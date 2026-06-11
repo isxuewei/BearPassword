@@ -15,6 +15,14 @@ import { loadTraySettings, saveTraySettings } from './trayConfig'
 import { applyTraySettings, destroyTray, isTrayAvailable } from './tray'
 import { loadDockSettings, saveDockSettings } from './dockConfig'
 import { applyDockIconVisibility, isDockIconAvailable, shouldShowDockOnFocus } from './dock'
+import {
+  applyWindowState,
+  attachMainWindowStateListeners,
+  flushPendingWindowStateSave,
+  getCachedWindowState,
+  persistMainWindowState,
+  seedCachedWindowState
+} from './windowState'
 
 /** 主窗口实例引用，用于窗口控制 IPC */
 let mainWindow: BrowserWindow | null = null
@@ -71,10 +79,14 @@ function applyAppIcon(): void {
 function createWindow(notifyOpenOnLoad = false): void {
   const isMac = process.platform === 'darwin'
   const iconPath = resolveAppIconPath()
+  const savedState = seedCachedWindowState(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
   mainWindow = new BrowserWindow({
-    width: WINDOW_MIN_WIDTH,
-    height: WINDOW_MIN_HEIGHT,
+    width: savedState.width,
+    height: savedState.height,
+    ...(savedState.x !== undefined && savedState.y !== undefined
+      ? { x: savedState.x, y: savedState.y }
+      : {}),
     minWidth: WINDOW_MIN_WIDTH,
     minHeight: WINDOW_MIN_HEIGHT,
     show: false,
@@ -93,9 +105,15 @@ function createWindow(notifyOpenOnLoad = false): void {
     }
   })
 
+  attachMainWindowStateListeners(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+
   // 窗口准备好后再显示，避免白屏闪烁
   mainWindow.on('ready-to-show', () => {
-    mainWindow?.show()
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (savedState.isMaximized) {
+      mainWindow.maximize()
+    }
+    mainWindow.show()
   })
 
   if (notifyOpenOnLoad) {
@@ -140,6 +158,10 @@ function registerWindowIpc(): void {
     mainWindow?.close()
   })
 
+  ipcMain.on('window:hide', () => {
+    hideMainWindow()
+  })
+
   ipcMain.handle('window:isMaximized', () => {
     return mainWindow?.isMaximized() ?? false
   })
@@ -173,26 +195,71 @@ function showDockIfNeeded(): void {
   }
 }
 
-/** 聚焦或创建主窗口（全局快捷键「打开」） */
-function focusMainWindow(): void {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    if (!mainWindow.isVisible()) mainWindow.show()
-    mainWindow.focus()
-    showDockIfNeeded()
-    mainWindow.webContents.send('shortcut:open')
+function isMainWindowOpen(): boolean {
+  return !!(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible())
+}
+
+function hideMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  flushPendingWindowStateSave(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+  mainWindow.hide()
+  const dockSettings = loadDockSettings()
+  if (dockSettings.hidden && app.dock) {
+    app.dock.hide()
+  }
+}
+
+function showExistingMainWindow(notify?: () => void): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+
+  applyWindowState(
+    mainWindow,
+    getCachedWindowState(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
+    WINDOW_MIN_WIDTH,
+    WINDOW_MIN_HEIGHT
+  )
+
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  if (!mainWindow.isVisible()) mainWindow.show()
+  mainWindow.focus()
+  showDockIfNeeded()
+  notify?.()
+}
+
+/** 全局快捷键「打开」：窗口已显示则隐藏，否则显示并进入密码库搜索 */
+function toggleMainWindowForShortcut(): void {
+  if (isMainWindowOpen()) {
+    hideMainWindow()
     return
   }
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    showExistingMainWindow(() => {
+      mainWindow?.webContents.send('shortcut:open')
+    })
+    return
+  }
+
+  createWindow(true)
+}
+
+/** 聚焦或创建主窗口（托盘等始终显示） */
+function focusMainWindow(): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    showExistingMainWindow(() => {
+      mainWindow?.webContents.send('shortcut:open')
+    })
+    return
+  }
+
   createWindow(true)
 }
 
 function sendTrayAction(action: TrayClickAction, notifyOpenOnLoad = false): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    if (!mainWindow.isVisible()) mainWindow.show()
-    mainWindow.focus()
-    showDockIfNeeded()
-    mainWindow.webContents.send('tray:action', action)
+    showExistingMainWindow(() => {
+      mainWindow?.webContents.send('tray:action', action)
+    })
     return
   }
 
@@ -223,7 +290,7 @@ function registerShortcutIpc(): void {
         open: bindings?.open ?? null,
         lock: bindings?.lock ?? null
       }
-      return syncGlobalShortcuts(plain, focusMainWindow)
+      return syncGlobalShortcuts(plain, toggleMainWindowForShortcut)
     } catch (error) {
       console.error('[shortcut:sync]', error)
       return {
@@ -327,7 +394,7 @@ app.whenReady().then(() => {
   registerDockIpc()
 
   const initialBindings = loadShortcutBindings()
-  syncGlobalShortcuts(initialBindings, focusMainWindow)
+  syncGlobalShortcuts(initialBindings, toggleMainWindowForShortcut)
 
   applyDockIconVisibility(loadDockSettings())
   createWindow()
@@ -347,6 +414,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
+  flushPendingWindowStateSave(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
   destroyTray()
   unregisterAllGlobalShortcuts()
 })

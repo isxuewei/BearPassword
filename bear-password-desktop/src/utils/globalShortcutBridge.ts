@@ -2,6 +2,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import { useShortcutsStore } from '@/stores/shortcuts'
+import { openVaultQuickSearch } from '@/utils/vaultQuickSearch'
 import { keyboardEventToShortcutInput, matchAccelerator } from '../../shared/acceleratorMatch'
 
 function handleLockShortcut(): void {
@@ -18,13 +19,7 @@ function handleLockShortcut(): void {
 }
 
 function handleOpenShortcut(): void {
-  const authStore = useAuthStore()
-  if (!authStore.isLoggedIn) return
-
-  const autoLockStore = useAutoLockStore()
-  if (autoLockStore.isLocked) {
-    autoLockStore.requestLockPresentation()
-  }
+  void openVaultQuickSearch()
 }
 
 function isRecordingShortcut(event: KeyboardEvent): boolean {
@@ -41,8 +36,8 @@ export function initGlobalShortcutBridge(): void {
     (event) => {
       if (event.repeat || isRecordingShortcut(event)) return
 
-      const { open, lock } = useShortcutsStore().settings
-      if (!open && !lock) return
+      const { lock } = useShortcutsStore().settings
+      if (!lock) return
 
       const input = keyboardEventToShortcutInput(event)
 
@@ -50,13 +45,6 @@ export function initGlobalShortcutBridge(): void {
         event.preventDefault()
         event.stopPropagation()
         handleLockShortcut()
-        return
-      }
-
-      if (open && matchAccelerator(input, open)) {
-        event.preventDefault()
-        event.stopPropagation()
-        handleOpenShortcut()
       }
     },
     true

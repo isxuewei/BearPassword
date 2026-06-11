@@ -161,7 +161,7 @@ const messages: MessageDict = {
   'shortcut.inApp.openSettings': 'Open settings',
   'shortcut.inApp.openSettingsDesc': 'Go to the settings page',
   'shortcut.open': 'Open BearPassword',
-  'shortcut.openDesc': 'Bring the app to the foreground globally',
+  'shortcut.openDesc': 'Open the vault and focus search; press again to hide',
   'shortcut.lock': 'Lock BearPassword',
   'shortcut.lockDesc': 'Lock the app immediately',
 

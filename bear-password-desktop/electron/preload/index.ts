@@ -8,6 +8,7 @@ const windowApi = {
   minimize: (): void => ipcRenderer.send('window:minimize'),
   maximize: (): void => ipcRenderer.send('window:maximize'),
   close: (): void => ipcRenderer.send('window:close'),
+  hide: (): void => ipcRenderer.send('window:hide'),
   isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized'),
   getPlatform: (): Promise<NodeJS.Platform> => ipcRenderer.invoke('window:getPlatform')
 }

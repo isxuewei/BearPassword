@@ -161,7 +161,7 @@ const messages: MessageDict = {
   'shortcut.inApp.openSettings': '設定を開く',
   'shortcut.inApp.openSettingsDesc': '設定ページを開く',
   'shortcut.open': 'BearPassword を開く',
-  'shortcut.openDesc': 'アプリを前面に表示（グローバル）',
+  'shortcut.openDesc': 'パスワード庫を開き検索にフォーカス、再度押すと非表示',
   'shortcut.lock': 'BearPassword をロック',
   'shortcut.lockDesc': 'すぐにアプリをロック',
 

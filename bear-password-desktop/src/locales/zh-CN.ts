@@ -159,7 +159,7 @@ const messages: MessageDict = {
   'shortcut.inApp.openSettings': '打开设置',
   'shortcut.inApp.openSettingsDesc': '进入设置页面',
   'shortcut.open': '打开 BearPassword',
-  'shortcut.openDesc': '全局唤起并聚焦应用窗口',
+  'shortcut.openDesc': '打开密码库并聚焦搜索框，再次按下隐藏窗口',
   'shortcut.lock': '锁定 BearPassword',
   'shortcut.lockDesc': '立即锁定应用，需输入密码解锁',
 

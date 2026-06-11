@@ -12,8 +12,11 @@ const STORAGE_KEY = 'auto_lock_minutes'
 const LOCK_STATE_KEY = 'app_locked'
 const ALLOWED_MINUTES = AUTO_LOCK_OPTIONS.map((item) => item.value)
 const CHECK_INTERVAL_MS = 1000
+/** 锁定后自动隐藏窗口的延迟 */
+const LOCK_HIDE_DELAY_MS = 3000
 
 let checkInterval: ReturnType<typeof setInterval> | null = null
+let hideAfterLockTimer: ReturnType<typeof setTimeout> | null = null
 let lastActivityAt = Date.now()
 
 function normalizeLockMinutes(value: unknown): AutoLockMinutes {
@@ -28,6 +31,21 @@ function clearCheckInterval(): void {
     clearInterval(checkInterval)
     checkInterval = null
   }
+}
+
+function clearHideAfterLockTimer(): void {
+  if (hideAfterLockTimer) {
+    clearTimeout(hideAfterLockTimer)
+    hideAfterLockTimer = null
+  }
+}
+
+function scheduleHideAfterLock(): void {
+  clearHideAfterLockTimer()
+  hideAfterLockTimer = setTimeout(() => {
+    hideAfterLockTimer = null
+    window.windowApi?.hide()
+  }, LOCK_HIDE_DELAY_MS)
 }
 
 function isMigrationActive(): boolean {
@@ -56,6 +74,7 @@ export const useAutoLockStore = defineStore('autoLock', () => {
   function requestLockPresentation(): void {
     if (isLocked.value) {
       lockPresentToken.value += 1
+      clearHideAfterLockTimer()
     }
   }
 
@@ -96,11 +115,16 @@ export const useAutoLockStore = defineStore('autoLock', () => {
   function lock(): void {
     if (isMigrationActive()) return
     clearCheckInterval()
+    const wasLocked = isLocked.value
     isLocked.value = true
     persistLockState(true)
+    if (!wasLocked) {
+      scheduleHideAfterLock()
+    }
   }
 
   function unlock(): void {
+    clearHideAfterLockTimer()
     isLocked.value = false
     persistLockState(false)
     lastActivityAt = Date.now()
@@ -119,6 +143,7 @@ export const useAutoLockStore = defineStore('autoLock', () => {
 
   /** 停止检测并清除锁定（登出时使用） */
   function stop(): void {
+    clearHideAfterLockTimer()
     pauseMonitoring()
     isLocked.value = false
     persistLockState(false)

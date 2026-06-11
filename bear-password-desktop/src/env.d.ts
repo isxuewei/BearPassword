@@ -12,6 +12,7 @@ interface WindowApi {
   minimize: () => void
   maximize: () => void
   close: () => void
+  hide: () => void
   isMaximized: () => Promise<boolean>
   getPlatform: () => Promise<NodeJS.Platform>
 }

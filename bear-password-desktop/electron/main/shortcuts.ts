@@ -44,17 +44,8 @@ function unregisterAllKnownAccelerators(previous: ShortcutBindings): void {
   registered.lock = null
 }
 
-function notifyOpen(): void {
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (!win.isDestroyed()) {
-      win.webContents.send('shortcut:open')
-    }
-  })
-}
-
 function focusMainWindowWithLockState(): void {
   showMainWindowHandler?.()
-  notifyOpen()
 }
 
 function notifyLock(): void {
