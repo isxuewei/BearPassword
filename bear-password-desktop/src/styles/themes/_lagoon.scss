@@ -1,0 +1,59 @@
+/**
+ * 碧波主题（Lagoon）
+ * 参考金融仪表盘示例：浅薄荷背景、深青强调、低阴影扁平风格
+ */
+html[data-theme='lagoon'] {
+  color-scheme: light;
+
+  --color-bg-primary: #e6f2f0;
+  --color-bg-secondary: #f4faf9;
+  --color-bg-elevated: #edf7f5;
+  --color-bg-glass: rgba(244, 250, 249, 0.88);
+
+  --color-text-primary: #1a2830;
+  --color-text-secondary: #4a5c62;
+  --color-text-muted: #7a8c92;
+
+  --color-accent: #0d6b62;
+  --color-accent-hover: #0b5c54;
+  --color-accent-glow: rgba(13, 107, 98, 0.28);
+  --color-accent-subtle: rgba(13, 107, 98, 0.12);
+
+  --color-border: rgba(15, 70, 65, 0.1);
+  --color-border-hover: rgba(15, 70, 65, 0.16);
+
+  --color-success: #0d6b62;
+  --color-warning: #c9922a;
+  --color-danger: #d64558;
+
+  --color-surface-hover: rgba(13, 107, 98, 0.07);
+  --color-titlebar-hover: rgba(13, 107, 98, 0.09);
+  --color-badge-bg: rgba(13, 107, 98, 0.09);
+  --color-scrollbar-thumb: rgba(15, 70, 65, 0.14);
+  --color-scrollbar-thumb-hover: rgba(15, 70, 65, 0.22);
+  --color-skeleton-base: rgba(13, 107, 98, 0.05);
+  --color-skeleton-shine: rgba(13, 107, 98, 0.1);
+
+  --shadow-sm: 0 1px 6px rgba(15, 70, 65, 0.05);
+  --shadow-md: 0 4px 16px rgba(15, 70, 65, 0.08);
+  --shadow-lg: 0 10px 32px rgba(15, 70, 65, 0.1);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #0d6b62;
+  --el-color-primary-light-3: #3d8f88;
+  --el-color-primary-light-5: #6db3ad;
+  --el-color-primary-light-7: #a6d4cf;
+  --el-color-primary-light-8: #c5e4e0;
+  --el-color-primary-light-9: #e2f2f0;
+  --el-color-primary-dark-2: #0b5c54;
+  --el-text-color-primary: #1a2830;
+  --el-text-color-regular: #4a5c62;
+  --el-text-color-secondary: #7a8c92;
+  --el-text-color-placeholder: #94a4a8;
+  --el-bg-color: #f4faf9;
+  --el-bg-color-overlay: #f4faf9;
+  --el-fill-color-blank: #edf7f5;
+  --el-border-color: rgba(15, 70, 65, 0.1);
+  --el-border-color-light: rgba(15, 70, 65, 0.07);
+  --el-border-color-lighter: rgba(15, 70, 65, 0.04);
+}

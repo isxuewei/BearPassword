@@ -1,0 +1,59 @@
+/**
+ * 紫韵主题（Violet）
+ * 参考金融仪表盘示例：浅紫灰背景、深紫强调、薰衣草点缀
+ */
+html[data-theme='violet'] {
+  color-scheme: light;
+
+  --color-bg-primary: #f0edf5;
+  --color-bg-secondary: #faf9fc;
+  --color-bg-elevated: #f5f3fa;
+  --color-bg-glass: rgba(250, 249, 252, 0.86);
+
+  --color-text-primary: #1e1a2e;
+  --color-text-secondary: #5c5670;
+  --color-text-muted: #8a8498;
+
+  --color-accent: #6b4fbb;
+  --color-accent-hover: #5c439f;
+  --color-accent-glow: rgba(107, 79, 187, 0.32);
+  --color-accent-subtle: rgba(107, 79, 187, 0.14);
+
+  --color-border: rgba(50, 30, 80, 0.09);
+  --color-border-hover: rgba(50, 30, 80, 0.16);
+
+  --color-success: #3d9a6a;
+  --color-warning: #c9a227;
+  --color-danger: #d64570;
+
+  --color-surface-hover: rgba(107, 79, 187, 0.08);
+  --color-titlebar-hover: rgba(107, 79, 187, 0.1);
+  --color-badge-bg: rgba(107, 79, 187, 0.1);
+  --color-scrollbar-thumb: rgba(50, 30, 80, 0.14);
+  --color-scrollbar-thumb-hover: rgba(50, 30, 80, 0.22);
+  --color-skeleton-base: rgba(107, 79, 187, 0.06);
+  --color-skeleton-shine: rgba(107, 79, 187, 0.12);
+
+  --shadow-sm: 0 2px 12px rgba(50, 30, 80, 0.07);
+  --shadow-md: 0 8px 28px rgba(50, 30, 80, 0.1);
+  --shadow-lg: 0 16px 48px rgba(50, 30, 80, 0.13);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #6b4fbb;
+  --el-color-primary-light-3: #8f77cc;
+  --el-color-primary-light-5: #b09fdd;
+  --el-color-primary-light-7: #d0c7ee;
+  --el-color-primary-light-8: #e0daf4;
+  --el-color-primary-light-9: #f0ecfa;
+  --el-color-primary-dark-2: #5c439f;
+  --el-text-color-primary: #1e1a2e;
+  --el-text-color-regular: #5c5670;
+  --el-text-color-secondary: #8a8498;
+  --el-text-color-placeholder: #a09aad;
+  --el-bg-color: #faf9fc;
+  --el-bg-color-overlay: #faf9fc;
+  --el-fill-color-blank: #f5f3fa;
+  --el-border-color: rgba(50, 30, 80, 0.1);
+  --el-border-color-light: rgba(50, 30, 80, 0.07);
+  --el-border-color-lighter: rgba(50, 30, 80, 0.04);
+}

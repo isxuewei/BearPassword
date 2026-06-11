@@ -1,0 +1,93 @@
+{
+  "name": "bear-password-desktop",
+  "version": "26.6.11",
+  "displayVersion": "26.06.11",
+  "description": "BearPassword - 简洁、安全、专业的桌面密码管理工具",
+  "main": "out/main/index.js",
+  "author": "薛伟同学",
+  "license": "MIT",
+  "scripts": {
+    "dev": "env -u ELECTRON_RUN_AS_NODE electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "build:mac": "npm run build && electron-builder --mac && node scripts/after-mac-build.mjs",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.1",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "sass": "^1.83.0",
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.33.5",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vue-tsc": "^2.2.0"
+  },
+  "build": {
+    "appId": "com.bear.password",
+    "productName": "BearPassword",
+    "copyright": "Copyright © 2026 薛伟同学",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/icon.icns",
+        "to": "icons/icon.icns"
+      },
+      {
+        "from": "resources/icon.png",
+        "to": "icons/icon.png"
+      },
+      {
+        "from": "resources/tray-icon.png",
+        "to": "icons/tray-icon.png"
+      }
+    ],
+    "asar": true,
+    "mac": {
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.productivity",
+      "extendInfo": {
+        "CFBundleShortVersionString": "26.06.11"
+      },
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64"]
+        }
+      ],
+      "artifactName": "${productName}.${ext}",
+      "identity": "-",
+      "entitlements": "build/mac/entitlements.mac.plist",
+      "entitlementsInherit": "build/mac/entitlements.mac.plist",
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "BearPassword",
+      "icon": "resources/icon.icns",
+      "sign": false
+    }
+  }
+}

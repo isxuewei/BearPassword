@@ -1,0 +1,59 @@
+/**
+ * 清新主题（Ocean）
+ * 参考金融仪表盘示例：浅蓝背景、天蓝强调、柔和卡片阴影
+ */
+html[data-theme='ocean'] {
+  color-scheme: light;
+
+  --color-bg-primary: #edf4fb;
+  --color-bg-secondary: #ffffff;
+  --color-bg-elevated: #f5faff;
+  --color-bg-glass: rgba(255, 255, 255, 0.82);
+
+  --color-text-primary: #1e3347;
+  --color-text-secondary: #4a6278;
+  --color-text-muted: #7a94a8;
+
+  --color-accent: #3b9fd9;
+  --color-accent-hover: #2b8fc9;
+  --color-accent-glow: rgba(59, 159, 217, 0.32);
+  --color-accent-subtle: rgba(59, 159, 217, 0.14);
+
+  --color-border: rgba(30, 80, 120, 0.1);
+  --color-border-hover: rgba(30, 80, 120, 0.18);
+
+  --color-success: #0d9488;
+  --color-warning: #d97706;
+  --color-danger: #e11d48;
+
+  --color-surface-hover: rgba(59, 159, 217, 0.08);
+  --color-titlebar-hover: rgba(59, 159, 217, 0.1);
+  --color-badge-bg: rgba(59, 159, 217, 0.1);
+  --color-scrollbar-thumb: rgba(30, 80, 120, 0.16);
+  --color-scrollbar-thumb-hover: rgba(30, 80, 120, 0.26);
+  --color-skeleton-base: rgba(59, 159, 217, 0.06);
+  --color-skeleton-shine: rgba(59, 159, 217, 0.12);
+
+  --shadow-sm: 0 2px 12px rgba(30, 80, 120, 0.07);
+  --shadow-md: 0 8px 28px rgba(30, 80, 120, 0.1);
+  --shadow-lg: 0 16px 48px rgba(30, 80, 120, 0.14);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #3b9fd9;
+  --el-color-primary-light-3: #6eb8e4;
+  --el-color-primary-light-5: #9fd0ef;
+  --el-color-primary-light-7: #cfe8f7;
+  --el-color-primary-light-8: #e0f0fa;
+  --el-color-primary-light-9: #f0f8fd;
+  --el-color-primary-dark-2: #2b8fc9;
+  --el-text-color-primary: #1e3347;
+  --el-text-color-regular: #4a6278;
+  --el-text-color-secondary: #7a94a8;
+  --el-text-color-placeholder: #94a8b8;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color-blank: #f5faff;
+  --el-border-color: rgba(30, 80, 120, 0.12);
+  --el-border-color-light: rgba(30, 80, 120, 0.08);
+  --el-border-color-lighter: rgba(30, 80, 120, 0.05);
+}

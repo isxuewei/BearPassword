@@ -1,0 +1,73 @@
+/**
+ * SCSS 设计令牌（Design Tokens）
+ * 颜色与阴影通过 CSS 变量驱动，支持浅色 / 深色主题切换
+ */
+
+// ── 颜色（映射 CSS 变量，随 data-theme 变化）──
+$color-bg-primary: var(--color-bg-primary);
+$color-bg-secondary: var(--color-bg-secondary);
+$color-bg-elevated: var(--color-bg-elevated);
+$color-bg-glass: var(--color-bg-glass);
+
+$color-text-primary: var(--color-text-primary);
+$color-text-secondary: var(--color-text-secondary);
+$color-text-muted: var(--color-text-muted);
+
+$color-accent: var(--color-accent);
+$color-accent-hover: var(--color-accent-hover);
+$color-accent-glow: var(--color-accent-glow);
+$color-accent-subtle: var(--color-accent-subtle);
+
+$color-border: var(--color-border);
+$color-border-hover: var(--color-border-hover);
+
+$color-success: var(--color-success);
+$color-warning: var(--color-warning);
+$color-danger: var(--color-danger);
+
+$color-surface-hover: var(--color-surface-hover);
+$color-titlebar-hover: var(--color-titlebar-hover);
+$color-badge-bg: var(--color-badge-bg);
+$color-scrollbar-thumb: var(--color-scrollbar-thumb);
+$color-scrollbar-thumb-hover: var(--color-scrollbar-thumb-hover);
+$color-skeleton-base: var(--color-skeleton-base);
+$color-skeleton-shine: var(--color-skeleton-shine);
+
+// ── 圆角 ──
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+
+// ── 阴影 ──
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-glow: 0 0 24px $color-accent-glow;
+
+// ── 间距 ──
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+
+// ── 字体（由 data-font 驱动 CSS 变量）──
+$font-family: var(--font-family-ui);
+$font-family-mono: var(--font-family-mono);
+$font-size-xs: 13px;
+$font-size-sm: 15px;
+$font-size-md: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 22px;
+$font-size-2xl: 32px;
+
+// ── 动效 ──
+$transition-fast: 0.15s ease;
+$transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ── 布局 ──
+$sidebar-width: 240px;
+$titlebar-height: 48px;

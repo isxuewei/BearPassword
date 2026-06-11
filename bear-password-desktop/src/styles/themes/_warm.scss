@@ -1,0 +1,59 @@
+/**
+ * 暖阳主题（Warm）
+ * 参考金融仪表盘示例：米色背景、珊瑚橙强调、大地色文字
+ */
+html[data-theme='warm'] {
+  color-scheme: light;
+
+  --color-bg-primary: #f4efe3;
+  --color-bg-secondary: #fffbf6;
+  --color-bg-elevated: #fff8f0;
+  --color-bg-glass: rgba(255, 251, 246, 0.85);
+
+  --color-text-primary: #2d2419;
+  --color-text-secondary: #5c4f42;
+  --color-text-muted: #8a7b6c;
+
+  --color-accent: #e86f3c;
+  --color-accent-hover: #d45f2e;
+  --color-accent-glow: rgba(232, 111, 60, 0.35);
+  --color-accent-subtle: rgba(232, 111, 60, 0.14);
+
+  --color-border: rgba(80, 50, 30, 0.1);
+  --color-border-hover: rgba(80, 50, 30, 0.18);
+
+  --color-success: #3d8b5a;
+  --color-warning: #c47a1a;
+  --color-danger: #d64545;
+
+  --color-surface-hover: rgba(232, 111, 60, 0.08);
+  --color-titlebar-hover: rgba(232, 111, 60, 0.1);
+  --color-badge-bg: rgba(232, 111, 60, 0.1);
+  --color-scrollbar-thumb: rgba(80, 50, 30, 0.16);
+  --color-scrollbar-thumb-hover: rgba(80, 50, 30, 0.26);
+  --color-skeleton-base: rgba(232, 111, 60, 0.06);
+  --color-skeleton-shine: rgba(232, 111, 60, 0.12);
+
+  --shadow-sm: 0 2px 12px rgba(80, 50, 30, 0.07);
+  --shadow-md: 0 8px 28px rgba(80, 50, 30, 0.1);
+  --shadow-lg: 0 16px 48px rgba(80, 50, 30, 0.14);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #e86f3c;
+  --el-color-primary-light-3: #ef9166;
+  --el-color-primary-light-5: #f4b090;
+  --el-color-primary-light-7: #f9d0ba;
+  --el-color-primary-light-8: #fbe0d0;
+  --el-color-primary-light-9: #fdf0e8;
+  --el-color-primary-dark-2: #d45f2e;
+  --el-text-color-primary: #2d2419;
+  --el-text-color-regular: #5c4f42;
+  --el-text-color-secondary: #8a7b6c;
+  --el-text-color-placeholder: #a89888;
+  --el-bg-color: #fffbf6;
+  --el-bg-color-overlay: #fffbf6;
+  --el-fill-color-blank: #fff8f0;
+  --el-border-color: rgba(80, 50, 30, 0.12);
+  --el-border-color-light: rgba(80, 50, 30, 0.08);
+  --el-border-color-lighter: rgba(80, 50, 30, 0.05);
+}

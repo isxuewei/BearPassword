@@ -1,0 +1,59 @@
+/**
+ * 薄荷主题（Mint）
+ * 参考金融仪表盘示例：浅灰绿背景、青绿强调、珊瑚点缀
+ */
+html[data-theme='mint'] {
+  color-scheme: light;
+
+  --color-bg-primary: #eef5f3;
+  --color-bg-secondary: #ffffff;
+  --color-bg-elevated: #f5faf8;
+  --color-bg-glass: rgba(255, 255, 255, 0.84);
+
+  --color-text-primary: #1a2e28;
+  --color-text-secondary: #4a635c;
+  --color-text-muted: #7a928a;
+
+  --color-accent: #1aab9b;
+  --color-accent-hover: #159a8a;
+  --color-accent-glow: rgba(26, 171, 155, 0.32);
+  --color-accent-subtle: rgba(26, 171, 155, 0.14);
+
+  --color-border: rgba(20, 60, 50, 0.09);
+  --color-border-hover: rgba(20, 60, 50, 0.16);
+
+  --color-success: #1aab9b;
+  --color-warning: #e07a4a;
+  --color-danger: #ef5350;
+
+  --color-surface-hover: rgba(26, 171, 155, 0.08);
+  --color-titlebar-hover: rgba(26, 171, 155, 0.1);
+  --color-badge-bg: rgba(26, 171, 155, 0.1);
+  --color-scrollbar-thumb: rgba(20, 60, 50, 0.14);
+  --color-scrollbar-thumb-hover: rgba(20, 60, 50, 0.22);
+  --color-skeleton-base: rgba(26, 171, 155, 0.06);
+  --color-skeleton-shine: rgba(26, 171, 155, 0.12);
+
+  --shadow-sm: 0 2px 12px rgba(20, 60, 50, 0.06);
+  --shadow-md: 0 8px 28px rgba(20, 60, 50, 0.09);
+  --shadow-lg: 0 16px 48px rgba(20, 60, 50, 0.12);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #1aab9b;
+  --el-color-primary-light-3: #4fc0b3;
+  --el-color-primary-light-5: #7fd4ca;
+  --el-color-primary-light-7: #bfeae4;
+  --el-color-primary-light-8: #d9f2ee;
+  --el-color-primary-light-9: #ecf9f7;
+  --el-color-primary-dark-2: #159a8a;
+  --el-text-color-primary: #1a2e28;
+  --el-text-color-regular: #4a635c;
+  --el-text-color-secondary: #7a928a;
+  --el-text-color-placeholder: #94a89e;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color-blank: #f5faf8;
+  --el-border-color: rgba(20, 60, 50, 0.1);
+  --el-border-color-light: rgba(20, 60, 50, 0.07);
+  --el-border-color-lighter: rgba(20, 60, 50, 0.04);
+}

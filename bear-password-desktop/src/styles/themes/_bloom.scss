@@ -1,0 +1,59 @@
+/**
+ * 缤粉主题（Bloom）
+ * 参考金融仪表盘示例：浅灰背景、品粉强调、青绿点缀
+ */
+html[data-theme='bloom'] {
+  color-scheme: light;
+
+  --color-bg-primary: #f0f1f5;
+  --color-bg-secondary: #ffffff;
+  --color-bg-elevated: #f8f9fc;
+  --color-bg-glass: rgba(255, 255, 255, 0.84);
+
+  --color-text-primary: #1f2430;
+  --color-text-secondary: #5c6370;
+  --color-text-muted: #8b92a0;
+
+  --color-accent: #e8458a;
+  --color-accent-hover: #d63378;
+  --color-accent-glow: rgba(232, 69, 138, 0.32);
+  --color-accent-subtle: rgba(232, 69, 138, 0.12);
+
+  --color-border: rgba(40, 30, 60, 0.08);
+  --color-border-hover: rgba(40, 30, 60, 0.14);
+
+  --color-success: #0d9488;
+  --color-warning: #d97706;
+  --color-danger: #e11d48;
+
+  --color-surface-hover: rgba(232, 69, 138, 0.07);
+  --color-titlebar-hover: rgba(232, 69, 138, 0.09);
+  --color-badge-bg: rgba(13, 148, 136, 0.1);
+  --color-scrollbar-thumb: rgba(40, 30, 60, 0.14);
+  --color-scrollbar-thumb-hover: rgba(40, 30, 60, 0.22);
+  --color-skeleton-base: rgba(232, 69, 138, 0.05);
+  --color-skeleton-shine: rgba(232, 69, 138, 0.1);
+
+  --shadow-sm: 0 2px 12px rgba(40, 30, 60, 0.06);
+  --shadow-md: 0 8px 28px rgba(40, 30, 60, 0.09);
+  --shadow-lg: 0 16px 48px rgba(40, 30, 60, 0.12);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #e8458a;
+  --el-color-primary-light-3: #ef74a7;
+  --el-color-primary-light-5: #f4a0c2;
+  --el-color-primary-light-7: #f9ccdd;
+  --el-color-primary-light-8: #fbe0eb;
+  --el-color-primary-light-9: #fdf0f5;
+  --el-color-primary-dark-2: #d63378;
+  --el-text-color-primary: #1f2430;
+  --el-text-color-regular: #5c6370;
+  --el-text-color-secondary: #8b92a0;
+  --el-text-color-placeholder: #a0a7b4;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color-blank: #f8f9fc;
+  --el-border-color: rgba(40, 30, 60, 0.1);
+  --el-border-color-light: rgba(40, 30, 60, 0.07);
+  --el-border-color-lighter: rgba(40, 30, 60, 0.04);
+}
