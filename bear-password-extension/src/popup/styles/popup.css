@@ -1,0 +1,201 @@
+/**
+ * BearPassword 扩展弹窗
+ * 颜色变量由 shared/theme/theme.ts 在启动时注入；以下为大地主题回退值
+ */
+
+:root {
+  --bear-bg: #e8e6e2;
+  --bear-surface: #faf9f7;
+  --bear-surface-2: #f3f2ee;
+  --bear-surface-glass: rgba(250, 249, 247, 0.88);
+  --bear-border: rgba(50, 45, 35, 0.1);
+  --bear-border-hover: rgba(50, 45, 35, 0.16);
+  --bear-primary: #5a7348;
+  --bear-primary-hover: #4d6340;
+  --bear-primary-light: #7d916d;
+  --bear-accent-subtle: rgba(90, 115, 72, 0.13);
+  --bear-accent-glow: rgba(90, 115, 72, 0.3);
+  --bear-warning: #c4734a;
+  --bear-badge-bg: rgba(196, 115, 74, 0.12);
+  --bear-text: #2a2a24;
+  --bear-text-secondary: #5c5c54;
+  --bear-text-muted: #8a8a80;
+  --bear-danger: #b85448;
+  --bear-surface-hover: rgba(90, 115, 72, 0.08);
+  --bear-shadow-sm: 0 2px 10px rgba(50, 45, 35, 0.06);
+  --bear-shadow-md: 0 6px 22px rgba(50, 45, 35, 0.09);
+  --bear-shadow-lg: 0 14px 40px rgba(50, 45, 35, 0.11);
+  --bear-scrollbar-thumb: rgba(50, 45, 35, 0.14);
+  --bear-scrollbar-thumb-hover: rgba(50, 45, 35, 0.22);
+  --bear-radius-sm: 8px;
+  --bear-radius-md: 12px;
+  --bear-radius-lg: 16px;
+  --bear-radius-popup: 18px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 380px;
+  min-height: 480px;
+  max-height: 560px;
+  overflow: hidden;
+  border-radius: var(--bear-radius-popup);
+  background: var(--bear-bg);
+}
+
+#app {
+  width: 100%;
+  min-height: 480px;
+  max-height: 560px;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--bear-bg);
+  color: var(--bear-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* ── 按钮 ── */
+.bear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--bear-radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.bear-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.bear-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bear-btn-primary {
+  background: var(--bear-primary);
+  color: #fff;
+  box-shadow: var(--bear-shadow-sm);
+}
+
+.bear-btn-primary:hover:not(:disabled) {
+  background: var(--bear-primary-hover);
+  box-shadow: 0 0 20px var(--bear-accent-glow);
+}
+
+.bear-btn-ghost {
+  background: var(--bear-surface-2);
+  color: var(--bear-text-secondary);
+  border: 1px solid var(--bear-border);
+}
+
+.bear-btn-ghost:hover:not(:disabled) {
+  background: var(--bear-surface-hover);
+  color: var(--bear-text);
+  border-color: var(--bear-border-hover);
+}
+
+/* ── 输入框 ── */
+.bear-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--bear-border);
+  border-radius: var(--bear-radius-md);
+  background: var(--bear-surface);
+  color: var(--bear-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bear-input:focus {
+  border-color: var(--bear-primary);
+  box-shadow: 0 0 0 3px var(--bear-accent-subtle);
+}
+
+.bear-input::placeholder {
+  color: var(--bear-text-muted);
+}
+
+.bear-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--bear-text-secondary);
+}
+
+.bear-field {
+  margin-bottom: 14px;
+}
+
+.bear-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--bear-radius-sm);
+  background: rgba(184, 84, 72, 0.1);
+  border: 1px solid rgba(184, 84, 72, 0.2);
+  color: var(--bear-danger);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* ── 主题标签 ── */
+.bear-theme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bear-badge-bg);
+  color: var(--bear-warning);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── 卡片容器 ── */
+.bear-card {
+  background: var(--bear-surface);
+  border: 1px solid var(--bear-border);
+  border-radius: var(--bear-radius-lg);
+  box-shadow: var(--bear-shadow-sm);
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bear-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bear-scrollbar-thumb-hover);
+}
