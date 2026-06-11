@@ -1,0 +1,30 @@
+package com.bear.password.module.password.dto;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 密码条目响应
+ */
+@Data
+public class PasswordEntryResponse {
+
+    private Long id;
+    private String passwordType;
+    private List<String> passwordLabels;
+    private String passwordTitle;
+    private Map<String, Object> content;
+    private List<String> websites;
+    private String remark;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
+    /** 是否已收藏（列表/详情可选返回） */
+    private Boolean favorite;
+    /** 收藏时间 */
+    private LocalDateTime favoriteTime;
+    /** 最近访问时间 */
+    private LocalDateTime recentVisitTime;
+}

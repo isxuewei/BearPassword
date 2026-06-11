@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    druid:
+      stat-view-servlet:
+        enabled: ${DRUID_STAT_ENABLED:false}
+        login-username: ${DRUID_STAT_USERNAME:admin}
+        login-password: ${DRUID_STAT_PASSWORD:}
+        allow: ${DRUID_STAT_ALLOW:127.0.0.1}
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
+# 文件服务
+dromara:
+  x-file-storage:
+    default-platform: aliyun-oss
+    thumbnail-suffix: ".min.jpg"
+    aliyun-oss:
+      - platform: aliyun-oss
+        enable-storage: true
+        access-key: ${ALIYUN_OSS_ACCESS_KEY}
+        secret-key: ${ALIYUN_OSS_SECRET_KEY}
+        end-point: ${ALIYUN_OSS_ENDPOINT}
+        bucket-name: ${ALIYUN_OSS_BUCKET_NAME}
+        domain: ${ALIYUN_OSS_DOMAIN}
+        base-path: ""

@@ -1,0 +1,8 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.idea/
+*.iml
+*.log
+.DS_Store
+application-local.yml
+/src/main/resources/application-dev.yml
