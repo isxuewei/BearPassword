@@ -11,7 +11,7 @@ const messages: MessageDict = {
   'locale.systemDesc': '根据系统语言自动选择界面语言',
 
   'font.canger': '仓耳今楷',
-  'font.system': '系统默认',
+  'font.system': '跟随系统',
   'font.cangerDesc': '使用仓耳今楷05 楷体',
   'font.systemDesc': '使用系统界面字体',
 

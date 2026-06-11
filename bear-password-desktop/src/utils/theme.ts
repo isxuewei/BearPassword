@@ -60,8 +60,8 @@ export function normalizeThemePreference(value: unknown): ThemePreference {
 }
 
 /** 系统浅色 / 深色对应的预设主题 */
-export const SYSTEM_LIGHT_THEME: ThemePresetId = 'light'
-export const SYSTEM_DARK_THEME: ThemePresetId = 'dark'
+export const SYSTEM_LIGHT_THEME: ThemePresetId = 'earth'
+export const SYSTEM_DARK_THEME: ThemePresetId = 'midnight'
 
 type SystemThemeListener = () => void
 

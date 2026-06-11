@@ -126,7 +126,7 @@ function createWindow(notifyOpenOnLoad = false): void {
 
   attachFocusedShortcutListener(mainWindow)
 
-  // 外部链接使用系统默认浏览器打开
+  // 外部链接使用跟随系统浏览器打开
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }

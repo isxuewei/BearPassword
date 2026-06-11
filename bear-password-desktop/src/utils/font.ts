@@ -12,7 +12,7 @@ export interface FontOption {
 /** 设置页字体选项 */
 export const FONT_OPTIONS: readonly FontOption[] = [
   { value: 'canger', label: '仓耳今楷', description: '使用仓耳今楷05 楷体' },
-  { value: 'system', label: '系统默认', description: '使用系统界面字体' }
+  { value: 'system', label: '跟随系统', description: '使用系统界面字体' }
 ]
 
 const VALID_FONT_PREFERENCES = new Set<string>(FONT_OPTIONS.map((item) => item.value))
