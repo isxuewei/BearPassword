@@ -86,7 +86,7 @@ server:
   servlet:
     context-path: /api
 
-# Sa-Token 配置（与桌面端 Authorization: Bearer 对齐）
+# Sa-Token 配置
 sa-token:
   # token 名称，对应请求头 Authorization
   token-name: Authorization
