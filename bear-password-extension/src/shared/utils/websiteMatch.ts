@@ -1,3 +1,5 @@
+import type { WebsiteMatchMode } from '@/shared/types'
+
 /** 解析结果，用于主机 + 端口精确匹配 */
 export interface ParsedMatchUrl {
   hostname: string
@@ -100,8 +102,44 @@ function portsMatch(entry: ParsedMatchUrl, page: ParsedMatchUrl): boolean {
   return page.port === defaultPort
 }
 
-/** 判断网站条目是否匹配当前页面（主机 + 端口） */
-export function websiteMatchesPage(website: string, pageUrl: string): boolean {
+function normalizePathname(pathname: string): string {
+  const path = pathname || '/'
+  if (path.length > 1 && path.endsWith('/')) {
+    return path.slice(0, -1)
+  }
+  return path
+}
+
+/** 规范化页面/网站 URL：协议 + 主机 + 端口 + 路径，去掉 ? 查询与 # 片段 */
+export function getPageWebsiteUrl(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+
+  if (trimmed.startsWith('*.')) {
+    return trimmed.toLowerCase()
+  }
+
+  let urlString = trimmed
+  if (!/^https?:\/\//i.test(trimmed)) {
+    const hostPart = trimmed.split('/')[0]
+    const scheme = isIpv4(hostPart.split(':')[0]) ? 'http' : 'https'
+    urlString = `${scheme}://${trimmed}`
+  }
+
+  try {
+    const url = new URL(urlString)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+
+    const pathname = normalizePathname(url.pathname)
+    const pathPart = pathname === '/' ? '' : pathname
+    return `${url.origin}${pathPart}`.toLowerCase()
+  } catch {
+    return ''
+  }
+}
+
+/** 按主机名 + 端口匹配（插件主页查询） */
+export function websiteMatchesPageByHost(website: string, pageUrl: string): boolean {
   const page = parseUrlForMatch(pageUrl)
   if (!page) return false
 
@@ -112,14 +150,43 @@ export function websiteMatchesPage(website: string, pageUrl: string): boolean {
   return portsMatch(entry, page)
 }
 
-export function entryMatchesPage(websites: string[], pageUrl: string): boolean {
-  if (!websites.length) return false
-  return websites.some((site) => websiteMatchesPage(site, pageUrl))
+/** 按完整路径匹配（网页填充，忽略查询参数） */
+export function websiteMatchesPageByPath(website: string, pageUrl: string): boolean {
+  const pageCanonical = getPageWebsiteUrl(pageUrl)
+  if (!pageCanonical) return false
+
+  const trimmedEntry = website.trim()
+  if (trimmedEntry.startsWith('*.')) {
+    return websiteMatchesPageByHost(trimmedEntry, pageUrl)
+  }
+
+  const entryCanonical = getPageWebsiteUrl(trimmedEntry)
+  if (!entryCanonical) return false
+  return entryCanonical === pageCanonical
 }
 
-/** 从页面 URL 提取用于后端 keyword 查询的主机（含非标准端口） */
-export function getUrlSearchKeyword(pageUrl: string): string {
-  return getPageHostLabel(pageUrl)
+export function websiteMatchesPage(
+  website: string,
+  pageUrl: string,
+  mode: WebsiteMatchMode = 'host'
+): boolean {
+  return mode === 'path'
+    ? websiteMatchesPageByPath(website, pageUrl)
+    : websiteMatchesPageByHost(website, pageUrl)
+}
+
+export function entryMatchesPage(
+  websites: string[],
+  pageUrl: string,
+  mode: WebsiteMatchMode = 'host'
+): boolean {
+  if (!websites.length) return false
+  return websites.some((site) => websiteMatchesPage(site, pageUrl, mode))
+}
+
+/** 从页面 URL 提取用于后端 keyword 查询的关键词 */
+export function getUrlSearchKeyword(pageUrl: string, mode: WebsiteMatchMode = 'host'): string {
+  return mode === 'path' ? getPageWebsiteUrl(pageUrl) : getPageHostLabel(pageUrl)
 }
 
 /** 当前页面的主机展示（含非标准端口） */

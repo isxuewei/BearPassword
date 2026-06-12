@@ -86,6 +86,11 @@ interface DockApi {
   >
 }
 
+/** Electron preload 暴露的文件选择 API */
+interface FileApi {
+  pickPasswordCsv: () => Promise<{ fileName: string; content: string } | null>
+}
+
 declare global {
   interface Window {
     windowApi?: WindowApi
@@ -94,6 +99,7 @@ declare global {
     launchAtLoginApi?: LaunchAtLoginApi
     trayApi?: TrayApi
     dockApi?: DockApi
+    fileApi?: FileApi
   }
 }
 

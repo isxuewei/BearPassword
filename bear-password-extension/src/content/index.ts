@@ -8,8 +8,14 @@ import {
   type LoginFieldContext
 } from '@/content/formDetector'
 import {
+  refreshPasswordFieldIconStyles,
+  setupPasswordFieldIcons
+} from '@/content/passwordFieldIcon'
+import {
+  getInlinePickerAnchor,
   hideInlinePicker,
   isInlinePickerVisible,
+  reanchorInlinePicker,
   refreshInlinePickerStyles,
   showInlinePicker,
   updateInlinePicker,
@@ -24,7 +30,7 @@ import {
 } from '@/shared/locale/contentLocale'
 import { applyContentThemePreference, initContentTheme } from '@/shared/theme/contentTheme'
 import { getBrowserTabTitle } from '@/shared/utils/tabTitle'
-import { getPageHostLabel } from '@/shared/utils/websiteMatch'
+import { getPageWebsiteUrl } from '@/shared/utils/websiteMatch'
 
 let matchingCredentials: FillCredential[] = []
 let needsSecurityKey = false
@@ -35,7 +41,7 @@ async function refreshCredentials(): Promise<void> {
   try {
     const result = await sendMessage<MatchingCredentialsResult>({
       type: 'GET_MATCHING_CREDENTIALS',
-      payload: { url: window.location.href }
+      payload: { url: window.location.href, matchBy: 'path' }
     })
     matchingCredentials = result.credentials
     needsSecurityKey = result.needsSecurityKey
@@ -75,7 +81,7 @@ async function performQuickSave(context: LoginFieldContext): Promise<void> {
   if (!password || credentialAlreadyExists(username, password)) return
 
   const title = await getBrowserTabTitle(window.location.hostname)
-  const website = getPageHostLabel(window.location.href)
+  const website = getPageWebsiteUrl(window.location.href)
 
   await sendMessage({
     type: 'SAVE_CREDENTIAL',
@@ -105,31 +111,93 @@ function handleSelect(credential: FillCredential, context: LoginFieldContext): v
   autofillInContext(credential, context)
 }
 
+function isSameLoginContext(a: LoginFieldContext, b: LoginFieldContext): boolean {
+  return a.usernameInput === b.usernameInput && a.passwordInput === b.passwordInput
+}
+
+function shouldKeepPickerOnBlur(blurredInput: HTMLInputElement): boolean {
+  const active = document.activeElement
+  if (!(active instanceof HTMLInputElement)) return false
+
+  const blurredContext = contextByInput.get(blurredInput) ?? resolveLoginContext(blurredInput)
+  if (!blurredContext) return false
+
+  const activeContext = resolveLoginContext(active)
+  if (!activeContext) return false
+
+  return isSameLoginContext(blurredContext, activeContext)
+}
+
+function buildPickerOptions(context: LoginFieldContext) {
+  return {
+    emptyText: getEmptyPickerText(),
+    onSelect: (cred: FillCredential) => handleSelect(cred, context),
+    quickSave: getQuickSaveOffer(context)
+  }
+}
+
+function hasPickerContent(context: LoginFieldContext, list: FillCredential[]): boolean {
+  if (list.length > 0) return true
+  if (getQuickSaveOffer(context)) return true
+  if (needsSecurityKey) return true
+  return false
+}
+
 async function openPickerForInput(input: HTMLInputElement): Promise<void> {
   const context = resolveLoginContext(input)
   if (!context) return
 
   contextByInput.set(input, context)
-  await refreshCredentials()
 
   const filterText = context.usernameInput?.value ?? ''
+
+  const anchor = getInlinePickerAnchor()
+  if (isInlinePickerVisible() && anchor) {
+    const anchorContext = contextByInput.get(anchor) ?? resolveLoginContext(anchor)
+    if (anchorContext && isSameLoginContext(anchorContext, context)) {
+      const { list } = getPickerCredentials(filterText)
+      const pickerOptions = buildPickerOptions(context)
+      if (!hasPickerContent(context, list)) {
+        hideInlinePicker()
+        return
+      }
+      reanchorInlinePicker(input, list, pickerOptions)
+      return
+    }
+  }
+
+  await refreshCredentials()
+
   const { list, title } = getPickerCredentials(filterText)
+  const pickerOptions = buildPickerOptions(context)
+
+  if (!hasPickerContent(context, list)) {
+    hideInlinePicker()
+    return
+  }
 
   showInlinePicker(input, list, {
     title,
-    emptyText: getEmptyPickerText(),
-    onSelect: (cred) => handleSelect(cred, context),
-    quickSave: getQuickSaveOffer(context)
+    ...pickerOptions
   })
 }
 
 function refreshOpenPicker(context: LoginFieldContext, filterText: string): void {
   const { list } = getPickerCredentials(filterText)
-  updateInlinePicker(list, {
-    emptyText: getEmptyPickerText(),
-    onSelect: (cred) => handleSelect(cred, context),
-    quickSave: getQuickSaveOffer(context)
-  })
+  const pickerOptions = buildPickerOptions(context)
+  if (!hasPickerContent(context, list)) {
+    hideInlinePicker()
+    return
+  }
+  updateInlinePicker(list, pickerOptions)
+}
+
+async function handlePasswordIconClick(passwordInput: HTMLInputElement): Promise<void> {
+  if (isInlinePickerVisible() && getInlinePickerAnchor() === passwordInput) {
+    hideInlinePicker()
+    return
+  }
+  await openPickerForInput(passwordInput)
 }
 
 function setupInputWatcher(input: HTMLInputElement): void {
@@ -154,6 +222,7 @@ function setupInputWatcher(input: HTMLInputElement): void {
       const active = document.activeElement
       const picker = document.getElementById('bear-password-inline-picker')
       if (picker?.contains(active)) return
+      if (shouldKeepPickerOnBlur(input)) return
       hideInlinePicker()
     }, 150)
   })
@@ -176,6 +245,9 @@ function setupInputWatcher(input: HTMLInputElement): void {
 }
 
 function setupFormWatchers(): void {
+  setupPasswordFieldIcons((passwordInput) => {
+    void handlePasswordIconClick(passwordInput)
+  })
   for (const input of detectLoginInputs()) {
     setupInputWatcher(input)
   }
@@ -196,7 +268,7 @@ async function handlePossibleSave(): Promise<void> {
   if (existing) return
 
   savePromptShown = true
-  const website = getPageHostLabel(window.location.href)
+  const website = getPageWebsiteUrl(window.location.href)
   showSaveBanner(
     { username, password, website },
     () => {
@@ -251,10 +323,12 @@ async function init(): Promise<void> {
     if (changes.bear_extension_theme) {
       applyContentThemePreference(changes.bear_extension_theme.newValue)
       refreshInlinePickerStyles()
+      refreshPasswordFieldIconStyles()
     }
     if (changes.bear_extension_locale) {
       applyContentLocalePreference(changes.bear_extension_locale.newValue)
       refreshInlinePickerStyles()
+      refreshPasswordFieldIconStyles()
     }
   })
 

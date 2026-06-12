@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
 import { existsSync } from 'fs'
-import { join } from 'path'
+import { readFile } from 'fs/promises'
+import { basename, join } from 'path'
 import {
   syncGlobalShortcuts,
   unregisterAllGlobalShortcuts,
@@ -356,6 +357,29 @@ function registerTrayIpc(): void {
   })
 }
 
+/** 注册文件选择 IPC（密码 CSV 导入） */
+function registerFileIpc(): void {
+  ipcMain.handle('file:pickPasswordCsv', async () => {
+    const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined
+    const result = await dialog.showOpenDialog(parent, {
+      title: '选择浏览器导出的密码 CSV 文件',
+      filters: [{ name: 'CSV', extensions: ['csv'] }],
+      properties: ['openFile']
+    })
+
+    if (result.canceled || !result.filePaths.length) {
+      return null
+    }
+
+    const filePath = result.filePaths[0]
+    const content = await readFile(filePath, 'utf-8')
+    return {
+      fileName: basename(filePath),
+      content
+    }
+  })
+}
+
 /** 注册 Dock 栏图标 IPC */
 function registerDockIpc(): void {
   ipcMain.handle('dock:get', () => ({
@@ -392,6 +416,7 @@ app.whenReady().then(() => {
   registerLaunchAtLoginIpc()
   registerTrayIpc()
   registerDockIpc()
+  registerFileIpc()
 
   const initialBindings = loadShortcutBindings()
   syncGlobalShortcuts(initialBindings, toggleMainWindowForShortcut)

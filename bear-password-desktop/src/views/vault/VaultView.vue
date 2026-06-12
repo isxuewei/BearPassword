@@ -389,6 +389,12 @@
     <PasswordTypePicker
       v-model:visible="pickerVisible"
       @select="onTypeSelected"
+      @import="openImportDialog"
+    />
+
+    <PasswordImportDialog
+      v-model:visible="importDialogVisible"
+      @imported="loadEntries"
     />
 
     <PasswordEntryDialog
@@ -418,6 +424,7 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { DropdownInstance, InputInstance } from 'element-plus'
 import PasswordEntryDialog from '@/components/vault/PasswordEntryDialog.vue'
+import PasswordImportDialog from '@/components/vault/PasswordImportDialog.vue'
 import PasswordTypePicker from '@/components/vault/PasswordTypePicker.vue'
 import VaultEntryTypeIcon from '@/components/vault/VaultEntryTypeIcon.vue'
 import {
@@ -548,6 +555,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const dialogVisible = ref(false)
 const pickerVisible = ref(false)
+const importDialogVisible = ref(false)
 const editingEntry = ref<PasswordEntry | null>(null)
 const presetType = ref<PasswordType | null>(null)
 const presetLabel = ref<string | null>(null)
@@ -897,6 +905,10 @@ function openCreate(): void {
   presetType.value = null
   presetLabel.value = null
   pickerVisible.value = true
+}
+
+function openImportDialog(): void {
+  importDialogVisible.value = true
 }
 
 function onTypeSelected(type: PasswordType, label: string): void {

@@ -144,6 +144,13 @@ export function detectLoginForms(root: ParentNode = document): DetectedLoginForm
   return results
 }
 
+/** 页面上所有可见的密码输入框 */
+export function detectPasswordInputs(root: ParentNode = document): HTMLInputElement[] {
+  return Array.from(root.querySelectorAll<HTMLInputElement>('input[type="password"]')).filter(
+    isPasswordInput
+  )
+}
+
 /** 页面上所有可能触发填充的登录相关输入框 */
 export function detectLoginInputs(root: ParentNode = document): HTMLInputElement[] {
   const inputs = Array.from(root.querySelectorAll<HTMLInputElement>('input')).filter(isLoginRelatedInput)

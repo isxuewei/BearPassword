@@ -7,7 +7,7 @@ import BearConfirmDialog from '@/popup/components/BearConfirmDialog.vue'
 import CredentialItem from '@/popup/components/CredentialItem.vue'
 import LoginEntryDialog from '@/popup/components/LoginEntryDialog.vue'
 import AppLogo from '@/popup/components/AppLogo.vue'
-import { getPageHostLabel } from '@/shared/utils/websiteMatch'
+import { getPageHostLabel, getPageWebsiteUrl } from '@/shared/utils/websiteMatch'
 
 const { t } = useI18n()
 const popupStore = usePopupStore()
@@ -19,6 +19,7 @@ onMounted(() => {
 })
 
 const pageHost = () => getPageHostLabel(vaultStore.currentUrl)
+const defaultWebsite = () => getPageWebsiteUrl(vaultStore.currentUrl)
 
 const emptyText = computed(() =>
   vaultStore.keyword ? t('vault.emptyNoMatch') : t('vault.emptyNoEntries')
@@ -143,7 +144,7 @@ const deleteMessage = computed(() =>
     <LoginEntryDialog
       :open="vaultStore.entryDialogOpen"
       :editing="vaultStore.editingCredential"
-      :default-website="pageHost()"
+      :default-website="defaultWebsite()"
       :saving="vaultStore.entrySaving"
       @close="vaultStore.closeEntryDialog()"
       @submit="vaultStore.saveEntry($event)"

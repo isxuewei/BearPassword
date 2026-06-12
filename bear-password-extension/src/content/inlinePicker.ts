@@ -185,6 +185,26 @@ export function showInlinePicker(
   window.addEventListener('resize', resizeHandler)
 }
 
+export function getInlinePickerAnchor(): HTMLInputElement | null {
+  return anchorInput
+}
+
+/** 同一登录表单内切换输入框时，更新锚点与内容，避免销毁重建导致闪烁 */
+export function reanchorInlinePicker(
+  anchor: HTMLInputElement,
+  credentials: FillCredential[],
+  options: {
+    emptyText: string
+    onSelect: (c: FillCredential) => void
+    quickSave?: QuickSaveOptions | null
+  }
+): void {
+  anchorInput = anchor
+  const picker = document.getElementById(PICKER_ID)
+  if (!picker) return
+  updateInlinePicker(credentials, options)
+}
+
 export function updateInlinePicker(
   credentials: FillCredential[],
   options: {

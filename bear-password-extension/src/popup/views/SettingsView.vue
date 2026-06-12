@@ -143,82 +143,11 @@ async function handleLocaleChange(event: Event): Promise<void> {
     </header>
 
     <div class="content">
-      <section class="section bear-card">
-        <h2 class="section-title">{{ t('settings.appearance') }}</h2>
-        <div class="theme-row">
-          <div class="theme-row-label">
-            <span>{{ t('settings.theme') }}</span>
-            <small>{{ themeDescription }}</small>
-          </div>
-          <select
-            class="bear-input theme-select"
-            :value="themeStore.preference"
-            @change="handleThemeChange"
-          >
-            <option v-for="option in THEME_OPTIONS" :key="option.value" :value="option.value">
-              {{ t(getThemeLabelKey(option.value)) }}
-            </option>
-          </select>
-        </div>
-        <div class="theme-row theme-row--spaced">
-          <div class="theme-row-label">
-            <span>{{ t('settings.language') }}</span>
-            <small>{{ localeDescription }}</small>
-          </div>
-          <select
-            class="bear-input theme-select"
-            :value="localeStore.preference"
-            @change="handleLocaleChange"
-          >
-            <option
-              v-for="option in LOCALE_PREFERENCE_OPTIONS"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ t(option.labelKey) }}
-            </option>
-          </select>
-        </div>
-      </section>
-
-      <section class="section bear-card">
-        <h2 class="section-title">{{ t('settings.server') }}</h2>
-        <p class="hint">{{ t('settings.serverDesc') }}</p>
-        <div class="bear-field">
-          <input
-            v-model="serverInput"
-            class="bear-input"
-            type="text"
-            :placeholder="serverPlaceholder"
-          />
-        </div>
-        <button
-          class="bear-btn bear-btn-primary save-server-btn"
-          type="button"
-          :disabled="sessionStore.loading"
-          @click="handleSaveServer"
-        >
-          {{ t('settings.serverSave') }}
-        </button>
-        <div class="server-health-row">
-          <div class="server-health-label">
-            <span>{{ t('settings.backend') }}</span>
-            <small>{{ healthStatusText }}</small>
-          </div>
-          <span
-            class="health-dot"
-            :class="healthReady ? 'is-ready' : 'is-down'"
-            :title="healthStatusText"
-            aria-hidden="true"
-          />
-        </div>
-      </section>
-
       <section v-if="sessionStore.isLoggedIn" class="section bear-card">
-        <h2 class="section-title">{{ t('settings.security') }}</h2>
+        <h3 class="section-title">{{ t('settings.security') }}</h3>
 
-        <div class="security-row">
-          <div class="security-row-label">
+        <div class="setting-row">
+          <div class="setting-row-label">
             <span>{{ t('settings.securityKey') }}</span>
             <small>{{ securityKeyHint }}</small>
           </div>
@@ -230,7 +159,7 @@ async function handleLocaleChange(event: Event): Promise<void> {
           </span>
         </div>
 
-        <div class="security-panel">
+        <div class="setting-panel">
           <div class="security-input-wrap">
             <input
               v-model="securityKeyInput"
@@ -305,23 +234,101 @@ async function handleLocaleChange(event: Event): Promise<void> {
               {{ t('settings.securityKeyClear') }}
             </button>
           </div>
-          <p class="security-note">{{ t('settings.securityKeyNote') }}</p>
+          <p class="setting-note">{{ t('settings.securityKeyNote') }}</p>
         </div>
       </section>
 
       <section v-else class="section bear-card">
-        <h2 class="section-title">{{ t('settings.security') }}</h2>
-        <p class="hint">{{ t('settings.securityLoginFirst') }}</p>
+        <h3 class="section-title">{{ t('settings.security') }}</h3>
+        <p class="setting-note">{{ t('settings.securityLoginFirst') }}</p>
       </section>
 
       <section class="section bear-card">
-        <h2 class="section-title">{{ t('settings.about') }}</h2>
-        <div class="about-row">
-          <span class="about-label">{{ t('settings.version') }}</span>
+        <h3 class="section-title">{{ t('settings.appearance') }}</h3>
+        <div class="setting-row setting-row--stack">
+          <div class="setting-row-label">
+            <span>{{ t('settings.theme') }}</span>
+            <small>{{ themeDescription }}</small>
+          </div>
+          <select
+            class="bear-input setting-select"
+            :value="themeStore.preference"
+            @change="handleThemeChange"
+          >
+            <option v-for="option in THEME_OPTIONS" :key="option.value" :value="option.value">
+              {{ t(getThemeLabelKey(option.value)) }}
+            </option>
+          </select>
+        </div>
+        <div class="setting-row setting-row--stack">
+          <div class="setting-row-label">
+            <span>{{ t('settings.language') }}</span>
+            <small>{{ localeDescription }}</small>
+          </div>
+          <select
+            class="bear-input setting-select"
+            :value="localeStore.preference"
+            @change="handleLocaleChange"
+          >
+            <option
+              v-for="option in LOCALE_PREFERENCE_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ t(option.labelKey) }}
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <section class="section bear-card">
+        <h3 class="section-title">{{ t('settings.service') }}</h3>
+        <div class="setting-row setting-row--intro">
+          <div class="setting-row-label">
+            <span>{{ t('settings.server') }}</span>
+            <small>{{ t('settings.serverDesc') }}</small>
+          </div>
+        </div>
+        <div class="setting-panel">
+          <div class="bear-field">
+            <input
+              v-model="serverInput"
+              class="bear-input"
+              type="text"
+              :placeholder="serverPlaceholder"
+            />
+          </div>
+          <button
+            class="bear-btn bear-btn-primary save-server-btn"
+            type="button"
+            :disabled="sessionStore.loading"
+            @click="handleSaveServer"
+          >
+            {{ t('settings.serverSave') }}
+          </button>
+        </div>
+        <div class="setting-row setting-row--health">
+          <div class="setting-row-label">
+            <span>{{ t('settings.backend') }}</span>
+            <small>{{ healthStatusText }}</small>
+          </div>
+          <span
+            class="health-dot"
+            :class="healthReady ? 'is-ready' : 'is-down'"
+            :title="healthStatusText"
+            aria-hidden="true"
+          />
+        </div>
+      </section>
+
+      <section class="section bear-card">
+        <h3 class="section-title">{{ t('settings.about') }}</h3>
+        <div class="setting-row">
+          <span class="setting-item-label">{{ t('settings.version') }}</span>
           <span class="about-badge">{{ APP_VERSION }}</span>
         </div>
-        <div class="about-row">
-          <span class="about-label">{{ t('settings.author') }}</span>
+        <div class="setting-row">
+          <span class="setting-item-label">{{ t('settings.author') }}</span>
           <a
             :href="AUTHOR_GITHUB_URL"
             class="about-link"
@@ -396,51 +403,76 @@ async function handleLocaleChange(event: Event): Promise<void> {
 }
 
 .section-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--bear-text);
-  margin-bottom: 8px;
-}
-
-.hint {
-  font-size: 12px;
   color: var(--bear-text-muted);
-  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
 }
 
-.security-row {
+.setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bear-border);
 }
 
-.security-row-label {
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.setting-row--intro {
+  align-items: flex-start;
+  padding-top: 0;
+}
+
+.setting-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.setting-row--health {
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.setting-row-label {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.security-row-label span {
+.setting-row-label span,
+.setting-item-label {
   font-size: 13px;
   font-weight: 500;
   color: var(--bear-text);
 }
 
-.security-row-label small {
+.setting-row-label small {
   font-size: 11px;
   color: var(--bear-text-muted);
   line-height: 1.4;
 }
 
-.security-panel {
+.setting-panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--bear-border);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--bear-border);
+}
+
+.setting-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--bear-text-muted);
 }
 
 .security-input-wrap {
@@ -484,13 +516,6 @@ async function handleLocaleChange(event: Event): Promise<void> {
   flex-shrink: 0;
 }
 
-.security-note {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--bear-text-muted);
-}
-
 .status-badge {
   font-size: 11px;
   font-weight: 600;
@@ -519,32 +544,6 @@ async function handleLocaleChange(event: Event): Promise<void> {
 
 .save-server-btn {
   width: 100%;
-  margin-bottom: 12px;
-}
-
-.server-health-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid var(--bear-border);
-}
-
-.server-health-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.server-health-label span {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--bear-text);
-}
-
-.server-health-label small {
-  font-size: 11px;
-  color: var(--bear-text-muted);
 }
 
 .health-dot {
@@ -578,62 +577,8 @@ async function handleLocaleChange(event: Event): Promise<void> {
   border: 1px solid var(--bear-border-hover);
 }
 
-.theme-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.theme-row--spaced {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--bear-border);
-}
-
-.theme-row-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.theme-row-label span {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--bear-text);
-}
-
-.theme-row-label small {
-  font-size: 11px;
-  color: var(--bear-text-muted);
-  line-height: 1.4;
-}
-
-.theme-select {
+.setting-select {
   cursor: pointer;
-}
-
-.about-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--bear-border);
-}
-
-.about-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.about-row:first-of-type {
-  padding-top: 0;
-}
-
-.about-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--bear-text);
 }
 
 .about-badge {

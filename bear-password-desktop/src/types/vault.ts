@@ -135,6 +135,17 @@ export interface PasswordPickerItem {
   featured?: boolean
 }
 
+/** 密码导入入口（类型选择器） */
+export interface PasswordImportPickerItem {
+  keywords: string[]
+  color: string
+}
+
+export const PASSWORD_IMPORT_PICKER_ITEM: PasswordImportPickerItem = {
+  keywords: ['导入', 'import', 'chrome', 'firefox', 'edge', 'safari', '浏览器', 'csv', '密码'],
+  color: '#e76f51'
+}
+
 /** 类型选择器选项 */
 export const PASSWORD_PICKER_ITEMS: PasswordPickerItem[] = [
   {

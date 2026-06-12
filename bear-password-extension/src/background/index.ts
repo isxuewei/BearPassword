@@ -21,6 +21,7 @@ import type {
   UpsertCredentialPayload
 } from '@/shared/types'
 import { clearSession, loadSession, saveSession } from '@/shared/storage/session'
+import type { WebsiteMatchMode } from '@/shared/types'
 import { getUrlSearchKeyword } from '@/shared/utils/websiteMatch'
 import {
   applyFavoriteState,
@@ -51,7 +52,8 @@ function clearCredentialsCache(): void {
 
 async function refreshMatchingCredentials(
   url?: string,
-  force = false
+  force = false,
+  matchBy: WebsiteMatchMode = 'path'
 ): Promise<MatchingCredentialsResult> {
   const session = await getActiveSession()
   if (!session) {
@@ -59,8 +61,8 @@ async function refreshMatchingCredentials(
     return { credentials: [], needsSecurityKey: false }
   }
 
-  const keyword = url ? getUrlSearchKeyword(url) : ''
-  const cacheKey = keyword || '__all__'
+  const keyword = url ? getUrlSearchKeyword(url, matchBy) : ''
+  const cacheKey = `${matchBy}:${keyword || '__all__'}`
   const cached = credentialsCache.get(cacheKey)
   const now = Date.now()
 
@@ -79,7 +81,7 @@ async function refreshMatchingCredentials(
   ])
 
   const result = url
-    ? buildMatchingCredentialsResult(page.list, url)
+    ? buildMatchingCredentialsResult(page.list, url, matchBy)
     : {
         credentials: page.list
           .map(toFillCredential)
@@ -111,23 +113,65 @@ async function updateBadgeForTab(tabId: number, url?: string): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ tabId, color: '#5a7348' })
 }
 
+async function resolveFillCredential(
+  session: ExtensionSession,
+  credentialId: number,
+  pageUrl?: string
+): Promise<FillCredential> {
+  if (pageUrl) {
+    const { credentials } = await refreshMatchingCredentials(pageUrl, false, 'path')
+    const matched = credentials.find((item) => item.id === credentialId)
+    if (matched) return matched
+  }
+
+  const entry = await getPasswordDetailApi(
+    session.serverOrigin,
+    session.token,
+    session.securityKey,
+    credentialId
+  )
+  const credential = toFillCredential(entry)
+  if (!credential) {
+    throw new Error('无法读取该登录项，请先配置正确的安全密钥')
+  }
+  return credential
+}
+
 async function handleAutofill(payload: AutofillPayload): Promise<void> {
   const session = await getActiveSession()
-  if (!session) throw new Error('请先登录并配置安全密钥')
+  if (!session) throw new Error('请先登录')
 
   const tabId = payload.tabId
   if (!tabId) throw new Error('无法定位当前标签页')
 
   const tab = await chrome.tabs.get(tabId)
   const pageUrl = tab.url ?? ''
-  const { credentials } = await refreshMatchingCredentials(pageUrl)
-  const credential = credentials.find((item) => item.id === payload.credentialId)
-  if (!credential) throw new Error('未找到该登录条目')
+  if (
+    !pageUrl ||
+    pageUrl.startsWith('chrome://') ||
+    pageUrl.startsWith('edge://') ||
+    pageUrl.startsWith('about:') ||
+    pageUrl.startsWith('chrome-extension://')
+  ) {
+    throw new Error('当前页面不支持自动填充，请在网站登录页使用')
+  }
 
-  await chrome.tabs.sendMessage(tabId, {
-    type: 'PERFORM_AUTOFILL',
-    payload: credential
-  })
+  const credential = await resolveFillCredential(session, payload.credentialId, pageUrl)
+
+  let filled = false
+  try {
+    const response = await chrome.tabs.sendMessage(tabId, {
+      type: 'PERFORM_AUTOFILL',
+      payload: credential
+    })
+    filled = !!response?.data
+  } catch {
+    filled = false
+  }
+
+  if (!filled) {
+    throw new Error('当前页面未检测到登录表单，请确认已在登录页打开')
+  }
 }
 
 async function handleCreateCredential(payload: UpsertCredentialPayload): Promise<void> {
@@ -317,8 +361,8 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
     }
 
     case 'GET_MATCHING_CREDENTIALS': {
-      const { url } = message.payload as MatchingCredentialsPayload
-      return refreshMatchingCredentials(url)
+      const { url, matchBy = 'path' } = message.payload as MatchingCredentialsPayload
+      return refreshMatchingCredentials(url, false, matchBy)
     }
 
     case 'GET_ALL_LOGIN_CREDENTIALS': {

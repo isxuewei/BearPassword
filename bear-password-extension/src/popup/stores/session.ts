@@ -214,7 +214,7 @@ export const useVaultStore = defineStore('vault', () => {
       if (currentUrl.value) {
         const result = await sendMessage<MatchingCredentialsResult>({
           type: 'GET_MATCHING_CREDENTIALS',
-          payload: { url: currentUrl.value }
+          payload: { url: currentUrl.value, matchBy: 'host' }
         })
         matching.value = result.credentials
         needsSecurityKey.value = result.needsSecurityKey
@@ -229,10 +229,19 @@ export const useVaultStore = defineStore('vault', () => {
 
   async function autofill(credentialId: number): Promise<void> {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    await sendMessage({
-      type: 'AUTOFILL',
-      payload: { credentialId, tabId: tab?.id }
-    })
+    if (!tab?.id) {
+      showToast(t('vault.toast.fillNoTab'))
+      return
+    }
+    try {
+      await sendMessage({
+        type: 'AUTOFILL',
+        payload: { credentialId, tabId: tab.id }
+      })
+      window.close()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('vault.toast.fillFailed'))
+    }
   }
 
   async function copyText(text: string): Promise<void> {

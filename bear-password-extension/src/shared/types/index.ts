@@ -158,8 +158,12 @@ export interface UpdateCredentialPayload extends UpsertCredentialPayload {
   credentialId: number
 }
 
+/** host：按主机名匹配（插件主页）；path：按完整路径匹配（网页填充） */
+export type WebsiteMatchMode = 'host' | 'path'
+
 export interface MatchingCredentialsPayload {
   url: string
+  matchBy?: WebsiteMatchMode
 }
 
 export interface MatchingCredentialsResult {

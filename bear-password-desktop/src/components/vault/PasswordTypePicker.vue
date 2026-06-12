@@ -31,6 +31,32 @@
         </div>
         <span class="type-picker-dialog__label">{{ getItemLabel(item) }}</span>
       </button>
+
+      <button
+        v-if="showImportItem"
+        type="button"
+        class="type-picker-dialog__item"
+        @click="handleImport"
+      >
+        <div class="type-picker-dialog__icon" :style="{ background: importItem.color }">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 3v12m0 0 4-4m-4 4-4-4"
+              stroke="white"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+              stroke="white"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <span class="type-picker-dialog__label">{{ t('entry.picker.import') }}</span>
+      </button>
     </div>
 
     <button
@@ -51,7 +77,12 @@ import VaultEntryTypeIcon from '@/components/vault/VaultEntryTypeIcon.vue'
 import { useI18n } from '@/composables/useI18n'
 import { getPasswordTypeLabel } from '@/utils/passwordTypeI18n'
 import { getPasswordTypeIconType } from '@/utils/vaultEntryDisplay'
-import { PASSWORD_PICKER_ITEMS, type PasswordPickerItem, type PasswordType } from '@/types'
+import {
+  PASSWORD_IMPORT_PICKER_ITEM,
+  PASSWORD_PICKER_ITEMS,
+  type PasswordPickerItem,
+  type PasswordType
+} from '@/types'
 
 const props = defineProps<{
   visible: boolean
@@ -60,7 +91,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:visible': [value: boolean]
   select: [type: PasswordType, label: string]
+  import: []
 }>()
+
+const importItem = PASSWORD_IMPORT_PICKER_ITEM
 
 const { t, locale } = useI18n()
 const searchText = ref('')
@@ -104,12 +138,29 @@ const hasMoreItems = computed(() =>
   PASSWORD_PICKER_ITEMS.some((item) => item.featured === false)
 )
 
+const showImportItem = computed(() => {
+  const keyword = searchText.value.trim().toLowerCase()
+  if (keyword) {
+    const label = t('entry.picker.import').toLowerCase()
+    return (
+      label.includes(keyword) ||
+      importItem.keywords.some((item) => item.toLowerCase().includes(keyword))
+    )
+  }
+  return showAll.value
+})
+
 function handleClose(): void {
   emit('update:visible', false)
 }
 
 function handleSelect(item: PasswordPickerItem): void {
   emit('select', item.value, getItemLabel(item))
+  emit('update:visible', false)
+}
+
+function handleImport(): void {
+  emit('import')
   emit('update:visible', false)
 }
 </script>

@@ -11,6 +11,7 @@ import {
   encryptContentObject,
   isEncryptedContent
 } from '@/shared/utils/contentCrypto'
+import type { WebsiteMatchMode } from '@/shared/types'
 import { entryMatchesPage } from '@/shared/utils/websiteMatch'
 
 export function isDecryptFailedContent(content: PasswordContent): boolean {
@@ -67,9 +68,13 @@ export async function encryptPasswordEntryParams(
 }
 
 /** 条目匹配当前网站但无法解密（未配置或密钥错误） */
-export function isEntryBlockedForAutofill(entry: PasswordEntry, pageUrl: string): boolean {
+export function isEntryBlockedForAutofill(
+  entry: PasswordEntry,
+  pageUrl: string,
+  matchBy: WebsiteMatchMode = 'host'
+): boolean {
   if (entry.passwordType !== '登录信息') return false
-  if (!entryMatchesPage(resolveEntryWebsites(entry), pageUrl)) return false
+  if (!entryMatchesPage(resolveEntryWebsites(entry), pageUrl, matchBy)) return false
   return isEncryptedContent(entry.content) || isDecryptFailedContent(entry.content)
 }
 
@@ -86,14 +91,15 @@ export function applyFavoriteState(
 
 export function buildMatchingCredentialsResult(
   entries: PasswordEntry[],
-  pageUrl: string
+  pageUrl: string,
+  matchBy: WebsiteMatchMode = 'host'
 ): MatchingCredentialsResult {
   const credentials = entries
     .map(toFillCredential)
     .filter((item): item is FillCredential => item !== null)
-    .filter((item) => entryMatchesPage(item.websites, pageUrl))
+    .filter((item) => entryMatchesPage(item.websites, pageUrl, matchBy))
 
-  const needsSecurityKey = entries.some((entry) => isEntryBlockedForAutofill(entry, pageUrl))
+  const needsSecurityKey = entries.some((entry) => isEntryBlockedForAutofill(entry, pageUrl, matchBy))
 
   return { credentials, needsSecurityKey }
 }

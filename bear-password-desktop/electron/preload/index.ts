@@ -118,3 +118,13 @@ const dockApi = {
 }
 
 contextBridge.exposeInMainWorld('dockApi', dockApi)
+
+const fileApi = {
+  pickPasswordCsv: () =>
+    ipcRenderer.invoke('file:pickPasswordCsv') as Promise<{
+      fileName: string
+      content: string
+    } | null>
+}
+
+contextBridge.exposeInMainWorld('fileApi', fileApi)
