@@ -175,7 +175,7 @@ function initNav() {
   })
 }
 
-function observeRevealElements(elements) {
+function observeRevealElements(elements, options = {}) {
   if (!elements.length) return
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -183,6 +183,11 @@ function observeRevealElements(elements) {
     elements.forEach((el) => el.classList.add('is-visible'))
     return
   }
+
+  const {
+    threshold = 0.14,
+    rootMargin = '0px 0px -8% 0px',
+  } = options
 
   const observer = new IntersectionObserver(
     (entries) => {
@@ -192,7 +197,7 @@ function observeRevealElements(elements) {
         observer.unobserve(entry.target)
       })
     },
-    { threshold: 0.14, rootMargin: '0px 0px -8% 0px' }
+    { threshold, rootMargin }
   )
 
   elements.forEach((el) => observer.observe(el))
@@ -240,7 +245,7 @@ function initHeroEntrance() {
 }
 
 function initReveal() {
-  const elements = [
+  const contentElements = [
     ...registerReveal('.section__header'),
     ...registerReveal('.feature-card', { variant: 'reveal--scale', stagger: 90 }),
     ...registerReveal('.product-card', { variant: 'reveal--scale', stagger: 120 }),
@@ -251,12 +256,16 @@ function initReveal() {
     ...registerReveal('.download-card', { variant: 'reveal--scale', stagger: 100 }),
     ...registerReveal('.extension-install', { baseDelay: 80 }),
     ...registerReveal('.download-cta__hint', { baseDelay: 160 }),
+  ]
+
+  const footerElements = [
     ...registerReveal('.site-footer__brand'),
     ...registerReveal('.site-footer__links', { baseDelay: 80 }),
     ...registerReveal('.site-footer__copy', { baseDelay: 160 }),
   ]
 
-  observeRevealElements(elements)
+  observeRevealElements(contentElements)
+  observeRevealElements(footerElements, { threshold: 0, rootMargin: '0px 0px 0px 0px' })
 }
 
 function initHeroCarousel() {
