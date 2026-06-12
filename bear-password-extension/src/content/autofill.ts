@@ -13,8 +13,10 @@ export function autofillInContext(
   credential: FillCredential,
   context: LoginFieldContext
 ): boolean {
+  const usernamePrefilled = !!context.usernameInput?.value.trim()
   let filled = false
-  if (credential.username && context.usernameInput) {
+
+  if (credential.username && context.usernameInput && !usernamePrefilled) {
     setInputValue(context.usernameInput, credential.username)
     filled = true
   }

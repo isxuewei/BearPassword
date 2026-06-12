@@ -128,16 +128,8 @@ async function performQuickSave(context: LoginFieldContext): Promise<void> {
   await refreshCredentials()
 }
 
-function getPickerCredentials(filterText = ''): { list: FillCredential[]; title: string } {
-  const q = filterText.trim().toLowerCase()
-  const list = q
-    ? matchingCredentials.filter(
-        (item) =>
-          item.title.toLowerCase().includes(q) ||
-          item.username.toLowerCase().includes(q)
-      )
-    : matchingCredentials
-  return { list, title: '此网站' }
+function getPickerCredentials(): { list: FillCredential[]; title: string } {
+  return { list: matchingCredentials, title: '此网站' }
 }
 
 function handleSelect(credential: FillCredential, context: LoginFieldContext): void {
@@ -182,13 +174,11 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
 
   contextByInput.set(input, context)
 
-  const filterText = context.usernameInput?.value ?? ''
-
   const anchor = getInlinePickerAnchor()
   if (isInlinePickerVisible() && anchor) {
     const anchorContext = contextByInput.get(anchor) ?? resolveLoginContext(anchor)
     if (anchorContext && isSameLoginContext(anchorContext, context)) {
-      const { list } = getPickerCredentials(filterText)
+      const { list } = getPickerCredentials()
       const pickerOptions = buildPickerOptions(context)
       if (!hasPickerContent(context, list)) {
         hideInlinePicker()
@@ -201,7 +191,7 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
 
   await refreshCredentials()
 
-  const { list, title } = getPickerCredentials(filterText)
+  const { list, title } = getPickerCredentials()
   const pickerOptions = buildPickerOptions(context)
 
   if (!hasPickerContent(context, list)) {
@@ -215,8 +205,8 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
   })
 }
 
-function refreshOpenPicker(context: LoginFieldContext, filterText: string): void {
-  const { list } = getPickerCredentials(filterText)
+function refreshOpenPicker(context: LoginFieldContext): void {
+  const { list } = getPickerCredentials()
   const pickerOptions = buildPickerOptions(context)
   if (!hasPickerContent(context, list)) {
     hideInlinePicker()
@@ -248,7 +238,7 @@ function setupInputWatcher(input: HTMLInputElement): void {
     const context = contextByInput.get(input) ?? resolveLoginContext(input)
     if (!context) return
 
-    refreshOpenPicker(context, context.usernameInput?.value ?? '')
+    refreshOpenPicker(context)
   })
 
   input.addEventListener('blur', () => {
