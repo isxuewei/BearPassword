@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BearPassword — 简洁、安全、专业的密码管理工具。桌面端与浏览器扩展协同，客户端加密，自动填充，多端同步。" />
+  <meta name="keywords" content="BearPassword,密码管理,密码管理器,自动填充,桌面端,浏览器扩展" />
+  <title>BearPassword — 简洁、安全、专业的密码管理工具</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="https://gw.alipayobjects.com/os/k/jinkai/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="font-letter">
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header" id="top">
+    <nav class="nav container" aria-label="主导航">
+      <a class="nav__brand" href="#top">
+        <img src="assets/icon.svg" alt="" width="40" height="40" />
+        <span>BearPassword</span>
+      </a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="打开菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__menu" id="nav-menu">
+        <a href="#features">功能</a>
+        <a href="#products">产品</a>
+        <a href="#security">安全</a>
+        <a href="#download">下载</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero__bg" aria-hidden="true">
+        <div class="hero__orb hero__orb--1"></div>
+        <div class="hero__orb hero__orb--2"></div>
+        <div class="hero__grid"></div>
+      </div>
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <p class="hero__eyebrow">桌面端 + 浏览器扩展</p>
+          <h1 class="hero__title">你的密码，<br /><em>安心托付</em></h1>
+          <p class="hero__desc">
+            BearPassword 是一款简洁、安全、专业的密码管理工具。
+            客户端加密保护你的保险库，桌面端与浏览器扩展无缝协同，登录网页只需一键。
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" id="hero-download" href="#download">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="hero-download-label">免费下载</span>
+            </a>
+            <a class="btn btn--ghost" href="#features">了解功能</a>
+          </div>
+          <ul class="hero__meta">
+            <li>
+              <strong id="version-mac">—</strong>
+              <span>macOS</span>
+            </li>
+            <li>
+              <strong id="version-win">—</strong>
+              <span>Windows</span>
+            </li>
+            <li>
+              <strong>中 / EN / 日</strong>
+              <span>多语言</span>
+            </li>
+          </ul>
+        </div>
+        <div class="hero__preview">
+          <div class="hero-carousel" aria-label="产品截图轮播" aria-roledescription="carousel">
+            <div class="hero-carousel__viewport">
+              <figure class="hero-carousel__slide is-active">
+                <img src="assets/screenshots/1.png" alt="BearPassword 首页界面" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">首页</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/2.png" alt="BearPassword 密码库界面" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">密码库</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/3.png" alt="BearPassword 新增密码" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">新增密码</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/4.png" alt="BearPassword 导入密码" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">导入密码</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/5.png" alt="BearPassword 安全密钥" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">安全密钥</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/6.png" alt="BearPassword 主题切换" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">主题切换</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/7.png" alt="BearPassword 语言切换" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">语言切换</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/8.png" alt="BearPassword 浏览器插件" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">浏览器插件</figcaption>
+              </figure>
+              <figure class="hero-carousel__slide">
+                <img src="assets/screenshots/9.png" alt="BearPassword 自动填充" width="1280" height="800" />
+                <figcaption class="hero-carousel__caption">自动填充</figcaption>
+              </figure>
+            </div>
+            <button type="button" class="hero-carousel__nav hero-carousel__nav--prev" aria-label="上一张">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="hero-carousel__nav hero-carousel__nav--next" aria-label="下一张">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="hero-carousel__dots" role="tablist" aria-label="选择截图">
+              <button type="button" class="hero-carousel__dot is-active" role="tab" aria-selected="true" aria-label="首页"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="密码库"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="新增密码"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="导入密码"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="安全密钥"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="主题切换"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="语言切换"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="浏览器插件"></button>
+              <button type="button" class="hero-carousel__dot" role="tab" aria-selected="false" aria-label="自动填充"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true">
+      <svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 24C240 48 480 0 720 24S1200 48 1440 24V48H0Z" fill="var(--color-bg-hero)" opacity="0.5"/>
+        <path d="M0 32C360 8 720 40 1080 16C1260 8 1380 20 1440 28V48H0Z" fill="var(--color-bg-features)"/>
+      </svg>
+    </div>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section__header">
+          <p class="section__eyebrow">核心功能</p>
+          <h2 class="section__title">为日常登录而设计</h2>
+          <p class="section__desc">从保存密码到网页填充，BearPassword 覆盖完整工作流，界面简洁、操作顺手。</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>密码库管理</h3>
+            <p>集中管理登录凭据、自定义条目，支持搜索、收藏与最近访问，快速找到所需账号。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2v4m0 12v4M4.9 4.9l2.8 2.8m8.6 8.6l2.8 2.8M2 12h4m12 0h4M4.9 19.1l2.8-2.8m8.6-8.6l2.8-2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>浏览器自动填充</h3>
+            <p>扩展在登录页检测表单，显示填充图标，一键填入用户名与密码，工具栏徽章提示可用条目。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3>客户端加密</h3>
+            <p>保险库内容在本地用安全密钥加解密，服务端仅存密文，解锁后方可查看明文密码。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 11V8a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3>自动锁定</h3>
+            <p>闲置一段时间后自动锁定保险库，离开电脑时也能保护敏感数据，解锁需重新验证。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>保存新凭据</h3>
+            <p>提交登录表单后，扩展会提示将新账号保存到保险库，减少重复录入与遗忘风险。</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="19" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3>丰富主题</h3>
+            <p>内置十余款浅色与深色主题，从清新海洋到典雅紫韵，随心切换界面风格。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="products">
+      <div class="container">
+        <div class="section__header">
+          <p class="section__eyebrow">产品矩阵</p>
+          <h2 class="section__title">桌面与浏览器，数据同源</h2>
+          <p class="section__desc">桌面端管理保险库，浏览器扩展负责网页场景，共享同一账号与安全密钥。</p>
+        </div>
+        <div class="products-grid">
+          <article class="product-card product-card--desktop">
+            <div class="product-card__badge">桌面端</div>
+            <h3>BearPassword Desktop</h3>
+            <p>基于 Electron 的跨平台桌面应用，提供完整的保险库管理、仪表盘、设置与系统托盘体验。</p>
+            <ul class="product-card__list">
+              <li>macOS（Apple Silicon）与 Windows x64</li>
+              <li>自定义标题栏与全局快捷键</li>
+              <li>系统托盘快速访问</li>
+              <li>版本更新自动检测</li>
+            </ul>
+            <div class="product-card__actions">
+              <a class="btn btn--primary btn--sm" id="download-mac" href="#download">下载 macOS</a>
+              <a class="btn btn--outline btn--sm" id="download-win" href="#download">下载 Windows</a>
+            </div>
+          </article>
+          <article class="product-card product-card--extension">
+            <div class="product-card__badge">浏览器扩展</div>
+            <h3>BearPassword Extension</h3>
+            <p>Chrome 浏览器扩展，对接同一后端，在浏览网页时完成自动填充与凭据保存。</p>
+            <ul class="product-card__list">
+              <li>Manifest V3，Vue 3 + TypeScript</li>
+              <li>网站匹配与工具栏徽章</li>
+              <li>右键菜单生成强密码</li>
+              <li>保险库弹窗搜索与复制</li>
+            </ul>
+            <div class="product-card__actions">
+              <a class="btn btn--primary btn--sm" id="download-extension" href="#extension-install">下载扩展</a>
+              <a class="btn btn--outline btn--sm" href="#extension-install">安装说明</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="security">
+      <div class="container security">
+        <div class="security__content">
+          <p class="section__eyebrow">安全架构</p>
+          <h2 class="section__title">密码不出明文，<br />密钥握在你手中</h2>
+          <p class="section__desc">
+            BearPassword 采用「服务端存储密文 + 客户端安全密钥解密」模型。
+            即使数据经过网络传输，明文密码也只在本地解锁后出现。
+          </p>
+          <ol class="security__steps">
+            <li>
+              <span class="security__step-num">01</span>
+              <div>
+                <strong>注册与登录</strong>
+                <p>邮箱验证码注册，安全会话认证，账号体系可靠。</p>
+              </div>
+            </li>
+            <li>
+              <span class="security__step-num">02</span>
+              <div>
+                <strong>设置安全密钥</strong>
+                <p>本地生成或自定义安全密钥，作为保险库加解密的根凭据。</p>
+              </div>
+            </li>
+            <li>
+              <span class="security__step-num">03</span>
+              <div>
+                <strong>加密存储与同步</strong>
+                <p>条目内容加密后上传，桌面端与扩展共享同一保险库数据。</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div class="security__visual" aria-hidden="true">
+          <div class="security-diagram">
+            <div class="security-diagram__node security-diagram__node--client">
+              <span>你的设备</span>
+              <small>安全密钥 · 本地解密</small>
+            </div>
+            <div class="security-diagram__arrow">
+              <span>加密数据</span>
+            </div>
+            <div class="security-diagram__node security-diagram__node--server">
+              <span>云端服务</span>
+              <small>仅存储密文</small>
+            </div>
+            <div class="security-diagram__shield">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" fill="currentColor" opacity=".15"/><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--cta" id="download">
+      <div class="container download-cta">
+        <div class="download-cta__content">
+          <h2 class="section__title">立即开始使用</h2>
+          <p class="section__desc">选择你的平台，下载最新版本。安装后使用同一账号登录，即可在桌面端管理密码、在浏览器中自动填充。</p>
+        </div>
+        <div class="download-cta__cards">
+          <a class="download-card" id="cta-download-mac" href="#" data-platform="mac">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18.7 16.2c-.4 1-1.8 2.7-3.6 2.7-1.5 0-2.4-.9-4-.9-1.7 0-2.7.9-4.2.9-2 0-3.6-1.8-4-3.5C1.5 13.4 2.8 9 5.2 6.7c1.2-1.1 2.8-1.8 4.5-1.7 1.7.1 2.9 1 4.4 1 1.5 0 2.9-.8 4.5-.7 1.9.1 3.3.9 4.2 2.1-3.7 2.1-3.1 7.6.9 9.8zM14.9 4.5c.8-1 1.4-2.4 1.2-3.8-1.2.1-2.6.8-3.4 1.8-.7.9-1.4 2.3-1.2 3.7 1.3.1 2.6-.7 3.4-1.7z" fill="currentColor"/></svg>
+            <div>
+              <strong>macOS</strong>
+              <span id="cta-version-mac">Apple Silicon · 检测中…</span>
+            </div>
+            <svg class="download-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l4-4m-4 4L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="download-card" id="cta-download-win" href="#" data-platform="win">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5.5L10.5 4.4v7.2H3V5.5zm7.5 0L21 3v8.6h-10.5V5.5zM3 12.9h7.5v7.6L3 19.4V12.9zm7.5 0H21V21l-10.5-1.5V12.9z" fill="currentColor"/></svg>
+            <div>
+              <strong>Windows</strong>
+              <span id="cta-version-win">x64 · 检测中…</span>
+            </div>
+            <svg class="download-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l4-4m-4 4L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="download-card download-card--extension" id="cta-download-extension" href="#extension-install" data-platform="extension">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div>
+              <strong>浏览器插件</strong>
+              <span id="cta-version-extension">Manifest V3 · 检测中…</span>
+            </div>
+            <svg class="download-card__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l4-4m-4 4L8 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+
+        <div class="extension-install" id="extension-install">
+          <div class="extension-install__header">
+            <h3>浏览器插件安装说明</h3>
+            <p>下载后无需解压，开启开发者模式后直接拖入即可完成安装。</p>
+          </div>
+          <ol class="extension-install__steps">
+            <li>在 Chrome 地址栏输入 <code>chrome://extensions</code> 并回车</li>
+            <li>打开页面右上角的<strong>开发者模式</strong></li>
+            <li>点击上方「浏览器插件」卡片下载，将文件<strong>直接拖入</strong>扩展管理页面</li>
+            <li>安装完成后，使用与桌面端相同的账号与安全密钥登录</li>
+          </ol>
+        </div>
+
+        <p class="download-cta__hint">服务器地址：<code>bear-password.xuewei.fun</code> · 桌面端与扩展共享账号数据</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <div class="site-footer__brand">
+        <img src="assets/icon.svg" alt="" width="32" height="32" />
+        <div>
+          <strong>BearPassword</strong>
+          <span>简洁、安全、专业的密码管理工具</span>
+        </div>
+      </div>
+      <div class="site-footer__links">
+        <a href="#features">功能</a>
+        <a href="#products">产品</a>
+        <a href="#security">安全</a>
+        <a href="#download">下载</a>
+      </div>
+      <p class="site-footer__copy">© 2026 <a href="https://github.com/isxuewei" target="_blank" rel="noopener noreferrer">薛伟同学</a> · MIT License</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -30,6 +30,9 @@ import {
 /** 主窗口实例引用，用于窗口控制 IPC */
 let mainWindow: BrowserWindow | null = null
 
+/** 正在退出应用，避免托盘模式下 close 事件拦截 quit */
+let isQuitting = false
+
 /** 主窗口最小尺寸（亦为默认启动尺寸） */
 const WINDOW_MIN_WIDTH = 1024
 const WINDOW_MIN_HEIGHT = 640
@@ -110,8 +113,10 @@ function createWindow(notifyOpenOnLoad = false): void {
 
   attachMainWindowStateListeners(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
-  // 启用托盘时，关闭窗口改为隐藏到托盘（Windows / macOS 通用）
+  // 启用托盘时，关闭窗口改为隐藏到托盘（生产环境）；开发环境直接退出，避免残留多个托盘图标
   mainWindow.on('close', (event) => {
+    if (isQuitting) return
+    if (isDev) return
     if (!isTrayAvailable() || !loadTraySettings().enabled) return
     event.preventDefault()
     hideMainWindow()
@@ -325,6 +330,14 @@ function sendTrayCommand(command: TrayRendererCommand, notifyOpenOnLoad = false)
   })
 }
 
+function quitApp(): void {
+  if (isQuitting) return
+  isQuitting = true
+  destroyTray()
+  unregisterAllGlobalShortcuts()
+  app.quit()
+}
+
 function syncTrayFromSettings(settings = loadTraySettings()): void {
   applyTraySettings(
     settings,
@@ -335,7 +348,8 @@ function syncTrayFromSettings(settings = loadTraySettings()): void {
       onSettings: () => sendTrayCommand({ action: 'settings' }),
       onSetTheme: (value) => sendTrayCommand({ action: 'set-theme', value }),
       onSetLocale: (value) => sendTrayCommand({ action: 'set-locale', value }),
-      onSetFont: (value) => sendTrayCommand({ action: 'set-font', value })
+      onSetFont: (value) => sendTrayCommand({ action: 'set-font', value }),
+      onQuit: () => quitApp()
     },
     getIconBaseDir
   )
@@ -476,23 +490,7 @@ function registerDockIpc(): void {
   })
 }
 
-app.whenReady().then(() => {
-  applyAppIcon()
-  registerWindowIpc()
-  registerThemeIpc()
-  registerShortcutIpc()
-  registerLaunchAtLoginIpc()
-  registerTrayIpc()
-  registerDockIpc()
-  registerFileIpc()
-
-  const initialBindings = loadShortcutBindings()
-  syncGlobalShortcuts(initialBindings, toggleMainWindowForShortcut)
-
-  applyDockIconVisibility(loadDockSettings())
-  createWindow()
-  syncTrayFromSettings()
-
+function registerAppLifecycleHandlers(): void {
   app.on('activate', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       bringMainWindowToFront(mainWindow)
@@ -502,16 +500,64 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+  app.on('window-all-closed', () => {
+    if (isDev) {
+      quitApp()
+      return
+    }
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
+  })
+
+  app.on('before-quit', () => {
+    isQuitting = true
+    destroyTray()
+    unregisterAllGlobalShortcuts()
+  })
+
+  app.on('will-quit', () => {
+    flushPendingWindowStateSave(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+  })
+
+  if (isDev) {
+    const handleDevExitSignal = (): void => {
+      quitApp()
+    }
+    process.on('SIGINT', handleDevExitSignal)
+    process.on('SIGTERM', handleDevExitSignal)
   }
-})
+}
 
-app.on('will-quit', () => {
-  flushPendingWindowStateSave(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-  destroyTray()
-  unregisterAllGlobalShortcuts()
-})
+function startApp(): void {
+  app.whenReady().then(() => {
+    applyAppIcon()
+    registerWindowIpc()
+    registerThemeIpc()
+    registerShortcutIpc()
+    registerLaunchAtLoginIpc()
+    registerTrayIpc()
+    registerDockIpc()
+    registerFileIpc()
+    registerAppLifecycleHandlers()
+
+    const initialBindings = loadShortcutBindings()
+    syncGlobalShortcuts(initialBindings, toggleMainWindowForShortcut)
+
+    applyDockIconVisibility(loadDockSettings())
+    createWindow()
+    syncTrayFromSettings()
+  })
+}
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+
+if (!gotSingleInstanceLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    focusMainWindow()
+  })
+  startApp()
+}

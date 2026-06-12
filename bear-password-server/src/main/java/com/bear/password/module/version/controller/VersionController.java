@@ -22,6 +22,8 @@ public class VersionController {
 
     /**
      * 查询指定系统的最新版本
+     *
+     * @param system MacOS | Windows | Extension
      */
     @SaIgnore
     @GetMapping("/latest")

@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @TableName("bp_version")
 public class AppVersion extends BaseEntity {
 
-    /** 系统类型，如 MacOS、Windows */
+    /** 系统类型：MacOS、Windows、Extension */
     @TableField("system_info")
     private String systemInfo;
 

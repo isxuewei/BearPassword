@@ -1,4 +1,4 @@
-import { app, Menu, Tray, nativeImage } from 'electron'
+import { Menu, Tray, nativeImage } from 'electron'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import type { TrayClickAction, TraySettings } from '../../shared/traySettings'
@@ -25,6 +25,7 @@ export interface TrayActionHandlers {
   onSetTheme: (value: TrayThemeValue) => void
   onSetLocale: (value: TrayLocaleValue) => void
   onSetFont: (value: TrayFontValue) => void
+  onQuit: () => void
 }
 
 /** 解析状态栏 / 系统托盘图标路径 */
@@ -105,7 +106,7 @@ function buildTrayContextMenu(
       }))
     },
     { type: 'separator' },
-    { label: labels.quit, click: () => app.quit() }
+    { label: labels.quit, click: handlers.onQuit }
   ])
 }
 
