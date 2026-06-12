@@ -84,7 +84,7 @@ async function handleLogin(): Promise<void> {
   if (!valid) return
 
   try {
-    await authStore.login({ username: form.username, password: form.password })
+    await authStore.login({ username: form.username.trim(), password: form.password })
     void router.replace({ name: 'Dashboard' })
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : String(err)

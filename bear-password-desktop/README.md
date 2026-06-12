@@ -65,11 +65,22 @@ npm run dev
 
 启动后会自动打开 Electron 窗口，支持热更新。
 
-### 构建打包
+### 构建（渲染层 + 主进程）
 
 ```bash
 npm run build
 ```
+
+### 打包发布
+
+| 平台 | 命令 | 产物（`release/`） |
+|------|------|-------------------|
+| macOS (Apple Silicon) | `npm run build:mac` | `BearPassword.dmg`、`BearPassword.zip`、`BearPassword-mac-安装包.zip` |
+| Windows (x64) | `npm run build:win` | `BearPassword-Setup.exe`（NSIS 安装程序）、`BearPassword-win-x64.zip`（便携版）、`BearPassword-Windows-安装包.zip`（安装程序 + 说明） |
+
+Windows 打包可在 macOS 上交叉编译（需本机已安装 NSIS 相关依赖，electron-builder 会自动处理）。未配置代码签名时，Windows 可能弹出 SmartScreen 提示，属正常现象。
+
+图标由 `npm run generate:icons` 从 `resources/icon.svg` 生成（`build:win` 会自动执行）。
 
 ### 类型检查
 
@@ -110,4 +121,4 @@ npm run typecheck
 - [ ] 自动锁定
 - [ ] 浅色主题切换
 - [ ] vue-i18n 国际化
-- [ ] electron-builder 打包发布
+- [x] electron-builder 打包发布（macOS / Windows）

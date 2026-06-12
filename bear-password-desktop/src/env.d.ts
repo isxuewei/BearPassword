@@ -60,6 +60,22 @@ interface TraySettingsState {
   clickAction: TrayClickAction
 }
 
+interface TrayAppearanceSnapshot {
+  theme: string
+  locale: string
+  font: string
+  labels: Record<string, unknown>
+}
+
+type TrayRendererCommand =
+  | { action: 'open' }
+  | { action: 'lock' }
+  | { action: 'settings' }
+  | { action: 'quick-search' }
+  | { action: 'set-theme'; value: string }
+  | { action: 'set-locale'; value: string }
+  | { action: 'set-font'; value: string }
+
 /** Electron preload 暴露的状态栏图标 API */
 interface TrayApi {
   getSettings: () => Promise<TraySettingsState>
@@ -67,7 +83,9 @@ interface TrayApi {
     | { ok: true; settings: TraySettingsState }
     | { ok: false; error: string }
   >
+  syncAppearance: (snapshot: TrayAppearanceSnapshot) => Promise<{ ok: boolean }>
   onAction: (callback: (action: TrayClickAction) => void) => () => void
+  onCommand: (callback: (command: TrayRendererCommand) => void) => () => void
 }
 
 type TrayClickAction = 'open' | 'quick-search'

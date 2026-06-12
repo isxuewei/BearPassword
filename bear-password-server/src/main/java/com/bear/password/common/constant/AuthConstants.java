@@ -20,6 +20,7 @@ public final class AuthConstants {
             "/auth/register",
             "/auth/register/code",
             "/health",
+            "/version/latest",
             "/error",
             "/druid/**"
     };

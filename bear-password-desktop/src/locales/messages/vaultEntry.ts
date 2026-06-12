@@ -172,10 +172,10 @@ export const vaultEntryZh: MessageDict = {
   'vault.detail.favorite': '收藏',
   'vault.detail.unfavorite': '取消收藏',
   'vault.detail.addFavorite': '加入收藏',
-  'vault.detail.share': '分享',
-  'vault.detail.duplicate': '复制',
-  'vault.detail.edit': '编辑',
-  'vault.detail.delete': '删除',
+  'vault.detail.share': '分享密码',
+  'vault.detail.duplicate': '创建副本',
+  'vault.detail.edit': '编辑密码',
+  'vault.detail.delete': '删除密码',
   'vault.detail.moreActions': '更多操作',
 
   'vault.msg.favoriteAdded': '已加入收藏',
@@ -193,7 +193,24 @@ export const vaultEntryZh: MessageDict = {
   'vault.msg.saveFailed': '保存失败',
   'vault.msg.operationFailed': '操作失败',
   'vault.msg.shareFooter': '当前内容复制自 BearPassword。',
-  'vault.msg.remarkLine': '备注：{text}'
+  'vault.msg.remarkLine': '备注：{text}',
+
+  'vault.batch.select': '批量操作',
+  'vault.batch.cancel': '取消',
+  'vault.batch.selectAll': '全选',
+  'vault.batch.selected': '已选 {count} 项',
+  'vault.batch.addFavorite': '加入收藏',
+  'vault.batch.removeFavorite': '取消收藏',
+  'vault.batch.delete': '删除',
+  'vault.batch.deleteConfirm': '确定删除选中的 {count} 个项目吗？',
+  'vault.batch.deleteConfirmTitle': '批量删除确认',
+  'vault.batch.deleted': '已删除 {count} 项',
+  'vault.batch.deletePartial': '删除完成：成功 {success} 项，失败 {failed} 项',
+  'vault.batch.favoriteAdded': '已加入收藏 {count} 项',
+  'vault.batch.favoritePartial': '加入收藏：成功 {success} 项，失败 {failed} 项',
+  'vault.batch.favoriteRemoved': '已取消收藏 {count} 项',
+  'vault.batch.unfavoritePartial': '取消收藏：成功 {success} 项，失败 {failed} 项',
+  'vault.batch.allFavorited': '所选项目均已收藏'
 }
 
 export const vaultEntryEn: MessageDict = {
@@ -368,10 +385,10 @@ export const vaultEntryEn: MessageDict = {
   'vault.detail.favorite': 'Favorite',
   'vault.detail.unfavorite': 'Remove favorite',
   'vault.detail.addFavorite': 'Add to favorites',
-  'vault.detail.share': 'Share',
-  'vault.detail.duplicate': 'Duplicate',
-  'vault.detail.edit': 'Edit',
-  'vault.detail.delete': 'Delete',
+  'vault.detail.share': 'Share password',
+  'vault.detail.duplicate': 'Create duplicate',
+  'vault.detail.edit': 'Edit password',
+  'vault.detail.delete': 'Delete password',
   'vault.detail.moreActions': 'More actions',
 
   'vault.msg.favoriteAdded': 'Added to favorites',
@@ -389,7 +406,24 @@ export const vaultEntryEn: MessageDict = {
   'vault.msg.saveFailed': 'Failed to save',
   'vault.msg.operationFailed': 'Operation failed',
   'vault.msg.shareFooter': 'Copied from BearPassword.',
-  'vault.msg.remarkLine': 'Notes: {text}'
+  'vault.msg.remarkLine': 'Notes: {text}',
+
+  'vault.batch.select': 'Batch actions',
+  'vault.batch.cancel': 'Cancel',
+  'vault.batch.selectAll': 'Select all',
+  'vault.batch.selected': '{count} selected',
+  'vault.batch.addFavorite': 'Add to favorites',
+  'vault.batch.removeFavorite': 'Remove from favorites',
+  'vault.batch.delete': 'Delete',
+  'vault.batch.deleteConfirm': 'Delete {count} selected items?',
+  'vault.batch.deleteConfirmTitle': 'Confirm batch delete',
+  'vault.batch.deleted': 'Deleted {count} items',
+  'vault.batch.deletePartial': 'Deleted {success} items, {failed} failed',
+  'vault.batch.favoriteAdded': 'Added {count} items to favorites',
+  'vault.batch.favoritePartial': 'Favorites: {success} succeeded, {failed} failed',
+  'vault.batch.favoriteRemoved': 'Removed {count} items from favorites',
+  'vault.batch.unfavoritePartial': 'Unfavorite: {success} succeeded, {failed} failed',
+  'vault.batch.allFavorited': 'All selected items are already favorited'
 }
 
 export const vaultEntryJa: MessageDict = {
@@ -564,10 +598,10 @@ export const vaultEntryJa: MessageDict = {
   'vault.detail.favorite': 'お気に入り',
   'vault.detail.unfavorite': 'お気に入り解除',
   'vault.detail.addFavorite': 'お気に入りに追加',
-  'vault.detail.share': '共有',
-  'vault.detail.duplicate': '複製',
-  'vault.detail.edit': '編集',
-  'vault.detail.delete': '削除',
+  'vault.detail.share': 'パスワードを共有',
+  'vault.detail.duplicate': 'コピーを作成',
+  'vault.detail.edit': 'パスワードを編集',
+  'vault.detail.delete': 'パスワードを削除',
   'vault.detail.moreActions': 'その他の操作',
 
   'vault.msg.favoriteAdded': 'お気に入りに追加しました',
@@ -585,5 +619,22 @@ export const vaultEntryJa: MessageDict = {
   'vault.msg.saveFailed': '保存に失敗しました',
   'vault.msg.operationFailed': '操作に失敗しました',
   'vault.msg.shareFooter': 'BearPassword からコピーした内容です。',
-  'vault.msg.remarkLine': 'メモ：{text}'
+  'vault.msg.remarkLine': 'メモ：{text}',
+
+  'vault.batch.select': '一括操作',
+  'vault.batch.cancel': 'キャンセル',
+  'vault.batch.selectAll': 'すべて選択',
+  'vault.batch.selected': '{count} 件選択中',
+  'vault.batch.addFavorite': 'お気に入りに追加',
+  'vault.batch.removeFavorite': 'お気に入り解除',
+  'vault.batch.delete': '削除',
+  'vault.batch.deleteConfirm': '選択した {count} 件を削除しますか？',
+  'vault.batch.deleteConfirmTitle': '一括削除の確認',
+  'vault.batch.deleted': '{count} 件を削除しました',
+  'vault.batch.deletePartial': '削除完了：成功 {success} 件、失敗 {failed} 件',
+  'vault.batch.favoriteAdded': '{count} 件をお気に入りに追加しました',
+  'vault.batch.favoritePartial': 'お気に入り追加：成功 {success} 件、失敗 {failed} 件',
+  'vault.batch.favoriteRemoved': '{count} 件のお気に入りを解除しました',
+  'vault.batch.unfavoritePartial': 'お気に入り解除：成功 {success} 件、失敗 {failed} 件',
+  'vault.batch.allFavorited': '選択した項目はすべてお気に入り済みです'
 }

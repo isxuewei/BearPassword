@@ -311,6 +311,18 @@
       </div>
 
       <div class="settings-view__row">
+        <span>{{ t('settings.systemType') }}</span>
+        <span class="settings-view__badge">{{ versionStore.systemType }}</span>
+      </div>
+
+      <div v-if="versionStore.hasUpdate" class="settings-view__row settings-view__row--update">
+        <span>{{ t('settings.updateAvailable', { version: versionStore.latestVersion }) }}</span>
+        <button type="button" class="settings-view__update-btn" @click="versionStore.openDownload">
+          {{ t('settings.updateDownload') }}
+        </button>
+      </div>
+
+      <div class="settings-view__row">
         <span>{{ t('settings.author') }}</span>
         <a
           :href="AUTHOR_GITHUB_URL"
@@ -340,6 +352,7 @@ import { useLaunchAtLoginStore } from '@/stores/launchAtLogin'
 import { useTrayStore } from '@/stores/tray'
 import { useSecurityStore } from '@/stores/security'
 import { useServerStore } from '@/stores/server'
+import { useVersionStore } from '@/stores/version'
 import { useShortcutsStore } from '@/stores/shortcuts'
 import { probeServerOrigin } from '@/utils/serverUrl'
 import { formatAccelerator } from '@/utils/shortcut'
@@ -374,6 +387,7 @@ const appStore = useAppStore()
 const securityStore = useSecurityStore()
 const autoLockStore = useAutoLockStore()
 const serverStore = useServerStore()
+const versionStore = useVersionStore()
 const shortcutsStore = useShortcutsStore()
 const launchAtLoginStore = useLaunchAtLoginStore()
 const trayStore = useTrayStore()
@@ -468,6 +482,8 @@ onMounted(() => {
   void window.windowApi?.getPlatform().then((platform) => {
     appPlatform.value = platform
   })
+  void versionStore.refreshSystemType()
+  void versionStore.checkForUpdate()
   void checkHealth()
   void shortcutsStore.syncToMain()
   void launchAtLoginStore.refresh()
@@ -808,6 +824,27 @@ async function handleClearKey(): Promise<void> {
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  &__row--update {
+    color: $color-accent;
+  }
+
+  &__update-btn {
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-md;
+    border: 1px solid rgba(108, 92, 231, 0.25);
+    background: rgba(108, 92, 231, 0.08);
+    color: $color-accent;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background $transition-fast, border-color $transition-fast;
+
+    &:hover {
+      background: rgba(108, 92, 231, 0.14);
+      border-color: rgba(108, 92, 231, 0.35);
     }
   }
 

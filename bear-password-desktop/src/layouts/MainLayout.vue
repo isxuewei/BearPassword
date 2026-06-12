@@ -24,13 +24,13 @@
               <img
                 v-if="showAvatarImage"
                 :src="authStore.avatar"
-                :alt="authStore.username"
+                :alt="authStore.displayName"
                 class="main-layout__avatar-img"
                 @error="onAvatarError"
               />
               <span v-else>{{ avatarLetter }}</span>
             </div>
-            <span class="main-layout__username">{{ authStore.username }}</span>
+            <span class="main-layout__username">{{ authStore.displayName }}</span>
           </button>
         </div>
       </aside>
@@ -83,9 +83,12 @@ import TitleBar from '@/components/window/TitleBar.vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 import LockScreen from '@/components/common/LockScreen.vue'
 import SideNav from '@/components/common/SideNav.vue'
+import { getCurrentUserApi } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
+import { useServerStore } from '@/stores/server'
+import { useVersionStore } from '@/stores/version'
 import { useAutoLockActivity } from '@/composables/useAutoLockActivity'
 import { useI18n } from '@/composables/useI18n'
 
@@ -95,6 +98,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
 const securityStore = useSecurityStore()
+const serverStore = useServerStore()
+const versionStore = useVersionStore()
 
 const migrationPercent = computed(() => {
   const { current, total } = securityStore.migrationProgress
@@ -102,9 +107,9 @@ const migrationPercent = computed(() => {
   return Math.min(100, Math.round((current / total) * 100))
 })
 
-/** 用户名首字母作为头像占位 */
+/** 昵称首字母作为头像占位 */
 const avatarLetter = computed(() => {
-  return authStore.username.charAt(0).toUpperCase() || 'B'
+  return authStore.displayName.charAt(0).toUpperCase() || 'B'
 })
 
 const avatarLoadFailed = ref(false)
@@ -142,8 +147,19 @@ function onSettingsHotkey(event: KeyboardEvent): void {
   }
 }
 
+watch(
+  () => serverStore.revision,
+  () => {
+    void versionStore.checkForUpdate()
+  }
+)
+
 onMounted(() => {
   window.addEventListener('keydown', onSettingsHotkey)
+  void getCurrentUserApi()
+    .then((profile) => authStore.syncProfile(profile))
+    .catch(() => {})
+  void versionStore.checkForUpdate()
 })
 
 onUnmounted(() => {

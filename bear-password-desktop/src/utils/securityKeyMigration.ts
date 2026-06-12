@@ -42,18 +42,25 @@ interface PreparedMigrationItem {
 
 async function decryptPlainContent(
   rawContent: PasswordContent,
-  oldKey: string | null
+  oldKey: string | null,
+  newKey: string | null
 ): Promise<PasswordContent> {
   if (!isEncryptedContent(rawContent)) {
     return rawContent
   }
-  if (!oldKey) {
-    throw new SecurityKeyMigrationError('存在已加密条目，但缺少原密钥，无法迁移')
+  // 新环境首次配置密钥：本地无旧密钥，用用户输入的密钥尝试解密服务端已有密文
+  const decryptKey = oldKey ?? newKey
+  if (!decryptKey) {
+    throw new SecurityKeyMigrationError('存在已加密条目，但缺少密钥，无法处理')
   }
   try {
-    return await decryptContentObject(rawContent, oldKey)
+    return await decryptContentObject(rawContent, decryptKey)
   } catch {
-    throw new SecurityKeyMigrationError('原密钥无法解密已有条目，请确认密钥正确')
+    throw new SecurityKeyMigrationError(
+      oldKey
+        ? '原密钥无法解密已有条目，请确认密钥正确'
+        : '安全密钥无法解密已有条目，请确认与之前使用的密钥完全一致'
+    )
   }
 }
 
@@ -100,7 +107,7 @@ async function prepareEntryMigration(
   oldKey: string | null,
   newKey: string | null
 ): Promise<PreparedMigrationItem | null> {
-  const plainContent = await decryptPlainContent(entry.content, oldKey)
+  const plainContent = await decryptPlainContent(entry.content, oldKey, newKey)
   const shouldRewrite = needsContentRewrite(entry.content, oldKey, newKey)
   const shouldExtractTitle = needsTitleMigration(entry, plainContent)
   const shouldExtractWebsites = needsWebsitesMigration(entry, plainContent)

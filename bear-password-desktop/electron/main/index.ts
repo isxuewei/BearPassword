@@ -12,8 +12,10 @@ import {
 import { loadShortcutBindings } from './shortcutConfig'
 import { getLaunchAtLoginSettings, setLaunchAtLogin } from './launchAtLogin'
 import type { TrayClickAction, TraySettings } from '../../shared/traySettings'
+import type { TrayAppearanceSnapshot, TrayRendererCommand } from '../../shared/trayMenu'
 import { loadTraySettings, saveTraySettings } from './trayConfig'
 import { applyTraySettings, destroyTray, isTrayAvailable } from './tray'
+import { saveTrayAppearanceSnapshot } from './trayAppearance'
 import { loadDockSettings, saveDockSettings } from './dockConfig'
 import { applyDockIconVisibility, isDockIconAvailable, shouldShowDockOnFocus } from './dock'
 import {
@@ -108,13 +110,20 @@ function createWindow(notifyOpenOnLoad = false): void {
 
   attachMainWindowStateListeners(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
+  // 启用托盘时，关闭窗口改为隐藏到托盘（Windows / macOS 通用）
+  mainWindow.on('close', (event) => {
+    if (!isTrayAvailable() || !loadTraySettings().enabled) return
+    event.preventDefault()
+    hideMainWindow()
+  })
+
   // 窗口准备好后再显示，避免白屏闪烁
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
     if (savedState.isMaximized) {
       mainWindow.maximize()
     }
-    mainWindow.show()
+    bringMainWindowToFront(mainWindow)
   })
 
   if (notifyOpenOnLoad) {
@@ -196,6 +205,29 @@ function showDockIfNeeded(): void {
   }
 }
 
+/** 将主窗口显示并置于最前，避免被其他应用遮挡 */
+function bringMainWindowToFront(win: BrowserWindow): void {
+  if (win.isDestroyed()) return
+
+  if (win.isMinimized()) {
+    win.restore()
+  }
+  if (!win.isVisible()) {
+    win.show()
+  }
+
+  if (process.platform === 'darwin') {
+    app.focus({ steal: true })
+    win.moveTop()
+  } else if (process.platform === 'win32') {
+    win.setAlwaysOnTop(true)
+    win.setAlwaysOnTop(false)
+  }
+
+  win.focus()
+  showDockIfNeeded()
+}
+
 function isMainWindowOpen(): boolean {
   return !!(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible())
 }
@@ -220,10 +252,7 @@ function showExistingMainWindow(notify?: () => void): void {
     WINDOW_MIN_HEIGHT
   )
 
-  if (mainWindow.isMinimized()) mainWindow.restore()
-  if (!mainWindow.isVisible()) mainWindow.show()
-  mainWindow.focus()
-  showDockIfNeeded()
+  bringMainWindowToFront(mainWindow)
   notify?.()
 }
 
@@ -272,12 +301,41 @@ function sendTrayAction(action: TrayClickAction, notifyOpenOnLoad = false): void
   })
 }
 
+function shouldFocusWindowForTrayCommand(command: TrayRendererCommand): boolean {
+  return command.action === 'open' || command.action === 'settings' || command.action === 'quick-search'
+}
+
+function sendTrayCommand(command: TrayRendererCommand, notifyOpenOnLoad = false): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (shouldFocusWindowForTrayCommand(command)) {
+      showExistingMainWindow(() => {
+        mainWindow?.webContents.send('tray:command', command)
+      })
+      return
+    }
+    mainWindow.webContents.send('tray:command', command)
+    return
+  }
+
+  createWindow(notifyOpenOnLoad || shouldFocusWindowForTrayCommand(command))
+  mainWindow?.webContents.once('did-finish-load', () => {
+    if (!mainWindow?.isDestroyed()) {
+      mainWindow.webContents.send('tray:command', command)
+    }
+  })
+}
+
 function syncTrayFromSettings(settings = loadTraySettings()): void {
   applyTraySettings(
     settings,
     {
       onOpen: () => focusMainWindow(),
-      onQuickSearch: () => sendTrayAction('quick-search')
+      onQuickSearch: () => sendTrayCommand({ action: 'quick-search' }),
+      onLock: () => sendTrayCommand({ action: 'lock' }),
+      onSettings: () => sendTrayCommand({ action: 'settings' }),
+      onSetTheme: (value) => sendTrayCommand({ action: 'set-theme', value }),
+      onSetLocale: (value) => sendTrayCommand({ action: 'set-locale', value }),
+      onSetFont: (value) => sendTrayCommand({ action: 'set-font', value })
     },
     getIconBaseDir
   )
@@ -355,6 +413,16 @@ function registerTrayIpc(): void {
       }
     }
   })
+
+  ipcMain.handle('tray:syncAppearance', (_event, snapshot: TrayAppearanceSnapshot) => {
+    try {
+      saveTrayAppearanceSnapshot(snapshot)
+      return { ok: true as const }
+    } catch (error) {
+      console.error('[tray:syncAppearance]', error)
+      return { ok: false as const }
+    }
+  })
 }
 
 /** 注册文件选择 IPC（密码 CSV 导入） */
@@ -426,6 +494,10 @@ app.whenReady().then(() => {
   syncTrayFromSettings()
 
   app.on('activate', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      bringMainWindowToFront(mainWindow)
+      return
+    }
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }

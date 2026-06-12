@@ -5,15 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 当前登录用户信息
+ * 用户名可用性校验结果
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoResponse {
+public class UsernameCheckResponse {
 
-    private Long userId;
-    private String username;
-    private String nickname;
-    private String avatar;
+    private boolean available;
 }

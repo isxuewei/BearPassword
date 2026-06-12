@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,6 +79,32 @@ public class AuthController {
     @PutMapping("/password")
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
+        return Result.success();
+    }
+
+    /**
+     * 校验用户名是否可用（排除当前用户）
+     */
+    @GetMapping("/username/check")
+    public Result<UsernameCheckResponse> checkUsername(@RequestParam String username) {
+        return Result.success(authService.checkUsername(username));
+    }
+
+    /**
+     * 修改当前用户名
+     */
+    @PutMapping("/username")
+    public Result<Void> updateUsername(@Valid @RequestBody UpdateUsernameRequest request) {
+        authService.updateUsername(request);
+        return Result.success();
+    }
+
+    /**
+     * 修改当前用户昵称
+     */
+    @PutMapping("/nickname")
+    public Result<Void> updateNickname(@Valid @RequestBody UpdateNicknameRequest request) {
+        authService.updateNickname(request);
         return Result.success();
     }
 

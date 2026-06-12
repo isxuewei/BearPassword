@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
@@ -41,9 +42,9 @@ public class AuthService {
     private final VerificationCodeService verificationCodeService;
 
     public LoginResponse login(LoginRequest request) {
-        User user = userService.getByUsername(request.getUsername());
+        User user = resolveUserByAccount(request.getUsername());
         if (user == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户名或密码错误");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "账号或密码错误");
         }
 
         if (user.getStatus() != null && user.getStatus() == 0) {
@@ -51,8 +52,10 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户名或密码错误");
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "账号或密码错误");
         }
+
+        touchLastLoginTime(user.getId());
 
         // Sa-Token 登录，以用户 ID 作为 loginId
         StpUtil.login(user.getId());
@@ -60,7 +63,7 @@ public class AuthService {
         String avatar = normalizeAvatar(user.getAvatar());
         StpUtil.getSession().set(AuthConstants.SESSION_AVATAR, avatar);
 
-        return new LoginResponse(StpUtil.getTokenValue(), user.getUsername(), avatar);
+        return buildLoginResponse(user);
     }
 
     public void logout() {
@@ -69,9 +72,59 @@ public class AuthService {
 
     public UserInfoResponse currentUser() {
         long userId = StpUtil.getLoginIdAsLong();
-        String username = (String) StpUtil.getSession().get(AuthConstants.SESSION_USERNAME);
-        String avatar = (String) StpUtil.getSession().get(AuthConstants.SESSION_AVATAR);
-        return new UserInfoResponse(userId, username, avatar);
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        return toUserInfoResponse(user);
+    }
+
+    public UsernameCheckResponse checkUsername(String username) {
+        String normalized = normalizeUsername(username);
+        long userId = StpUtil.getLoginIdAsLong();
+        User existing = userService.getByUsername(normalized);
+        boolean available = existing == null || existing.getId().equals(userId);
+        return new UsernameCheckResponse(available);
+    }
+
+    public void updateUsername(UpdateUsernameRequest request) {
+        long userId = StpUtil.getLoginIdAsLong();
+        String username = normalizeUsername(request.getUsername());
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        if (username.equals(user.getUsername())) {
+            return;
+        }
+
+        User existing = userService.getByUsername(username);
+        if (existing != null && !existing.getId().equals(userId)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名已被占用");
+        }
+
+        User update = new User();
+        update.setId(userId);
+        update.setUsername(username);
+        userService.updateById(update);
+        StpUtil.getSession().set(AuthConstants.SESSION_USERNAME, username);
+    }
+
+    public void updateNickname(UpdateNicknameRequest request) {
+        long userId = StpUtil.getLoginIdAsLong();
+        String nickname = normalizeNickname(request.getNickname());
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        if (nickname.equals(resolveNickname(user))) {
+            return;
+        }
+
+        User update = new User();
+        update.setId(userId);
+        update.setNickname(nickname);
+        userService.updateById(update);
     }
 
     public void changePassword(ChangePasswordRequest request) {
@@ -166,6 +219,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(username);
         user.setStatus(1);
+        user.setLastLoginTime(LocalDateTime.now());
         userService.save(user);
 
         StpUtil.login(user.getId());
@@ -173,7 +227,65 @@ public class AuthService {
         String avatar = normalizeAvatar(user.getAvatar());
         StpUtil.getSession().set(AuthConstants.SESSION_AVATAR, avatar);
 
-        return new LoginResponse(StpUtil.getTokenValue(), user.getUsername(), avatar);
+        return buildLoginResponse(user);
+    }
+
+    private LoginResponse buildLoginResponse(User user) {
+        String avatar = normalizeAvatar(user.getAvatar());
+        return new LoginResponse(
+                StpUtil.getTokenValue(),
+                user.getUsername(),
+                resolveNickname(user),
+                avatar
+        );
+    }
+
+    private UserInfoResponse toUserInfoResponse(User user) {
+        return new UserInfoResponse(
+                user.getId(),
+                user.getUsername(),
+                resolveNickname(user),
+                normalizeAvatar(user.getAvatar())
+        );
+    }
+
+    private String resolveNickname(User user) {
+        if (StringUtils.hasText(user.getNickname())) {
+            return user.getNickname().trim();
+        }
+        return user.getUsername();
+    }
+
+    private void touchLastLoginTime(Long userId) {
+        User update = new User();
+        update.setId(userId);
+        update.setLastLoginTime(LocalDateTime.now());
+        userService.updateById(update);
+    }
+
+    private User resolveUserByAccount(String account) {
+        if (!StringUtils.hasText(account)) {
+            return null;
+        }
+        String trimmed = account.trim();
+        if (trimmed.contains("@")) {
+            return userService.getByEmail(normalizeEmail(trimmed));
+        }
+        return userService.getByUsername(trimmed);
+    }
+
+    private String normalizeUsername(String username) {
+        if (!StringUtils.hasText(username)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名不能为空");
+        }
+        return username.trim();
+    }
+
+    private String normalizeNickname(String nickname) {
+        if (!StringUtils.hasText(nickname)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "昵称不能为空");
+        }
+        return nickname.trim();
     }
 
     private String normalizeEmail(String email) {

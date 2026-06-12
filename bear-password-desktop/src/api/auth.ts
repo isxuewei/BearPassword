@@ -1,5 +1,16 @@
 import { request } from '@/utils/request'
-import type { AvatarUploadResult, ChangePasswordParams, LoginParams, LoginResult, RegisterParams, SendRegisterCodeParams, UserProfile } from '@/types'
+import type {
+  AvatarUploadResult,
+  ChangePasswordParams,
+  LoginParams,
+  LoginResult,
+  RegisterParams,
+  SendRegisterCodeParams,
+  UpdateNicknameParams,
+  UpdateUsernameParams,
+  UserProfile,
+  UsernameCheckResult
+} from '@/types'
 
 /**
  * 认证相关 API
@@ -41,4 +52,19 @@ export function sendRegisterCodeApi(params: SendRegisterCodeParams): Promise<voi
 /** 注册 POST /auth/register */
 export function registerApi(params: RegisterParams): Promise<LoginResult> {
   return request.post<LoginResult>('/auth/register', params)
+}
+
+/** 校验用户名是否可用 GET /auth/username/check */
+export function checkUsernameApi(username: string): Promise<UsernameCheckResult> {
+  return request.get<UsernameCheckResult>('/auth/username/check', { params: { username } })
+}
+
+/** 修改用户名 PUT /auth/username */
+export function updateUsernameApi(params: UpdateUsernameParams): Promise<void> {
+  return request.put<void>('/auth/username', params)
+}
+
+/** 修改昵称 PUT /auth/nickname */
+export function updateNicknameApi(params: UpdateNicknameParams): Promise<void> {
+  return request.put<void>('/auth/nickname', params)
 }

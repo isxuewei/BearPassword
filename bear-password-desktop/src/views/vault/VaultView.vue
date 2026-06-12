@@ -101,13 +101,53 @@
           @keyup.enter="onSearchEnter"
         />
       </div>
-      <el-button v-if="!isSpecialListMode" type="primary" size="large" :icon="Plus" @click="openCreate">
+      <el-button v-if="!isSpecialListMode && !selectionMode" type="primary" size="large" :icon="Plus" @click="openCreate">
         {{ t('vault.newItem') }}
       </el-button>
     </header>
 
     <div v-loading="loading" class="vault-view__split">
       <aside class="vault-view__list-pane">
+        <div v-if="selectionMode" class="vault-view__batch-bar">
+          <el-checkbox
+            :model-value="isAllPageSelected"
+            :indeterminate="isPageIndeterminate"
+            @change="toggleSelectAll"
+          >
+            {{ t('vault.batch.selectAll') }}
+          </el-checkbox>
+          <span class="vault-view__batch-count">{{ t('vault.batch.selected', { count: selectedCount }) }}</span>
+          <div class="vault-view__batch-actions">
+            <el-button
+              v-if="!isFavoritesMode"
+              size="small"
+              :disabled="!selectedCount || batchLoading"
+              @click="handleBatchAddFavorite"
+            >
+              {{ t('vault.batch.addFavorite') }}
+            </el-button>
+            <el-button
+              v-else
+              size="small"
+              :disabled="!selectedCount || batchLoading"
+              @click="handleBatchRemoveFavorite"
+            >
+              {{ t('vault.batch.removeFavorite') }}
+            </el-button>
+            <el-button
+              size="small"
+              type="danger"
+              :disabled="!selectedCount || batchLoading"
+              @click="handleBatchDelete"
+            >
+              {{ t('vault.batch.delete') }}
+            </el-button>
+            <el-button size="small" :disabled="batchLoading" @click="exitSelectionMode">
+              {{ t('vault.batch.cancel') }}
+            </el-button>
+          </div>
+        </div>
+
         <div v-if="!loading && entries.length === 0" class="vault-view__list-empty">
           <p>{{ emptyListText }}</p>
           <button v-if="!isSpecialListMode" type="button" class="vault-view__list-empty-btn" @click="openCreate">
@@ -126,12 +166,22 @@
               v-for="entry in group.entries"
               :key="entry.id"
               class="vault-view__list-item"
-              :class="{ 'is-active': selectedEntryId === entry.id }"
+              :class="{
+                'is-active': !selectionMode && selectedEntryId === entry.id,
+                'is-selected': selectionMode && isEntrySelected(entry.id)
+              }"
             >
+              <el-checkbox
+                v-if="selectionMode"
+                class="vault-view__item-checkbox"
+                :model-value="isEntrySelected(entry.id)"
+                @click.stop
+                @change="(checked: boolean) => setEntrySelected(entry.id, checked)"
+              />
               <button
                 type="button"
                 class="vault-view__list-item-main"
-                @click="selectEntry(entry.id)"
+                @click="handleListItemClick(entry)"
                 @contextmenu.prevent="onItemContextMenu($event, entry)"
               >
                 <span class="vault-view__item-icon" :style="{ background: getEntryTypeColor(entry) }">
@@ -153,6 +203,7 @@
               </button>
 
               <el-dropdown
+                v-if="!selectionMode"
                 :ref="(el) => setEntryDropdownRef(entry.id, el)"
                 trigger="click"
                 placement="bottom-end"
@@ -170,8 +221,11 @@
                 </button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="favorite" :disabled="favoriteLoading">
-                      {{ isEntryFavorite(entry) ? t('vault.detail.unfavorite') : t('vault.detail.favorite') }}
+                    <el-dropdown-item command="select">
+                      {{ t('vault.batch.select') }}
+                    </el-dropdown-item>
+                    <el-dropdown-item command="favorite" :disabled="favoriteLoading" divided>
+                      {{ isEntryFavorite(entry) ? t('vault.detail.unfavorite') : t('vault.detail.addFavorite') }}
                     </el-dropdown-item>
                     <el-dropdown-item command="share">{{ t('vault.detail.share') }}</el-dropdown-item>
                     <el-dropdown-item command="duplicate">{{ t('vault.detail.duplicate') }}</el-dropdown-item>
@@ -560,15 +614,39 @@ const editingEntry = ref<PasswordEntry | null>(null)
 const presetType = ref<PasswordType | null>(null)
 const presetLabel = ref<string | null>(null)
 const visibleFields = ref<Record<string, boolean>>({})
+const fieldHideTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const SECRET_FIELD_AUTO_HIDE_MS = 3000
 const favoriteIds = ref<number[]>([])
 const favoriteLoading = ref(false)
+const selectionMode = ref(false)
+const selectedIds = ref<Set<number>>(new Set())
+const batchLoading = ref(false)
 const entryDropdownRefs = new Map<number, DropdownInstance>()
 
-type EntryMenuCommand = 'favorite' | 'share' | 'duplicate' | 'edit' | 'delete'
+type EntryMenuCommand = 'select' | 'favorite' | 'share' | 'duplicate' | 'edit' | 'delete'
 
 const selectedEntry = computed(() =>
   entries.value.find((entry) => entry.id === selectedEntryId.value) ?? null
 )
+
+const selectedCount = computed(() => selectedIds.value.size)
+
+const currentPageEntryIds = computed(() =>
+  entriesForDisplay.value.map((entry) => Number(entry.id))
+)
+
+const isAllPageSelected = computed(() => {
+  const ids = currentPageEntryIds.value
+  if (!ids.length) return false
+  return ids.every((id) => selectedIds.value.has(id))
+})
+
+const isPageIndeterminate = computed(() => {
+  const ids = currentPageEntryIds.value
+  if (!ids.length) return false
+  const selectedOnPage = ids.filter((id) => selectedIds.value.has(id)).length
+  return selectedOnPage > 0 && selectedOnPage < ids.length
+})
 
 const entriesForDisplay = computed(() => {
   if (isFavoritesMode.value) {
@@ -603,6 +681,7 @@ watch(entries, (list) => {
 watch(
   () => route.name,
   () => {
+    exitSelectionMode()
     page.value = 1
     keyword.value = ''
     filterType.value = ''
@@ -624,6 +703,157 @@ watch(
     void loadFavoriteIds().then(() => loadEntries())
   }
 )
+
+function enterSelectionMode(entry?: PasswordEntry): void {
+  selectionMode.value = true
+  selectedIds.value = entry ? new Set([Number(entry.id)]) : new Set()
+}
+
+function exitSelectionMode(): void {
+  selectionMode.value = false
+  selectedIds.value = new Set()
+}
+
+function isEntrySelected(entryId: number): boolean {
+  return selectedIds.value.has(Number(entryId))
+}
+
+function setEntrySelected(entryId: number, selected: boolean): void {
+  const next = new Set(selectedIds.value)
+  const id = Number(entryId)
+  if (selected) next.add(id)
+  else next.delete(id)
+  selectedIds.value = next
+}
+
+function toggleSelectAll(checked: boolean): void {
+  const next = new Set(selectedIds.value)
+  for (const id of currentPageEntryIds.value) {
+    if (checked) next.add(id)
+    else next.delete(id)
+  }
+  selectedIds.value = next
+}
+
+function handleListItemClick(entry: PasswordEntry): void {
+  if (selectionMode.value) {
+    setEntrySelected(entry.id, !isEntrySelected(entry.id))
+    return
+  }
+  selectEntry(entry.id)
+}
+
+function reportBatchResult(
+  success: number,
+  failed: number,
+  allSuccessKey: string,
+  partialKey: string,
+  count: number
+): void {
+  if (failed === 0) {
+    ElMessage.success(t(allSuccessKey, { count }))
+    return
+  }
+  if (success === 0) {
+    ElMessage.error(t('vault.msg.operationFailed'))
+    return
+  }
+  ElMessage.warning(t(partialKey, { success, failed }))
+}
+
+async function handleBatchAddFavorite(): Promise<void> {
+  const ids = [...selectedIds.value].filter((id) => !favoriteIds.value.includes(id))
+  if (!ids.length) {
+    ElMessage.info(t('vault.batch.allFavorited'))
+    return
+  }
+
+  batchLoading.value = true
+  try {
+    const results = await Promise.allSettled(ids.map((id) => addFavoriteApi(id)))
+    const success = results.filter((result) => result.status === 'fulfilled').length
+    const failed = results.length - success
+    reportBatchResult(success, failed, 'vault.batch.favoriteAdded', 'vault.batch.favoritePartial', success)
+    await loadFavoriteIds()
+    exitSelectionMode()
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('vault.msg.operationFailed'))
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+async function handleBatchRemoveFavorite(): Promise<void> {
+  const ids = [...selectedIds.value]
+  if (!ids.length) return
+
+  batchLoading.value = true
+  try {
+    const results = await Promise.allSettled(ids.map((id) => removeFavoriteApi(id)))
+    const success = results.filter((result) => result.status === 'fulfilled').length
+    const failed = results.length - success
+    reportBatchResult(
+      success,
+      failed,
+      'vault.batch.favoriteRemoved',
+      'vault.batch.unfavoritePartial',
+      success
+    )
+    favoriteIds.value = favoriteIds.value.filter((id) => !ids.includes(id))
+    await loadFavoriteIds()
+    exitSelectionMode()
+    if (isFavoritesMode.value) {
+      if (entries.value.length <= ids.length && page.value > 1) {
+        page.value -= 1
+      }
+      await loadEntries()
+    }
+  } catch (err) {
+    await loadFavoriteIds().catch(() => undefined)
+    ElMessage.error(err instanceof Error ? err.message : t('vault.msg.operationFailed'))
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+async function handleBatchDelete(): Promise<void> {
+  const ids = [...selectedIds.value]
+  if (!ids.length) return
+
+  try {
+    await ElMessageBox.confirm(
+      t('vault.batch.deleteConfirm', { count: ids.length }),
+      t('vault.batch.deleteConfirmTitle'),
+      {
+        type: 'warning',
+        confirmButtonText: t('vault.detail.delete'),
+        cancelButtonText: t('entry.dialog.cancel')
+      }
+    )
+  } catch (err) {
+    if (err === 'cancel' || err === 'close') return
+    ElMessage.error(err instanceof Error ? err.message : t('vault.msg.deleteFailed'))
+    return
+  }
+
+  batchLoading.value = true
+  try {
+    const results = await Promise.allSettled(ids.map((id) => deletePasswordApi(id)))
+    const success = results.filter((result) => result.status === 'fulfilled').length
+    const failed = results.length - success
+    reportBatchResult(success, failed, 'vault.batch.deleted', 'vault.batch.deletePartial', success)
+    favoriteIds.value = favoriteIds.value.filter((id) => !ids.includes(id))
+    exitSelectionMode()
+    if (entries.value.length <= ids.length && page.value > 1) {
+      page.value -= 1
+    }
+    await loadEntries()
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('vault.msg.deleteFailed'))
+  } finally {
+    batchLoading.value = false
+  }
+}
 
 function isEntryFavorite(entry: PasswordEntry): boolean {
   if (isFavoritesMode.value) return true
@@ -678,16 +908,40 @@ function isFieldVisible(entryId: number, label: string): boolean {
   return !!visibleFields.value[fieldVisibleKey(entryId, label)]
 }
 
+function cancelFieldHideTimer(key: string): void {
+  const timer = fieldHideTimers.get(key)
+  if (!timer) return
+  clearTimeout(timer)
+  fieldHideTimers.delete(key)
+}
+
+function scheduleFieldHide(entryId: number, label: string): void {
+  const key = fieldVisibleKey(entryId, label)
+  cancelFieldHideTimer(key)
+  fieldHideTimers.set(key, setTimeout(() => {
+    visibleFields.value[key] = false
+    fieldHideTimers.delete(key)
+  }, SECRET_FIELD_AUTO_HIDE_MS))
+}
+
 function toggleFieldVisible(entryId: number, label: string): void {
   const key = fieldVisibleKey(entryId, label)
-  visibleFields.value[key] = !visibleFields.value[key]
+  const nextVisible = !visibleFields.value[key]
+  visibleFields.value[key] = nextVisible
+  if (!nextVisible) {
+    cancelFieldHideTimer(key)
+  }
 }
 
 async function handleFieldClick(entryId: number, item: PreviewField): Promise<void> {
   if (!item.value || item.value === '-') return
 
-  if (item.secret && !isFieldVisible(entryId, item.label)) {
-    toggleFieldVisible(entryId, item.label)
+  if (item.secret) {
+    const key = fieldVisibleKey(entryId, item.label)
+    if (!isFieldVisible(entryId, item.label)) {
+      visibleFields.value[key] = true
+    }
+    scheduleFieldHide(entryId, item.label)
   }
 
   const copied = await copyText(t('vault.msg.fieldCopied', { label: item.label }), item.value)
@@ -806,6 +1060,9 @@ async function handleEntryMenuCommand(
   entry: PasswordEntry
 ): Promise<void> {
   switch (command) {
+    case 'select':
+      enterSelectionMode(entry)
+      break
     case 'favorite':
       await handleToggleFavorite(entry)
       break
@@ -874,6 +1131,7 @@ async function loadEntries(): Promise<void> {
 }
 
 function handleSearch(): void {
+  exitSelectionMode()
   page.value = 1
   loadEntries()
 }
@@ -896,6 +1154,7 @@ function onSearchHotkey(event: KeyboardEvent): void {
 }
 
 function handleSizeChange(): void {
+  exitSelectionMode()
   page.value = 1
   loadEntries()
 }
@@ -1198,9 +1457,31 @@ watch(
   }
 )
 
+watch(
+  () => trayStore.openCreateToken,
+  async () => {
+    if (trayStore.openCreateToken === 0) return
+    await nextTick()
+    openCreate()
+  }
+)
+
+watch(
+  () => trayStore.openImportToken,
+  async () => {
+    if (trayStore.openImportToken === 0) return
+    await nextTick()
+    openImportDialog()
+  }
+)
+
 onUnmounted(() => {
   window.removeEventListener('keydown', onSearchHotkey)
   if (searchTimer) clearTimeout(searchTimer)
+  for (const timer of fieldHideTimers.values()) {
+    clearTimeout(timer)
+  }
+  fieldHideTimers.clear()
 })
 </script>
 
@@ -1347,6 +1628,31 @@ onUnmounted(() => {
     min-height: 0;
   }
 
+  &__batch-bar {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm $vault-edge;
+    border-bottom: 1px solid $color-border;
+    background: $color-bg-primary;
+  }
+
+  &__batch-count {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    margin-right: auto;
+  }
+
+  &__batch-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-xs;
+    width: 100%;
+  }
+
   &__list-scroll {
     flex: 1;
     overflow-y: auto;
@@ -1403,9 +1709,19 @@ onUnmounted(() => {
       }
     }
 
-    &.is-active {
+    &.is-active,
+    &.is-selected {
       background: $color-surface-hover;
     }
+
+    &.is-selected {
+      box-shadow: inset 3px 0 0 $color-accent;
+    }
+  }
+
+  &__item-checkbox {
+    flex-shrink: 0;
+    margin-left: $spacing-sm;
   }
 
   &__list-item-main {

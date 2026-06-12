@@ -1,6 +1,12 @@
 <template>
   <!-- 仪表盘统计卡片 -->
-  <div class="stat-card">
+  <component
+    :is="clickable ? 'button' : 'div'"
+    class="stat-card"
+    :class="{ 'stat-card--clickable': clickable }"
+    :type="clickable ? 'button' : undefined"
+    @click="handleClick"
+  >
     <div class="stat-card__icon" :style="{ background: iconBg }">
       <span v-html="icon" />
     </div>
@@ -11,7 +17,7 @@
         <span v-else>{{ formattedValue }}</span>
       </p>
     </div>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -24,14 +30,25 @@ const props = withDefaults(
     icon: string
     iconBg?: string
     loading?: boolean
+    clickable?: boolean
   }>(),
   {
     iconBg: 'rgba(108, 92, 231, 0.15)',
-    loading: false
+    loading: false,
+    clickable: false
   }
 )
 
+const emit = defineEmits<{
+  click: []
+}>()
+
 const formattedValue = computed(() => props.value.toLocaleString())
+
+function handleClick(): void {
+  if (!props.clickable) return
+  emit('click')
+}
 </script>
 
 <style scoped lang="scss">
@@ -41,6 +58,31 @@ const formattedValue = computed(() => props.value.toLocaleString())
   display: flex;
   align-items: center;
   gap: $spacing-lg;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: $color-bg-elevated;
+  font: inherit;
+  color: inherit;
+
+  &--clickable {
+    cursor: pointer;
+    transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-accent;
+      outline-offset: 2px;
+    }
+  }
 
   &__icon {
     width: 48px;

@@ -12,6 +12,10 @@ export const useTrayStore = defineStore('tray', () => {
   const loading = ref(false)
   /** 递增后通知密码库页聚焦搜索框 */
   const quickSearchFocusToken = ref(0)
+  /** 递增后通知密码库页打开新增项目选择器 */
+  const openCreateToken = ref(0)
+  /** 递增后通知密码库页打开导入密码对话框 */
+  const openImportToken = ref(0)
 
   async function refresh(): Promise<void> {
     if (!window.trayApi) {
@@ -52,14 +56,26 @@ export const useTrayStore = defineStore('tray', () => {
     quickSearchFocusToken.value += 1
   }
 
+  function requestOpenCreate(): void {
+    openCreateToken.value += 1
+  }
+
+  function requestOpenImport(): void {
+    openImportToken.value += 1
+  }
+
   return {
     available,
     enabled,
     clickAction,
     loading,
     quickSearchFocusToken,
+    openCreateToken,
+    openImportToken,
     refresh,
     updateSettings,
-    requestQuickSearchFocus
+    requestQuickSearchFocus,
+    requestOpenCreate,
+    requestOpenImport
   }
 })

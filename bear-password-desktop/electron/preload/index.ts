@@ -93,12 +93,21 @@ const trayApi = {
         }
       | { ok: false; error: string }
     >,
+  syncAppearance: (snapshot: unknown) =>
+    ipcRenderer.invoke('tray:syncAppearance', snapshot) as Promise<{ ok: boolean }>,
   onAction: (callback: (action: 'open' | 'quick-search') => void): (() => void) => {
     const handler = (_event: unknown, action: 'open' | 'quick-search'): void => {
       callback(action)
     }
     ipcRenderer.on('tray:action', handler)
     return () => ipcRenderer.removeListener('tray:action', handler)
+  },
+  onCommand: (callback: (command: unknown) => void): (() => void) => {
+    const handler = (_event: unknown, command: unknown): void => {
+      callback(command)
+    }
+    ipcRenderer.on('tray:command', handler)
+    return () => ipcRenderer.removeListener('tray:command', handler)
   }
 }
 

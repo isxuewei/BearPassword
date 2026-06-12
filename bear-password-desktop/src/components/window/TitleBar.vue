@@ -1,7 +1,10 @@
 <template>
-  <!-- 自定义窗口标题栏：macOS 保留左侧交通灯区域，Windows 显示自定义按钮 -->
-  <div class="title-bar" :class="{ 'title-bar--mac': isMac }">
-    <!-- Windows / Linux 窗口控制按钮 -->
+  <!-- 自定义窗口标题栏：macOS 保留左侧交通灯区域，Windows 控件在右上角 -->
+  <div class="title-bar" :class="{ 'title-bar--mac': isMac, 'title-bar--win': !isMac }">
+    <div class="title-bar__drag">
+      <span v-if="title" class="title-bar__title">{{ title }}</span>
+    </div>
+
     <div v-if="!isMac" class="title-bar__controls">
       <button class="title-bar__btn title-bar__btn--minimize" @click="handleMinimize" title="最小化">
         <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor" /></svg>
@@ -16,11 +19,6 @@
           <path d="M1 1L9 9M9 1L1 9" stroke="currentColor" stroke-width="1.2" />
         </svg>
       </button>
-    </div>
-
-    <!-- 可拖拽区域 -->
-    <div class="title-bar__drag">
-      <span v-if="title" class="title-bar__title">{{ title }}</span>
     </div>
   </div>
 </template>
@@ -58,7 +56,7 @@ function handleClose(): void {
 .title-bar {
   height: $titlebar-height;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   flex-shrink: 0;
   background: transparent;
   position: relative;
@@ -67,21 +65,31 @@ function handleClose(): void {
   &--mac {
     // macOS 左侧为系统交通灯预留空间
     padding-left: 80px;
+
+    .title-bar__drag {
+      justify-content: center;
+    }
+  }
+
+  &--win {
+    .title-bar__drag {
+      justify-content: flex-start;
+      padding-left: $spacing-md;
+    }
   }
 
   &__controls {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
+    align-items: stretch;
+    flex-shrink: 0;
     @include no-drag;
   }
 
   &__btn {
-    width: 36px;
-    height: 28px;
+    width: 46px;
+    height: 100%;
     @include flex-center;
-    border-radius: $radius-sm;
+    border-radius: 0;
     color: $color-text-secondary;
     transition: background $transition-fast, color $transition-fast;
 
@@ -91,13 +99,14 @@ function handleClose(): void {
     }
 
     &--close:hover {
-      background: $color-danger;
+      background: #e81123;
       color: white;
     }
   }
 
   &__drag {
     flex: 1;
+    min-width: 0;
     height: 100%;
     @include flex-center;
     @include drag-region;

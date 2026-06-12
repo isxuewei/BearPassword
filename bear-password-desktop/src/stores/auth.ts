@@ -2,18 +2,42 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loginApi, logoutApi, registerApi } from '@/api'
 import { storage } from '@/utils/storage'
-import type { LoginParams, RegisterParams, UserInfo } from '@/types'
+import type { LoginParams, RegisterParams, UserInfo, UserProfile } from '@/types'
+
+function resolveNickname(nickname: string | undefined, username: string): string {
+  const trimmed = nickname?.trim()
+  return trimmed || username
+}
+
+function toUserInfo(result: { username: string; nickname?: string; avatar?: string; token: string }): UserInfo {
+  return {
+    username: result.username,
+    nickname: resolveNickname(result.nickname, result.username),
+    avatar: result.avatar,
+    token: result.token
+  }
+}
 
 /**
  * 认证状态管理
  * 管理登录态、用户信息与 Token 持久化
  */
 export const useAuthStore = defineStore('auth', () => {
-  const userInfo = ref<UserInfo | null>(storage.get<UserInfo>('user'))
+  const stored = storage.get<UserInfo>('user')
+  const userInfo = ref<UserInfo | null>(
+    stored
+      ? {
+          ...stored,
+          nickname: resolveNickname(stored.nickname, stored.username)
+        }
+      : null
+  )
   const loading = ref(false)
 
   const isLoggedIn = computed(() => !!userInfo.value?.token)
   const username = computed(() => userInfo.value?.username ?? '')
+  const nickname = computed(() => userInfo.value?.nickname?.trim() || username.value)
+  const displayName = computed(() => nickname.value)
   const avatar = computed(() => userInfo.value?.avatar ?? '')
 
   /** 登录 */
@@ -21,11 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const result = await loginApi(params)
-      const info: UserInfo = {
-        username: result.username,
-        avatar: result.avatar,
-        token: result.token
-      }
+      const info = toUserInfo(result)
       userInfo.value = info
       storage.set('user', info)
       storage.set('token', result.token)
@@ -39,11 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const result = await registerApi(params)
-      const info: UserInfo = {
-        username: result.username,
-        avatar: result.avatar,
-        token: result.token
-      }
+      const info = toUserInfo(result)
       userInfo.value = info
       storage.set('user', info)
       storage.set('token', result.token)
@@ -76,16 +92,48 @@ export const useAuthStore = defineStore('auth', () => {
     storage.set('user', userInfo.value)
   }
 
+  /** 更新本地用户名（修改成功后同步） */
+  function updateUsername(username: string): void {
+    if (!userInfo.value) return
+    userInfo.value = { ...userInfo.value, username }
+    storage.set('user', userInfo.value)
+  }
+
+  /** 更新本地昵称（修改成功后同步侧边栏等展示） */
+  function updateNickname(nickname: string): void {
+    if (!userInfo.value) return
+    const normalized = resolveNickname(nickname, userInfo.value.username)
+    userInfo.value = { ...userInfo.value, nickname: normalized }
+    storage.set('user', userInfo.value)
+  }
+
+  /** 从服务端用户详情同步本地展示信息 */
+  function syncProfile(profile: UserProfile): void {
+    if (!userInfo.value) return
+    userInfo.value = {
+      ...userInfo.value,
+      username: profile.username,
+      nickname: resolveNickname(profile.nickname, profile.username),
+      avatar: profile.avatar
+    }
+    storage.set('user', userInfo.value)
+  }
+
   return {
     userInfo,
     loading,
     isLoggedIn,
     username,
+    nickname,
+    displayName,
     avatar,
     login,
     register,
     logout,
     clearSession,
-    updateAvatar
+    updateAvatar,
+    updateUsername,
+    updateNickname,
+    syncProfile
   }
 })

@@ -12,6 +12,7 @@
     "preview": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
     "generate:icons": "node scripts/generate-icons.mjs",
     "build:mac": "npm run build && electron-builder --mac && node scripts/after-mac-build.mjs",
+    "build:win": "npm run generate:icons && npm run build && electron-builder --win --x64 && node scripts/after-win-build.mjs",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
@@ -53,6 +54,10 @@
         "to": "icons/icon.icns"
       },
       {
+        "from": "resources/icon.ico",
+        "to": "icons/icon.ico"
+      },
+      {
         "from": "resources/icon.png",
         "to": "icons/icon.png"
       },
@@ -88,6 +93,35 @@
       "title": "BearPassword",
       "icon": "resources/icon.icns",
       "sign": false
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "executableName": "BearPassword",
+      "artifactName": "BearPassword-win-x64.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BearPassword",
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico",
+      "unicode": true,
+      "artifactName": "BearPassword-Setup.${ext}"
     }
   }
 }

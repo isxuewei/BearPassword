@@ -2,21 +2,46 @@ import { app, Menu, Tray, nativeImage } from 'electron'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import type { TrayClickAction, TraySettings } from '../../shared/traySettings'
+import {
+  TRAY_FONT_VALUES,
+  TRAY_LOCALE_VALUES,
+  TRAY_THEME_VALUES,
+  type TrayAppearanceSnapshot,
+  type TrayFontValue,
+  type TrayLocaleValue,
+  type TrayThemeValue
+} from '../../shared/trayMenu'
+import { loadTrayAppearanceSnapshot } from './trayAppearance'
 
 let tray: Tray | null = null
 
-/** macOS 状态栏图标显示尺寸（pt） */
-const TRAY_ICON_SIZE = 22
+const TRAY_ICON_SIZE = process.platform === 'win32' ? 16 : 22
 
 export interface TrayActionHandlers {
   onOpen: () => void
   onQuickSearch: () => void
+  onLock: () => void
+  onSettings: () => void
+  onSetTheme: (value: TrayThemeValue) => void
+  onSetLocale: (value: TrayLocaleValue) => void
+  onSetFont: (value: TrayFontValue) => void
 }
 
-/** 解析状态栏图标路径 */
+/** 解析状态栏 / 系统托盘图标路径 */
 export function resolveTrayIconPath(getIconBaseDir: () => string): string | undefined {
-  const iconPath = join(getIconBaseDir(), 'tray-icon.png')
-  return existsSync(iconPath) ? iconPath : undefined
+  const baseDir = getIconBaseDir()
+  const candidates =
+    process.platform === 'win32'
+      ? ['icon.ico', 'tray-icon.png', 'icon.png']
+      : ['tray-icon.png', 'icon.png']
+
+  for (const name of candidates) {
+    const iconPath = join(baseDir, name)
+    if (existsSync(iconPath)) {
+      return iconPath
+    }
+  }
+  return undefined
 }
 
 function buildTrayImage(getIconBaseDir: () => string): Electron.NativeImage | null {
@@ -25,6 +50,10 @@ function buildTrayImage(getIconBaseDir: () => string): Electron.NativeImage | nu
 
   let image = nativeImage.createFromPath(iconPath)
   if (image.isEmpty()) return null
+
+  if (process.platform === 'win32' && iconPath.endsWith('.ico')) {
+    return image
+  }
 
   return image.resize({ width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE, quality: 'best' })
 }
@@ -37,7 +66,50 @@ function handleTrayClick(action: TrayClickAction, handlers: TrayActionHandlers):
   handlers.onOpen()
 }
 
-/** 按配置创建或更新 macOS 状态栏图标 */
+function buildTrayContextMenu(
+  handlers: TrayActionHandlers,
+  snapshot: TrayAppearanceSnapshot = loadTrayAppearanceSnapshot()
+): Menu {
+  const labels = snapshot.labels
+
+  return Menu.buildFromTemplate([
+    { label: labels.open, click: handlers.onOpen },
+    { label: labels.lock, click: handlers.onLock },
+    { label: labels.settings, click: handlers.onSettings },
+    { type: 'separator' },
+    {
+      label: labels.theme,
+      submenu: TRAY_THEME_VALUES.map((value) => ({
+        type: 'radio' as const,
+        label: labels.themes[value] ?? value,
+        checked: snapshot.theme === value,
+        click: () => handlers.onSetTheme(value)
+      }))
+    },
+    {
+      label: labels.language,
+      submenu: TRAY_LOCALE_VALUES.map((value) => ({
+        type: 'radio' as const,
+        label: labels.locales[value] ?? value,
+        checked: snapshot.locale === value,
+        click: () => handlers.onSetLocale(value)
+      }))
+    },
+    {
+      label: labels.font,
+      submenu: TRAY_FONT_VALUES.map((value) => ({
+        type: 'radio' as const,
+        label: labels.fonts[value] ?? value,
+        checked: snapshot.font === value,
+        click: () => handlers.onSetFont(value)
+      }))
+    },
+    { type: 'separator' },
+    { label: labels.quit, click: () => app.quit() }
+  ])
+}
+
+/** 按配置创建或更新系统托盘 / 菜单栏图标 */
 export function applyTraySettings(
   settings: TraySettings,
   handlers: TrayActionHandlers,
@@ -45,7 +117,7 @@ export function applyTraySettings(
 ): Tray | null {
   destroyTray()
 
-  if (process.platform !== 'darwin' || !settings.enabled) {
+  if (!isTrayAvailable() || !settings.enabled) {
     return null
   }
 
@@ -59,16 +131,9 @@ export function applyTraySettings(
     handleTrayClick(settings.clickAction, handlers)
   })
 
-  const contextMenu = Menu.buildFromTemplate([
-    { label: '打开 BearPassword', click: handlers.onOpen },
-    { label: '打开快捷搜索', click: handlers.onQuickSearch },
-    { type: 'separator' },
-    { label: '退出', click: () => app.quit() }
-  ])
-
-  // macOS 下 setContextMenu 会让左键也弹出菜单，改为仅右键弹出
+  // 左键执行配置动作；右键弹出菜单（macOS / Windows 统一）
   tray.on('right-click', () => {
-    tray?.popUpContextMenu(contextMenu)
+    tray?.popUpContextMenu(buildTrayContextMenu(handlers))
   })
 
   return tray
@@ -82,5 +147,5 @@ export function destroyTray(): void {
 }
 
 export function isTrayAvailable(): boolean {
-  return process.platform === 'darwin'
+  return process.platform === 'darwin' || process.platform === 'win32'
 }

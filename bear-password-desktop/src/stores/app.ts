@@ -28,6 +28,7 @@ import {
   syncSystemLocale,
   systemLocaleRevision
 } from '@/utils/localePreference'
+import { syncTrayAppearanceToMain } from '@/utils/trayAppearanceSync'
 
 /**
  * 应用全局状态
@@ -58,6 +59,15 @@ export const useAppStore = defineStore('app', () => {
 
   let unsubscribeSystemTheme: (() => void) | null = null
 
+  function pushTrayAppearanceSnapshot(): void {
+    void syncTrayAppearanceToMain({
+      theme: themePreference.value,
+      locale: localePreference.value,
+      font: fontPreference.value,
+      resolvedLocale: resolveLocale(localePreference.value)
+    })
+  }
+
   /** 应用解析后的主题到 DOM */
   function applyTheme(): void {
     applyResolvedTheme(resolveTheme(themePreference.value))
@@ -79,6 +89,7 @@ export const useAppStore = defineStore('app', () => {
     fontPreference.value = normalized
     storage.set('font', normalized)
     applyFont()
+    pushTrayAppearanceSnapshot()
   }
 
   /** 设置语言偏好 */
@@ -87,6 +98,7 @@ export const useAppStore = defineStore('app', () => {
     localePreference.value = normalized
     storage.set('locale', normalized)
     applyLocale()
+    pushTrayAppearanceSnapshot()
   }
 
   /** 设置主题偏好 */
@@ -95,6 +107,7 @@ export const useAppStore = defineStore('app', () => {
     themePreference.value = normalized
     storage.set('theme', normalized)
     applyTheme()
+    pushTrayAppearanceSnapshot()
   }
 
   /** @deprecated 使用 setLocalePreference */
@@ -113,6 +126,7 @@ export const useAppStore = defineStore('app', () => {
     watchSystemTheme()
 
     window.addEventListener('focus', handleWindowFocus)
+    pushTrayAppearanceSnapshot()
   }
 
   /** 窗口重新获得焦点时同步系统外观与语言 */

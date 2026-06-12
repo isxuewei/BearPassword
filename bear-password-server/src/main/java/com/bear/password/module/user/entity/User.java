@@ -5,6 +5,8 @@ import com.bear.password.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 /**
  * 用户实体
  */
@@ -30,4 +32,7 @@ public class User extends BaseEntity {
 
     /** 状态：0-禁用 1-正常 */
     private Integer status;
+
+    /** 上次登录时间 */
+    private LocalDateTime lastLoginTime;
 }

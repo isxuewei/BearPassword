@@ -34,13 +34,72 @@
           </div>
         </el-upload>
         <div class="profile-view__account-info">
-          <span class="profile-view__username">{{ displayName }}</span>
           <span v-if="profile?.userId" class="profile-view__user-id">
             {{ t('profile.userId', { id: profile.userId }) }}
           </span>
           <span class="profile-view__avatar-tip">{{ t('profile.avatarTip') }}</span>
         </div>
       </div>
+
+      <el-form
+        ref="nicknameFormRef"
+        :model="nicknameForm"
+        :rules="nicknameRules"
+        label-position="top"
+        class="profile-view__username-form"
+        @submit.prevent="handleSaveNickname"
+      >
+        <el-form-item :label="t('profile.nickname')" prop="nickname">
+          <div class="profile-view__username-row">
+            <el-input
+              v-model="nicknameForm.nickname"
+              size="large"
+              :placeholder="t('profile.nicknamePlaceholder')"
+              :disabled="savingNickname"
+              maxlength="32"
+            />
+            <el-button
+              type="primary"
+              size="large"
+              :loading="savingNickname"
+              :disabled="!nicknameChanged"
+              @click="handleSaveNickname"
+            >
+              {{ t('profile.saveNickname') }}
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <el-form
+        ref="usernameFormRef"
+        :model="usernameForm"
+        :rules="usernameRules"
+        label-position="top"
+        class="profile-view__username-form"
+        @submit.prevent="handleSaveUsername"
+      >
+        <el-form-item :label="t('profile.username')" prop="username">
+          <div class="profile-view__username-row">
+            <el-input
+              v-model="usernameForm.username"
+              size="large"
+              :placeholder="t('profile.usernamePlaceholder')"
+              :disabled="savingUsername"
+              maxlength="32"
+            />
+            <el-button
+              type="primary"
+              size="large"
+              :loading="savingUsername"
+              :disabled="!usernameChanged"
+              @click="handleSaveUsername"
+            >
+              {{ t('profile.saveUsername') }}
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
     </div>
 
     <div class="profile-view__section">
@@ -109,7 +168,14 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
-import { changePasswordApi, getCurrentUserApi, uploadAvatarApi } from '@/api'
+import {
+  changePasswordApi,
+  checkUsernameApi,
+  getCurrentUserApi,
+  updateNicknameApi,
+  updateUsernameApi,
+  uploadAvatarApi
+} from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useI18n } from '@/composables/useI18n'
@@ -120,13 +186,21 @@ const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
 const { t } = useI18n()
 
+const USERNAME_PATTERN = /^[\u4e00-\u9fff\w]+$/
+
 const profile = ref<UserProfile | null>(null)
 const loadingProfile = ref(false)
 const saving = ref(false)
+const savingUsername = ref(false)
+const savingNickname = ref(false)
 const loggingOut = ref(false)
 const uploadingAvatar = ref(false)
 const avatarLoadFailed = ref(false)
 const formRef = ref<FormInstance>()
+const nicknameFormRef = ref<FormInstance>()
+const usernameFormRef = ref<FormInstance>()
+const originalUsername = ref('')
+const originalNickname = ref('')
 
 const form = reactive({
   oldPassword: '',
@@ -134,7 +208,23 @@ const form = reactive({
   confirmPassword: ''
 })
 
-const displayName = computed(() => profile.value?.username || authStore.username)
+const usernameForm = reactive({
+  username: ''
+})
+
+const nicknameForm = reactive({
+  nickname: ''
+})
+
+const displayName = computed(() => profile.value?.nickname || authStore.displayName)
+
+const usernameChanged = computed(
+  () => usernameForm.username.trim() !== originalUsername.value.trim()
+)
+
+const nicknameChanged = computed(
+  () => nicknameForm.nickname.trim() !== originalNickname.value.trim()
+)
 
 const avatarLetter = computed(() => displayName.value.charAt(0).toUpperCase() || 'B')
 
@@ -142,6 +232,50 @@ const showAvatarImage = computed(() => {
   const avatar = profile.value?.avatar || authStore.avatar
   return !!avatar && !avatarLoadFailed.value
 })
+
+const nicknameRules = computed<FormRules>(() => ({
+  nickname: [
+    { required: true, message: t('profile.nicknameRequired'), trigger: 'blur' },
+    { min: 1, max: 32, message: t('profile.nicknameLength'), trigger: 'blur' }
+  ]
+}))
+
+const usernameRules = computed<FormRules>(() => ({
+  username: [
+    { required: true, message: t('profile.usernameRequired'), trigger: 'blur' },
+    { min: 2, max: 32, message: t('profile.usernameLength'), trigger: 'blur' },
+    {
+      pattern: USERNAME_PATTERN,
+      message: t('profile.usernamePattern'),
+      trigger: 'blur'
+    },
+    {
+      validator: (_rule, value, callback) => {
+        const trimmed = String(value ?? '').trim()
+        if (!trimmed || trimmed === originalUsername.value.trim()) {
+          callback()
+          return
+        }
+        if (!USERNAME_PATTERN.test(trimmed) || trimmed.length < 2 || trimmed.length > 32) {
+          callback()
+          return
+        }
+        checkUsernameApi(trimmed)
+          .then((result) => {
+            if (!result.available) {
+              callback(new Error(t('profile.usernameTaken')))
+              return
+            }
+            callback()
+          })
+          .catch((err: unknown) => {
+            callback(new Error(err instanceof Error ? err.message : t('profile.usernameCheckFailed')))
+          })
+      },
+      trigger: 'blur'
+    }
+  ]
+}))
 
 const rules = computed<FormRules>(() => ({
   oldPassword: [{ required: true, message: t('profile.oldPasswordRequired'), trigger: 'blur' }],
@@ -196,6 +330,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
       profile.value = {
         userId: 0,
         username: authStore.username,
+        nickname: authStore.nickname,
         avatar: result.avatar
       }
     }
@@ -211,15 +346,76 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
   }
 }
 
+function syncUsernameForm(username: string): void {
+  originalUsername.value = username
+  usernameForm.username = username
+  usernameFormRef.value?.clearValidate()
+}
+
+function syncNicknameForm(nickname: string): void {
+  originalNickname.value = nickname
+  nicknameForm.nickname = nickname
+  nicknameFormRef.value?.clearValidate()
+}
+
 async function loadProfile(): Promise<void> {
   loadingProfile.value = true
   avatarLoadFailed.value = false
   try {
     profile.value = await getCurrentUserApi()
+    syncUsernameForm(profile.value.username)
+    syncNicknameForm(profile.value.nickname)
+    authStore.syncProfile(profile.value)
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : t('profile.loadFailed'))
   } finally {
     loadingProfile.value = false
+  }
+}
+
+async function handleSaveNickname(): Promise<void> {
+  if (savingNickname.value || !nicknameChanged.value) return
+
+  const valid = await nicknameFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  const nickname = nicknameForm.nickname.trim()
+  savingNickname.value = true
+  try {
+    await updateNicknameApi({ nickname })
+    if (profile.value) {
+      profile.value = { ...profile.value, nickname }
+    }
+    authStore.updateNickname(nickname)
+    syncNicknameForm(nickname)
+    ElMessage.success(t('profile.nicknameUpdated'))
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('profile.nicknameUpdateFailed'))
+  } finally {
+    savingNickname.value = false
+  }
+}
+
+async function handleSaveUsername(): Promise<void> {
+  if (savingUsername.value || !usernameChanged.value) return
+
+  const valid = await usernameFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  const username = usernameForm.username.trim()
+  savingUsername.value = true
+  try {
+    await updateUsernameApi({ username })
+    if (profile.value) {
+      profile.value = { ...profile.value, username }
+    }
+    authStore.updateUsername(username)
+    syncUsernameForm(username)
+    ElMessage.success(t('profile.usernameUpdated'))
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('profile.usernameUpdateFailed'))
+  } finally {
+    savingUsername.value = false
   }
 }
 
@@ -391,10 +587,23 @@ onMounted(() => {
     min-width: 0;
   }
 
-  &__username {
-    font-size: $font-size-lg;
-    font-weight: 600;
-    color: $color-text-primary;
+  &__username-form {
+    margin-top: $spacing-lg;
+    max-width: 420px;
+  }
+
+  &__username-row {
+    display: flex;
+    gap: $spacing-sm;
+    width: 100%;
+
+    .el-input {
+      flex: 1;
+    }
+
+    .el-button {
+      flex-shrink: 0;
+    }
   }
 
   &__user-id {
