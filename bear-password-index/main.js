@@ -175,25 +175,88 @@ function initNav() {
   })
 }
 
-function initReveal() {
-  const targets = document.querySelectorAll(
-    '.feature-card, .product-card, .security__content, .security__visual, .section__header, .download-cta__content, .download-card, .extension-install'
-  )
-  targets.forEach((el) => el.classList.add('reveal'))
+function observeRevealElements(elements) {
+  if (!elements.length) return
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReducedMotion) {
+    elements.forEach((el) => el.classList.add('is-visible'))
+    return
+  }
 
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible')
-          observer.unobserve(entry.target)
-        }
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        observer.unobserve(entry.target)
       })
     },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.14, rootMargin: '0px 0px -8% 0px' }
   )
 
-  targets.forEach((el) => observer.observe(el))
+  elements.forEach((el) => observer.observe(el))
+}
+
+function registerReveal(selector, options = {}) {
+  const { variant = '', stagger = 0, baseDelay = 0 } = options
+  const nodes = document.querySelectorAll(selector)
+  const elements = []
+
+  nodes.forEach((el, index) => {
+    el.classList.add('reveal')
+    if (variant) {
+      variant.split(' ').forEach((name) => el.classList.add(name))
+    }
+    const delay = baseDelay + index * stagger
+    if (delay > 0) {
+      el.style.setProperty('--reveal-delay', `${delay}ms`)
+    }
+    elements.push(el)
+  })
+
+  return elements
+}
+
+function initHeroEntrance() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  const sequence = [
+    { selector: '.hero__eyebrow', delay: 80 },
+    { selector: '.hero__title', delay: 160 },
+    { selector: '.hero__desc', delay: 260 },
+    { selector: '.hero__actions', delay: 360 },
+    { selector: '.hero__meta', delay: 460 },
+    { selector: '.hero__preview', delay: 320, float: true },
+  ]
+
+  for (const item of sequence) {
+    const el = document.querySelector(item.selector)
+    if (!el) continue
+    el.classList.add('hero-entrance')
+    if (item.float) el.classList.add('hero-entrance--float')
+    el.style.setProperty('--hero-delay', `${item.delay}ms`)
+  }
+}
+
+function initReveal() {
+  const elements = [
+    ...registerReveal('.section__header'),
+    ...registerReveal('.feature-card', { variant: 'reveal--scale', stagger: 90 }),
+    ...registerReveal('.product-card', { variant: 'reveal--scale', stagger: 120 }),
+    ...registerReveal('.security__content', { variant: 'reveal--left' }),
+    ...registerReveal('.security__visual', { variant: 'reveal--right', baseDelay: 120 }),
+    ...registerReveal('.security__steps li', { stagger: 100, baseDelay: 180 }),
+    ...registerReveal('.download-cta__content'),
+    ...registerReveal('.download-card', { variant: 'reveal--scale', stagger: 100 }),
+    ...registerReveal('.extension-install', { baseDelay: 80 }),
+    ...registerReveal('.download-cta__hint', { baseDelay: 160 }),
+    ...registerReveal('.site-footer__brand'),
+    ...registerReveal('.site-footer__links', { baseDelay: 80 }),
+    ...registerReveal('.site-footer__copy', { baseDelay: 160 }),
+  ]
+
+  observeRevealElements(elements)
 }
 
 function initHeroCarousel() {
@@ -202,8 +265,6 @@ function initHeroCarousel() {
 
   const slides = [...carousel.querySelectorAll('.hero-carousel__slide')]
   const dots = [...carousel.querySelectorAll('.hero-carousel__dot')]
-  const prevBtn = carousel.querySelector('.hero-carousel__nav--prev')
-  const nextBtn = carousel.querySelector('.hero-carousel__nav--next')
   let index = 0
   let timer = null
 
@@ -220,28 +281,14 @@ function initHeroCarousel() {
     goTo(index + 1)
   }
 
-  function prev() {
-    goTo(index - 1)
-  }
-
   function startAutoplay() {
     clearInterval(timer)
-    timer = setInterval(next, 5000)
+    timer = setInterval(next, 2000)
   }
 
   function resetAutoplay() {
     startAutoplay()
   }
-
-  prevBtn?.addEventListener('click', () => {
-    prev()
-    resetAutoplay()
-  })
-
-  nextBtn?.addEventListener('click', () => {
-    next()
-    resetAutoplay()
-  })
 
   dots.forEach((dot, i) => {
     dot.addEventListener('click', () => {
@@ -258,6 +305,7 @@ function initHeroCarousel() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initNav()
+  initHeroEntrance()
   initReveal()
   initHeroCarousel()
   bindDownloadLink('cta-download-mac', 'mac')
