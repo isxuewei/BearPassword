@@ -143,26 +143,25 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
 
 export function passwordFieldIconStyles(tokens: ThemeTokens): string {
   return `
-    .bear-password-field-wrap {
-      position: relative;
-      display: inline-block;
-      width: 100%;
-      max-width: 100%;
-      vertical-align: top;
-      box-sizing: border-box;
-    }
-    .bear-password-field-wrap > input[type="password"] {
+    .bear-password-field-icon-host {
+      all: unset;
+      position: fixed;
+      z-index: 2147483646;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      pointer-events: none;
       box-sizing: border-box;
     }
     .bear-password-field-icon {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
+      position: static;
       width: 26px;
       height: 26px;
-      padding: 0;
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       border: 1px solid transparent;
       border-radius: 6px;
       background: transparent;
@@ -170,7 +169,7 @@ export function passwordFieldIconStyles(tokens: ThemeTokens): string {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 2147483646;
+      pointer-events: auto;
       transition: background 0.12s ease, border-color 0.12s ease;
     }
     .bear-password-field-icon img {

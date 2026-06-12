@@ -53,7 +53,7 @@ function clearCredentialsCache(): void {
 async function refreshMatchingCredentials(
   url?: string,
   force = false,
-  matchBy: WebsiteMatchMode = 'path'
+  matchBy: WebsiteMatchMode = 'host'
 ): Promise<MatchingCredentialsResult> {
   const session = await getActiveSession()
   if (!session) {
@@ -95,7 +95,7 @@ async function refreshMatchingCredentials(
   return result
 }
 
-async function updateBadgeForTab(tabId: number, url?: string): Promise<void> {
+async function updateBadgeForTab(tabId: number, url?: string, force = false): Promise<void> {
   if (!url || url.startsWith('chrome://') || url.startsWith('edge://') || url.startsWith('about:')) {
     await chrome.action.setBadgeText({ tabId, text: '' })
     return
@@ -107,7 +107,7 @@ async function updateBadgeForTab(tabId: number, url?: string): Promise<void> {
     return
   }
 
-  const { credentials } = await refreshMatchingCredentials(url)
+  const { credentials } = await refreshMatchingCredentials(url, force)
   const count = credentials.length
   await chrome.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' })
   await chrome.action.setBadgeBackgroundColor({ tabId, color: '#5a7348' })
@@ -119,7 +119,7 @@ async function resolveFillCredential(
   pageUrl?: string
 ): Promise<FillCredential> {
   if (pageUrl) {
-    const { credentials } = await refreshMatchingCredentials(pageUrl, false, 'path')
+    const { credentials } = await refreshMatchingCredentials(pageUrl, false, 'host')
     const matched = credentials.find((item) => item.id === credentialId)
     if (matched) return matched
   }
@@ -278,7 +278,11 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 })
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.url || changeInfo.status === 'complete') {
+  if (changeInfo.status === 'complete') {
+    await updateBadgeForTab(tabId, tab.url, true)
+    return
+  }
+  if (changeInfo.url) {
     await updateBadgeForTab(tabId, tab.url)
   }
 })
@@ -361,8 +365,8 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
     }
 
     case 'GET_MATCHING_CREDENTIALS': {
-      const { url, matchBy = 'path' } = message.payload as MatchingCredentialsPayload
-      return refreshMatchingCredentials(url, false, matchBy)
+      const { url, matchBy = 'host', force = false } = message.payload as MatchingCredentialsPayload
+      return refreshMatchingCredentials(url, force, matchBy)
     }
 
     case 'GET_ALL_LOGIN_CREDENTIALS': {

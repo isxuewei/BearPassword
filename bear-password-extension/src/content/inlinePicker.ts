@@ -5,6 +5,8 @@ import { inlinePickerStyles } from '@/shared/theme/contentStyles'
 
 const PICKER_ID = 'bear-password-inline-picker'
 const STYLE_ID = 'bear-password-inline-picker-style'
+const PICKER_OFFSET_X = 14
+const PICKER_OFFSET_Y = 14
 
 export interface QuickSaveOptions {
   username: string
@@ -52,14 +54,14 @@ function positionPicker(picker: HTMLElement, anchor: HTMLInputElement): void {
   const pickerWidth = picker.offsetWidth || 300
   const pickerHeight = picker.offsetHeight || 200
 
-  let top = rect.bottom + 4
-  let left = rect.left
+  let top = rect.bottom + PICKER_OFFSET_Y
+  let left = rect.left + PICKER_OFFSET_X
 
   if (left + pickerWidth > window.innerWidth - 8) {
     left = Math.max(8, window.innerWidth - pickerWidth - 8)
   }
   if (top + pickerHeight > window.innerHeight - 8) {
-    top = Math.max(8, rect.top - pickerHeight - 4)
+    top = Math.max(8, rect.top - pickerHeight - PICKER_OFFSET_Y)
   }
 
   picker.style.top = `${top}px`

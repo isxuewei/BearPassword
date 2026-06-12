@@ -2,6 +2,7 @@ import type { FillCredential, MatchingCredentialsResult, SaveCredentialPayload }
 import { autofillCredential, autofillInContext, getDetectedForms, insertTextAtActiveElement } from '@/content/autofill'
 import {
   detectLoginInputs,
+  isPasswordInput,
   readContextValues,
   readFormValues,
   resolveLoginContext,
@@ -37,11 +38,11 @@ let needsSecurityKey = false
 let savePromptShown = false
 const contextByInput = new WeakMap<HTMLInputElement, LoginFieldContext>()
 
-async function refreshCredentials(): Promise<void> {
+async function refreshCredentials(force = false): Promise<void> {
   try {
     const result = await sendMessage<MatchingCredentialsResult>({
       type: 'GET_MATCHING_CREDENTIALS',
-      payload: { url: window.location.href, matchBy: 'path' }
+      payload: { url: window.location.href, matchBy: 'host', force }
     })
     matchingCredentials = result.credentials
     needsSecurityKey = result.needsSecurityKey
@@ -49,6 +50,38 @@ async function refreshCredentials(): Promise<void> {
     matchingCredentials = []
     needsSecurityKey = false
   }
+}
+
+let currentPageUrl = window.location.href
+
+function onPageNavigation(): void {
+  const nextUrl = window.location.href
+  if (nextUrl === currentPageUrl) return
+
+  currentPageUrl = nextUrl
+  savePromptShown = false
+  hideInlinePicker()
+  void refreshCredentials(true)
+}
+
+function setupPageNavigationWatcher(): void {
+  window.addEventListener('pageshow', () => {
+    currentPageUrl = window.location.href
+    savePromptShown = false
+    void refreshCredentials(true)
+  })
+
+  window.addEventListener('popstate', onPageNavigation)
+
+  const wrapHistoryMethod = <T extends History['pushState']>(method: T): T =>
+    function (this: History, ...args: Parameters<T>) {
+      const result = method.apply(this, args)
+      onPageNavigation()
+      return result
+    } as T
+
+  history.pushState = wrapHistoryMethod(history.pushState)
+  history.replaceState = wrapHistoryMethod(history.replaceState)
 }
 
 function credentialAlreadyExists(username: string, password: string): boolean {
@@ -204,9 +237,11 @@ function setupInputWatcher(input: HTMLInputElement): void {
   if (input.dataset.bearInlineWatched) return
   input.dataset.bearInlineWatched = '1'
 
-  input.addEventListener('focus', () => {
-    void openPickerForInput(input)
-  })
+  if (isPasswordInput(input)) {
+    input.addEventListener('click', () => {
+      void openPickerForInput(input)
+    })
+  }
 
   input.addEventListener('input', () => {
     if (!isInlinePickerVisible()) return
@@ -315,7 +350,8 @@ chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, se
 
 async function init(): Promise<void> {
   await Promise.all([initContentTheme(), initContentLocale()])
-  await refreshCredentials()
+  setupPageNavigationWatcher()
+  await refreshCredentials(true)
   setupFormWatchers()
 
   chrome.storage.onChanged.addListener((changes, area) => {
