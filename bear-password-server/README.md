@@ -52,7 +52,7 @@ mysql -u root -p < sql/init.sql
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/bear_password?...
+    url: jdbc:mysql://localhost:3306/bear_password?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
     password: 你的密码
 ```
@@ -110,7 +110,7 @@ curl http://localhost:8080/api/dashboard/stats
 
 | 变量 | 说明 | 默认 |
 |------|------|------|
-| `DB_URL` | JDBC 地址 | - |
+| `DB_URL` | JDBC 地址（建议带 `serverTimezone=Asia/Shanghai`） | - |
 | `DB_USERNAME` | 数据库用户名 | - |
 | `DB_PASSWORD` | 数据库密码 | - |
 | `DRUID_STAT_ENABLED` | 是否开启监控页 | `false` |

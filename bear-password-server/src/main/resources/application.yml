@@ -3,6 +3,8 @@ spring:
     name: bear-password-server
   profiles:
     active: dev
+  jackson:
+    time-zone: Asia/Shanghai
   servlet:
     multipart:
       max-file-size: 5MB
@@ -29,6 +31,7 @@ spring:
       initial-size: 5
       min-idle: 5
       max-active: 20
+      connection-init-sqls: SET time_zone = '+08:00'
       max-wait: 60000
       keep-alive: true
       time-between-eviction-runs-millis: 60000

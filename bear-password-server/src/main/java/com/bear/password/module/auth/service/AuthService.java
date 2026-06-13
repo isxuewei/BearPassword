@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bear.password.common.config.TimeZoneConfig;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -219,7 +220,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(username);
         user.setStatus(1);
-        user.setLastLoginTime(LocalDateTime.now());
+        user.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
         userService.save(user);
 
         StpUtil.login(user.getId());
@@ -259,7 +260,7 @@ public class AuthService {
     private void touchLastLoginTime(Long userId) {
         User update = new User();
         update.setId(userId);
-        update.setLastLoginTime(LocalDateTime.now());
+        update.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
         userService.updateById(update);
     }
 
