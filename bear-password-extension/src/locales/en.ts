@@ -144,6 +144,8 @@ const messages: MessageDict = {
   'settings.securityKeyRequired': 'Enter the security key',
   'settings.about': 'About',
   'settings.version': 'Version',
+  'settings.updateAvailable': 'New version {version} available',
+  'settings.updateDownload': 'Download now',
   'settings.author': 'Author',
 
   'session.loginFailed': 'Sign-in failed',

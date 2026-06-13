@@ -1,8 +1,13 @@
 import { getThemeTokens, type ThemeTokens } from '@/shared/theme/presets'
 import { loadThemePreference } from '@/shared/storage/theme'
-import { normalizeThemePreference, resolveTheme, type ThemePreference } from '@/shared/theme/theme'
+import {
+  DEFAULT_THEME_PREFERENCE,
+  normalizeThemePreference,
+  resolveTheme,
+  type ThemePreference
+} from '@/shared/theme/theme'
 
-let activeTokens: ThemeTokens = getThemeTokens('earth')
+let activeTokens: ThemeTokens = getThemeTokens(resolveTheme(DEFAULT_THEME_PREFERENCE))
 
 export function getContentThemeTokens(): ThemeTokens {
   return activeTokens

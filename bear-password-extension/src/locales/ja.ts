@@ -144,6 +144,8 @@ const messages: MessageDict = {
   'settings.securityKeyRequired': 'セキュリティキーを入力してください',
   'settings.about': '情報',
   'settings.version': 'バージョン',
+  'settings.updateAvailable': '新しいバージョン {version} があります',
+  'settings.updateDownload': '今すぐダウンロード',
   'settings.author': '作者',
 
   'session.loginFailed': 'サインインに失敗しました',

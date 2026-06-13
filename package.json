@@ -1,0 +1,11 @@
+{
+  "name": "bear-password",
+  "private": true,
+  "description": "BearPassword monorepo",
+  "scripts": {
+    "build:all": "node scripts/build-all.mjs",
+    "build:mac": "node scripts/build-all.mjs --mac",
+    "build:win": "node scripts/build-all.mjs --win",
+    "build:extension": "node scripts/build-all.mjs --extension"
+  }
+}

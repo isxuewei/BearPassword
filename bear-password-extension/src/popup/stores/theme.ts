@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import {
   initThemeOnBoot,
+  DEFAULT_THEME_PREFERENCE,
   resolveTheme,
   setThemePreference,
   subscribeSystemThemeChange,
@@ -10,7 +11,7 @@ import {
 } from '@/shared/theme/theme'
 
 export const useThemeStore = defineStore('theme', () => {
-  const preference = ref<ThemePreference>('earth')
+  const preference = ref<ThemePreference>(DEFAULT_THEME_PREFERENCE)
   let unsubscribeSystem: (() => void) | null = null
 
   const resolvedTheme = computed<ResolvedTheme>(() => resolveTheme(preference.value))

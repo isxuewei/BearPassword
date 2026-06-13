@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from '@/popup/composables/useI18n'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore, useVaultStore } from '@/popup/stores/session'
+import { useVersionStore } from '@/popup/stores/version'
 import BearConfirmDialog from '@/popup/components/BearConfirmDialog.vue'
 import CredentialItem from '@/popup/components/CredentialItem.vue'
 import LoginEntryDialog from '@/popup/components/LoginEntryDialog.vue'
@@ -13,6 +14,7 @@ const { t } = useI18n()
 const popupStore = usePopupStore()
 const sessionStore = useSessionStore()
 const vaultStore = useVaultStore()
+const versionStore = useVersionStore()
 
 onMounted(() => {
   void vaultStore.refresh()
@@ -40,7 +42,13 @@ const deleteMessage = computed(() =>
         <span class="user-name">{{ sessionStore.username }}</span>
       </div>
       <div class="actions">
-        <button class="icon-btn" type="button" :title="t('vault.settings')" @click="popupStore.openSettings()">
+        <button
+          class="icon-btn icon-btn--settings"
+          type="button"
+          :title="t('vault.settings')"
+          @click="popupStore.openSettings()"
+        >
+          <span v-if="versionStore.hasUpdate" class="update-dot" aria-hidden="true" />
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
@@ -223,6 +231,21 @@ const deleteMessage = computed(() =>
   background: var(--bear-surface-hover);
   color: var(--bear-primary);
   border-color: var(--bear-border);
+}
+
+.icon-btn--settings {
+  position: relative;
+}
+
+.update-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bear-warning);
+  box-shadow: 0 0 0 2px var(--bear-surface-glass);
 }
 
 .search-wrap {

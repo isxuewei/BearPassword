@@ -18,6 +18,8 @@ const pngBuffer = await sharp(svgPath).resize(1024, 1024).png().toBuffer()
 await sharp(pngBuffer).resize(512, 512).png().toFile(join(resourcesDir, 'icon.png'))
 await sharp(pngBuffer).resize(256, 256).png().toFile(join(publicDir, 'favicon.png'))
 await sharp(traySvgPath).resize(22, 22).png().toFile(join(resourcesDir, 'tray-icon.png'))
+// macOS 菜单栏另备 @2x，提升 Retina 清晰度
+await sharp(traySvgPath).resize(44, 44).png().toFile(join(resourcesDir, 'tray-icon@2x.png'))
 
 const icoSizes = [16, 24, 32, 48, 64, 128, 256]
 const icoBuffers = await Promise.all(

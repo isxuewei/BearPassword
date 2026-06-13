@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { applyResolvedLocale } from '@/shared/locale/locale'
 import {
   initLocaleOnBoot,
+  DEFAULT_LOCALE_PREFERENCE,
   resolveLocale,
   setLocalePreference,
   subscribeSystemLocaleChange
@@ -10,7 +11,7 @@ import {
 import type { LocalePreference, ResolvedLocale } from '@/locales/types'
 
 export const useLocaleStore = defineStore('locale', () => {
-  const preference = ref<LocalePreference>('zh-CN')
+  const preference = ref<LocalePreference>(DEFAULT_LOCALE_PREFERENCE)
   let unsubscribeSystem: (() => void) | null = null
 
   const resolvedLocale = computed<ResolvedLocale>(() => resolveLocale(preference.value))

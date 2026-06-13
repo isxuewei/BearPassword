@@ -9,6 +9,7 @@ import { useLocaleStore } from '@/popup/stores/locale'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore, useVaultStore } from '@/popup/stores/session'
 import { useThemeStore } from '@/popup/stores/theme'
+import { useVersionStore } from '@/popup/stores/version'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/shared/constants/app'
 import { THEME_OPTIONS } from '@/shared/theme/theme'
 import type { LocalePreference } from '@/locales/types'
@@ -21,6 +22,7 @@ const sessionStore = useSessionStore()
 const vaultStore = useVaultStore()
 const themeStore = useThemeStore()
 const localeStore = useLocaleStore()
+const versionStore = useVersionStore()
 const serverInput = ref('')
 const securityKeyInput = ref('')
 const showSecurityKey = ref(false)
@@ -75,6 +77,7 @@ onMounted(async () => {
   serverInput.value = sessionStore.serverOrigin
   syncSecurityKeyFromSession()
   void checkHealth()
+  void versionStore.checkForUpdate()
   healthTimer = setInterval(() => {
     void checkHealth()
   }, 15000)
@@ -94,6 +97,7 @@ async function handleBack(): Promise<void> {
 async function handleSaveServer(): Promise<void> {
   await sessionStore.updateServer(serverInput.value)
   await checkHealth()
+  void versionStore.checkForUpdate()
 }
 
 async function handleApplyKey(): Promise<void> {
@@ -326,6 +330,14 @@ async function handleLocaleChange(event: Event): Promise<void> {
         <div class="setting-row">
           <span class="setting-item-label">{{ t('settings.version') }}</span>
           <span class="about-badge">{{ APP_VERSION }}</span>
+        </div>
+        <div v-if="versionStore.hasUpdate" class="setting-row setting-row--update">
+          <span class="setting-item-label update-label">
+            {{ t('settings.updateAvailable', { version: versionStore.latestVersion ?? '' }) }}
+          </span>
+          <button class="update-btn" type="button" @click="versionStore.openDownload">
+            {{ t('settings.updateDownload') }}
+          </button>
         </div>
         <div class="setting-row">
           <span class="setting-item-label">{{ t('settings.author') }}</span>
@@ -601,5 +613,33 @@ async function handleLocaleChange(event: Event): Promise<void> {
 .about-link:hover {
   text-decoration: underline;
   opacity: 0.85;
+}
+
+.setting-row--update {
+  align-items: center;
+}
+
+.update-label {
+  color: var(--bear-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.update-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: var(--bear-radius-sm);
+  border: 1px solid var(--bear-border-hover);
+  background: var(--bear-accent-subtle);
+  color: var(--bear-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.update-btn:hover {
+  background: var(--bear-surface-hover);
+  border-color: var(--bear-primary);
 }
 </style>

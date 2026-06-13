@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { confirmAnnouncementApi, getPendingAnnouncementApi } from '@/api/announcement'
 import { useI18n } from '@/composables/useI18n'
 import { useAuthStore } from '@/stores/auth'
@@ -40,6 +40,9 @@ import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import type { Announcement } from '@/types/announcement'
 import { renderAnnouncementMarkdown } from '@/utils/markdown'
+
+/** 登录状态下轮询未确认公告的间隔 */
+const POLL_INTERVAL_MS = 60_000
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -51,6 +54,7 @@ const confirming = ref(false)
 const announcement = ref<Announcement | null>(null)
 const titleId = 'announcement-dialog-title'
 let checking = false
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const dialogTitle = computed(() => announcement.value?.title?.trim() || t('announcement.defaultTitle'))
 
@@ -96,16 +100,38 @@ async function handleConfirm(): Promise<void> {
   }
 }
 
+function stopPolling(): void {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+function startPolling(): void {
+  stopPolling()
+  if (!canCheckAnnouncement()) return
+
+  void checkPendingAnnouncement()
+  pollTimer = setInterval(() => {
+    void checkPendingAnnouncement()
+  }, POLL_INTERVAL_MS)
+}
+
 watch(
   () => [authStore.isLoggedIn, autoLockStore.isLocked, securityStore.isMigrating] as const,
   ([loggedIn, locked, migrating]) => {
-    if (!loggedIn || locked || migrating) {
+    if (loggedIn && !locked && !migrating) {
+      startPolling()
       return
     }
-    void checkPendingAnnouncement()
+    stopPolling()
   },
   { immediate: true }
 )
+
+onUnmounted(() => {
+  stopPolling()
+})
 </script>
 
 <style scoped lang="scss">

@@ -56,7 +56,14 @@ function buildTrayImage(getIconBaseDir: () => string): Electron.NativeImage | nu
     return image
   }
 
-  return image.resize({ width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE, quality: 'best' })
+  image = image.resize({ width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE, quality: 'best' })
+
+  // macOS 菜单栏模板图标：随浅色/深色菜单栏自动反色
+  if (process.platform === 'darwin') {
+    image.setTemplateImage(true)
+  }
+
+  return image
 }
 
 function handleTrayClick(action: TrayClickAction, handlers: TrayActionHandlers): void {

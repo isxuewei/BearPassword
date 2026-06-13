@@ -21,6 +21,8 @@ const VALID_LOCALE_PREFERENCES = new Set<string>(
   LOCALE_PREFERENCE_OPTIONS.map((item) => item.value)
 )
 
+export const DEFAULT_LOCALE_PREFERENCE: LocalePreference = 'system'
+
 /** 根据浏览器语言解析系统语言 */
 export function getSystemLocale(): ResolvedLocale {
   if (typeof navigator === 'undefined') return 'zh-CN'
@@ -39,7 +41,7 @@ export function normalizeLocalePreference(value: unknown): LocalePreference {
       return value as LocalePreference
     }
   }
-  return 'zh-CN'
+  return DEFAULT_LOCALE_PREFERENCE
 }
 
 /** 根据偏好解析最终语言 */

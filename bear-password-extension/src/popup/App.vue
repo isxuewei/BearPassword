@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useI18n } from '@/popup/composables/useI18n'
 import { useLocaleStore } from '@/popup/stores/locale'
 import { useSessionStore } from '@/popup/stores/session'
 import { useThemeStore } from '@/popup/stores/theme'
 import { usePopupStore } from '@/popup/stores/popup'
+import { useVersionStore } from '@/popup/stores/version'
 import LoginView from '@/popup/views/LoginView.vue'
 import VaultView from '@/popup/views/VaultView.vue'
 import SettingsView from '@/popup/views/SettingsView.vue'
@@ -14,13 +15,22 @@ const localeStore = useLocaleStore()
 const sessionStore = useSessionStore()
 const themeStore = useThemeStore()
 const popupStore = usePopupStore()
+const versionStore = useVersionStore()
 const { t } = useI18n()
 const ready = ref(false)
 
 onMounted(async () => {
   await Promise.all([localeStore.init(), themeStore.init(), sessionStore.init()])
   ready.value = true
+  void versionStore.checkForUpdate()
 })
+
+watch(
+  () => sessionStore.serverOrigin,
+  () => {
+    void versionStore.checkForUpdate()
+  }
+)
 </script>
 
 <template>

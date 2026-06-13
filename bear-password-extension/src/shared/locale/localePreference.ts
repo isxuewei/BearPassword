@@ -7,6 +7,7 @@ import {
 import { loadLocalePreference, saveLocalePreference } from '@/shared/storage/locale'
 
 export {
+  DEFAULT_LOCALE_PREFERENCE,
   LOCALE_PREFERENCE_OPTIONS,
   normalizeLocalePreference,
   resolveLocale,

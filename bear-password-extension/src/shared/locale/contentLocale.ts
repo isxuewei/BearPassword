@@ -1,11 +1,17 @@
 import { t as translate } from '@/locales'
-import { applyResolvedLocale, normalizeLocalePreference, resolveLocale } from '@/shared/locale/locale'
+import {
+  applyResolvedLocale,
+  DEFAULT_LOCALE_PREFERENCE,
+  getSystemLocale,
+  normalizeLocalePreference,
+  resolveLocale
+} from '@/shared/locale/locale'
 import type { LocalePreference } from '@/locales/types'
 import { loadLocalePreference } from '@/shared/storage/locale'
 import type { ResolvedLocale } from '@/locales/types'
 
-let activePreference: LocalePreference = 'zh-CN'
-let activeLocale: ResolvedLocale = 'zh-CN'
+let activePreference: LocalePreference = DEFAULT_LOCALE_PREFERENCE
+let activeLocale: ResolvedLocale = getSystemLocale()
 
 export function getContentLocale(): ResolvedLocale {
   return activeLocale

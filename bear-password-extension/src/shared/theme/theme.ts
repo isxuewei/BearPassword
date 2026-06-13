@@ -32,6 +32,8 @@ const VALID_THEME_PREFERENCES = new Set<string>(THEME_OPTIONS.map((item) => item
 export const SYSTEM_LIGHT_THEME: ThemePresetId = 'earth'
 export const SYSTEM_DARK_THEME: ThemePresetId = 'midnight'
 
+export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system'
+
 type SystemThemeListener = () => void
 
 let systemThemeListeners: SystemThemeListener[] = []
@@ -41,7 +43,7 @@ export function normalizeThemePreference(value: unknown): ThemePreference {
   if (typeof value === 'string' && VALID_THEME_PREFERENCES.has(value)) {
     return value as ThemePreference
   }
-  return 'earth'
+  return DEFAULT_THEME_PREFERENCE
 }
 
 export function getSystemTheme(): 'light' | 'dark' {
