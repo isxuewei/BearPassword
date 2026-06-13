@@ -21,6 +21,7 @@
         class="login-entry-form__title-input"
         :placeholder="t('entry.form.titlePlaceholder')"
         type="text"
+        :maxlength="PASSWORD_TITLE_MAX_LENGTH"
       />
     </div>
 
@@ -154,6 +155,7 @@
         class="login-entry-form__textarea"
         :placeholder="t('entry.form.remarkPlaceholder')"
         rows="2"
+        :maxlength="PASSWORD_REMARK_MAX_LENGTH"
         @input="onRemarkInput"
       />
     </div>
@@ -170,6 +172,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import TagInput from '@/components/vault/TagInput.vue'
+import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import type { LoginContent } from '@/types'
 

@@ -110,6 +110,7 @@ const messages: MessageDict = {
   'entry.hidePassword': 'Hide password',
   'entry.generatePassword': 'Generate strong password',
   'entry.error.titleRequired': 'Title is required',
+  'entry.error.titleTooLong': 'Title cannot exceed {max} characters',
   'entry.error.usernameOrPassword': 'Enter at least a username or password',
 
   'settings.title': 'Extension settings',

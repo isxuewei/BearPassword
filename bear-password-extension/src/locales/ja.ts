@@ -110,6 +110,7 @@ const messages: MessageDict = {
   'entry.hidePassword': 'パスワードを非表示',
   'entry.generatePassword': '強力なパスワードを生成',
   'entry.error.titleRequired': 'タイトルを入力してください',
+  'entry.error.titleTooLong': 'タイトルは {max} 文字以内で入力してください',
   'entry.error.usernameOrPassword': 'ユーザー名またはパスワードを入力してください',
 
   'settings.title': '拡張機能の設定',

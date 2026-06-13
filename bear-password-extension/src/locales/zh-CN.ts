@@ -109,6 +109,7 @@ const messages: MessageDict = {
   'entry.hidePassword': '隐藏密码',
   'entry.generatePassword': '生成强密码',
   'entry.error.titleRequired': '请填写标题',
+  'entry.error.titleTooLong': '标题不能超过 {max} 个字符',
   'entry.error.usernameOrPassword': '请至少填写用户名或密码',
 
   'settings.title': '扩展设置',

@@ -12,6 +12,7 @@
         class="custom-form__title-input"
         :placeholder="t('entry.form.titlePlaceholder')"
         type="text"
+        :maxlength="PASSWORD_TITLE_MAX_LENGTH"
       />
     </div>
 
@@ -66,6 +67,7 @@
         class="custom-form__textarea"
         :placeholder="t('entry.form.remarkPlaceholder')"
         rows="2"
+        :maxlength="PASSWORD_REMARK_MAX_LENGTH"
         @input="onRemarkInput"
       />
     </div>
@@ -80,6 +82,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import TagInput from '@/components/vault/TagInput.vue'
+import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import { isSecretCustomField } from '@/utils/customContent'
 import type { CustomContent } from '@/types'

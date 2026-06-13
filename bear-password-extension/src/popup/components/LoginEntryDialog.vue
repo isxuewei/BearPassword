@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/popup/composables/useI18n'
 import type { FillCredential } from '@/shared/types'
+import { PASSWORD_TITLE_MAX_LENGTH } from '@/shared/constants/vaultFieldLimits'
 import { sendMessage } from '@/shared/utils/messaging'
 
 const { t } = useI18n()
@@ -46,6 +47,10 @@ watch(
 function validate(): boolean {
   if (!title.value.trim()) {
     error.value = t('entry.error.titleRequired')
+    return false
+  }
+  if (title.value.length > PASSWORD_TITLE_MAX_LENGTH) {
+    error.value = t('entry.error.titleTooLong', { max: PASSWORD_TITLE_MAX_LENGTH })
     return false
   }
   if (!username.value.trim() && !password.value) {
@@ -111,6 +116,7 @@ async function handleGeneratePassword(): Promise<void> {
             type="text"
             :placeholder="t('entry.titlePlaceholder')"
             :disabled="saving"
+            :maxlength="PASSWORD_TITLE_MAX_LENGTH"
           />
         </div>
 

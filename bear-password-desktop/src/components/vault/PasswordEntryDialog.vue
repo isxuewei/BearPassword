@@ -113,7 +113,14 @@
       />
 
       <el-form-item v-if="!isVaultItemForm" :label="t('entry.dialog.remark')">
-        <el-input v-model="form.remark" type="textarea" :rows="2" :placeholder="t('entry.dialog.optionalRemark')" />
+        <el-input
+          v-model="form.remark"
+          type="textarea"
+          :rows="2"
+          :placeholder="t('entry.dialog.optionalRemark')"
+          :maxlength="PASSWORD_REMARK_MAX_LENGTH"
+          show-word-limit
+        />
       </el-form-item>
     </el-form>
 
@@ -181,6 +188,7 @@ import {
   buildWebsitesFromForm,
   resolveFormWebsites
 } from '@/utils/passwordWebsites'
+import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import { getPasswordTypeFilterOptions, getPasswordTypeLabel } from '@/utils/passwordTypeI18n'
 import {
@@ -495,6 +503,25 @@ async function handleSubmit(): Promise<void> {
     return
   }
 
+  const passwordTitle = buildPasswordTitleFromForm(form.passwordType, {
+    login: loginContent,
+    bank: bankContent,
+    identity: identityContent,
+    secureNote: secureNoteContent,
+    custom: customContent,
+    database: databaseContent
+  })
+  if (passwordTitle.length > PASSWORD_TITLE_MAX_LENGTH) {
+    ElMessage.warning(t('entry.validate.titleTooLong', { max: PASSWORD_TITLE_MAX_LENGTH }))
+    return
+  }
+
+  const remark = form.remark ?? ''
+  if (remark.length > PASSWORD_REMARK_MAX_LENGTH) {
+    ElMessage.warning(t('entry.validate.remarkTooLong', { max: PASSWORD_REMARK_MAX_LENGTH }))
+    return
+  }
+
   submitting.value = true
   try {
     const passwordType: PasswordType = form.passwordType
@@ -502,14 +529,7 @@ async function handleSubmit(): Promise<void> {
     emit('submit', {
       passwordType,
       passwordLabels: form.passwordLabels,
-      passwordTitle: buildPasswordTitleFromForm(passwordType, {
-        login: loginContent,
-        bank: bankContent,
-        identity: identityContent,
-        secureNote: secureNoteContent,
-        custom: customContent,
-        database: databaseContent
-      }),
+      passwordTitle,
       websites: buildWebsitesFromForm(passwordType, loginContent),
       content,
       remark: form.remark
