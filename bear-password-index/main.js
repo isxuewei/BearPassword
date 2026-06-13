@@ -292,7 +292,7 @@ function initHeroCarousel() {
 
   function startAutoplay() {
     clearInterval(timer)
-    timer = setInterval(next, 2000)
+    timer = setInterval(next, 3000)
   }
 
   function resetAutoplay() {
