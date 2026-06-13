@@ -9,17 +9,19 @@
       ;(function () {
         try {
           var raw = localStorage.getItem('bear_password_theme')
-          var pref = raw ? JSON.parse(raw) : 'light'
+          var pref = raw ? JSON.parse(raw) : 'system'
           var resolved =
             pref === 'system'
               ? window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light'
+                ? 'midnight'
+                : 'earth'
               : pref
           document.documentElement.setAttribute('data-theme', resolved)
-          if (resolved === 'dark') document.documentElement.classList.add('dark')
+          if (resolved === 'dark' || resolved === 'midnight' || resolved === 'noir') {
+            document.documentElement.classList.add('dark')
+          }
           var fontRaw = localStorage.getItem('bear_password_font')
-          var fontPref = fontRaw ? JSON.parse(fontRaw) : 'canger'
+          var fontPref = fontRaw ? JSON.parse(fontRaw) : 'system'
           document.documentElement.setAttribute('data-font', fontPref === 'system' ? 'system' : 'canger')
           var localeRaw = localStorage.getItem('bear_password_locale')
           var localePref = localeRaw ? JSON.parse(localeRaw) : 'zh-CN'

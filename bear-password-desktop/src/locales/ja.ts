@@ -91,6 +91,9 @@ const messages: MessageDict = {
   'lock.wrongPassword': 'パスワードが正しくありません',
   'lock.passwordRequired': 'パスワードを入力してください',
 
+  'announcement.defaultTitle': 'お知らせ',
+  'announcement.gotIt': '確認しました',
+
   'dashboard.welcome': 'おかえりなさい',
   'dashboard.tagline': '安全 · シンプル · プロ品質',
   'dashboard.totalPasswords': 'パスワード総数',

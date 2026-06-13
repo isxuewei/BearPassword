@@ -16,6 +16,8 @@ export type ThemePresetId = 'light' | 'ocean' | 'warm' | 'bloom' | 'rose' | 'min
 /** 用户可选择的主题偏好（含跟随系统） */
 export type ThemePreference = ThemePresetId | 'system'
 
+export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system'
+
 /** 实际生效的主题 */
 export type ResolvedTheme = ThemePresetId
 
@@ -45,8 +47,8 @@ export const THEME_PRESET_OPTIONS: readonly ThemeOption[] = [
 
 /** 设置页下拉完整列表 */
 export const THEME_OPTIONS: ThemeOption[] = [
-  ...THEME_PRESET_OPTIONS,
-  { value: 'system', label: '跟随系统', description: '' }
+  { value: 'system', label: '跟随系统', description: '' },
+  ...THEME_PRESET_OPTIONS
 ]
 
 const VALID_THEME_PREFERENCES = new Set<string>(THEME_OPTIONS.map((item) => item.value))
@@ -56,7 +58,7 @@ export function normalizeThemePreference(value: unknown): ThemePreference {
   if (typeof value === 'string' && VALID_THEME_PREFERENCES.has(value)) {
     return value as ThemePreference
   }
-  return 'light'
+  return DEFAULT_THEME_PREFERENCE
 }
 
 /** 系统浅色 / 深色对应的预设主题 */
@@ -187,6 +189,6 @@ export function applyResolvedTheme(theme: ResolvedTheme): void {
 
 /** 应用启动时尽早初始化，减少主题闪烁 */
 export function initThemeOnBoot(): void {
-  const preference = normalizeThemePreference(storage.get('theme', 'light'))
+  const preference = normalizeThemePreference(storage.get('theme', DEFAULT_THEME_PREFERENCE))
   applyResolvedTheme(resolveTheme(preference))
 }

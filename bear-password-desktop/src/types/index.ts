@@ -3,6 +3,7 @@
  * 使用时: import type { LoginParams, DashboardStats } from '@/types'
  */
 export * from './api'
+export * from './announcement'
 export * from './auth'
 export * from './autoLock'
 export * from './dashboard'

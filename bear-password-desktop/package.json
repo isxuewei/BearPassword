@@ -1,7 +1,7 @@
 {
   "name": "bear-password-desktop",
-  "version": "26.6.11",
-  "displayVersion": "26.6.12",
+  "version": "26.6.13",
+  "displayVersion": "26.6.13",
   "description": "BearPassword - 简洁、安全、专业的桌面密码管理工具",
   "main": "out/main/index.js",
   "author": "薛伟同学",
@@ -19,6 +19,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "axios": "^1.7.9",
     "element-plus": "^2.9.1",
+    "marked": "^18.0.5",
     "pinia": "^2.3.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
@@ -29,8 +30,8 @@
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
-    "sass": "^1.83.0",
     "png-to-ico": "^2.1.8",
+    "sass": "^1.83.0",
     "sharp": "^0.33.5",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
@@ -71,16 +72,20 @@
       "icon": "resources/icon.icns",
       "category": "public.app-category.productivity",
       "extendInfo": {
-        "CFBundleShortVersionString": "26.6.12"
+        "CFBundleShortVersionString": "26.6.13"
       },
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "artifactName": "${productName}.${ext}",
@@ -101,11 +106,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

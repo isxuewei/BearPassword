@@ -1,6 +1,6 @@
 {
   "name": "bear-password-extension",
-  "version": "26.6.12",
+  "version": "26.6.13",
   "description": "BearPassword 浏览器扩展 — 模仿 1Password 的自动填充与保险库管理",
   "type": "module",
   "scripts": {

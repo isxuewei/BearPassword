@@ -91,6 +91,9 @@ const messages: MessageDict = {
   'lock.wrongPassword': '密码错误，请重试',
   'lock.passwordRequired': '请输入密码',
 
+  'announcement.defaultTitle': '公告',
+  'announcement.gotIt': '我知道了',
+
   'dashboard.welcome': '欢迎回来',
   'dashboard.tagline': '安全守护 · 简洁至臻 · 专业之选',
   'dashboard.totalPasswords': '总密码数',

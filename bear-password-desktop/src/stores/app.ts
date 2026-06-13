@@ -10,13 +10,15 @@ import {
   normalizeThemePreference,
   subscribeSystemThemeChange,
   syncSystemThemeFromPlatform,
-  systemThemeRevision
+  systemThemeRevision,
+  DEFAULT_THEME_PREFERENCE
 } from '@/utils/theme'
 import {
   type FontPreference,
   applyFontPreference,
   initFontOnBoot,
-  normalizeFontPreference
+  normalizeFontPreference,
+  DEFAULT_FONT_PREFERENCE
 } from '@/utils/font'
 import {
   type LocalePreference,
@@ -36,13 +38,13 @@ import { syncTrayAppearanceToMain } from '@/utils/trayAppearanceSync'
  */
 export const useAppStore = defineStore('app', () => {
   const themePreference = ref<ThemePreference>(
-    normalizeThemePreference(storage.get<ThemePreference>('theme', 'light'))
+    normalizeThemePreference(storage.get<ThemePreference>('theme', DEFAULT_THEME_PREFERENCE))
   )
   const localePreference = ref<LocalePreference>(
     normalizeLocalePreference(storage.get<LocalePreference>('locale', 'zh-CN'))
   )
   const fontPreference = ref<FontPreference>(
-    normalizeFontPreference(storage.get<FontPreference>('font', 'canger'))
+    normalizeFontPreference(storage.get<FontPreference>('font', DEFAULT_FONT_PREFERENCE))
   )
 
   /** 当前实际生效的主题（systemThemeRevision 确保跟随系统时随 OS 变化更新） */

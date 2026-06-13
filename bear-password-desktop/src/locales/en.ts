@@ -91,6 +91,9 @@ const messages: MessageDict = {
   'lock.wrongPassword': 'Incorrect password. Try again.',
   'lock.passwordRequired': 'Please enter your password',
 
+  'announcement.defaultTitle': 'Announcement',
+  'announcement.gotIt': 'Got it',
+
   'dashboard.welcome': 'Welcome back',
   'dashboard.tagline': 'Secure · Simple · Professional',
   'dashboard.totalPasswords': 'Total passwords',

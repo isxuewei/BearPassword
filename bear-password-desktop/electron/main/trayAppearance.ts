@@ -36,9 +36,9 @@ export function loadTrayAppearanceSnapshot(): TrayAppearanceSnapshot {
   const filePath = getSnapshotPath()
   if (!existsSync(filePath)) {
     return {
-      theme: 'light',
+      theme: 'system',
       locale: 'zh-CN',
-      font: 'canger',
+      font: 'system',
       labels: DEFAULT_TRAY_MENU_LABELS
     }
   }
@@ -46,16 +46,16 @@ export function loadTrayAppearanceSnapshot(): TrayAppearanceSnapshot {
   try {
     const raw = JSON.parse(readFileSync(filePath, 'utf-8')) as Partial<TrayAppearanceSnapshot>
     return {
-      theme: typeof raw.theme === 'string' ? raw.theme : 'light',
+      theme: typeof raw.theme === 'string' ? raw.theme : 'system',
       locale: typeof raw.locale === 'string' ? raw.locale : 'zh-CN',
-      font: typeof raw.font === 'string' ? raw.font : 'canger',
+      font: typeof raw.font === 'string' ? raw.font : 'system',
       labels: mergeLabels(raw.labels)
     }
   } catch {
     return {
-      theme: 'light',
+      theme: 'system',
       locale: 'zh-CN',
-      font: 'canger',
+      font: 'system',
       labels: DEFAULT_TRAY_MENU_LABELS
     }
   }
