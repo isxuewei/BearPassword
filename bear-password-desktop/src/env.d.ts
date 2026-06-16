@@ -113,6 +113,34 @@ interface FileApi {
   }) => Promise<{ ok: true; filePath: string } | { ok: false; canceled: true }>
 }
 
+/** Electron preload 暴露的安全密钥存储 API（系统钥匙串） */
+interface SecureStorageApi {
+  isAvailable: () => Promise<boolean>
+  get: () => Promise<string | null>
+  set: (key: string) => Promise<{ ok: true } | { ok: false; error: string }>
+  remove: () => Promise<void>
+}
+
+/** Electron preload 暴露的账户密码存储 API（生物识别解锁时替代手动输入） */
+interface AccountPasswordApi {
+  isAvailable: () => Promise<boolean>
+  get: () => Promise<string | null>
+  set: (password: string) => Promise<{ ok: true } | { ok: false; error: string }>
+  remove: () => Promise<void>
+}
+
+/** Electron preload 暴露的生物识别解锁 API */
+interface BiometricApi {
+  getAvailability: () => Promise<{
+    available: boolean
+    kind: 'touchId' | 'windowsHello' | null
+  }>
+  prompt: (reason: string) => Promise<
+    | { ok: true }
+    | { ok: false; canceled: boolean; error?: string }
+  >
+}
+
 declare global {
   interface Window {
     windowApi?: WindowApi
@@ -122,6 +150,9 @@ declare global {
     trayApi?: TrayApi
     dockApi?: DockApi
     fileApi?: FileApi
+    secureStorageApi?: SecureStorageApi
+    accountPasswordApi?: AccountPasswordApi
+    biometricApi?: BiometricApi
   }
 }
 

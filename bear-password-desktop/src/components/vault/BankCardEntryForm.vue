@@ -148,6 +148,7 @@ import TagInput from '@/components/vault/TagInput.vue'
 import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import type { BankCardContent } from '@/types'
+import { appendClipboardClearHint, copySensitiveText } from '@/utils/sensitiveClipboard'
 
 const props = defineProps<{
   content: BankCardContent
@@ -210,7 +211,10 @@ async function revealAndCopySecret(field: 'cardNumber' | 'cvv'): Promise<void> {
   const copied = await copyText(value, input)
   if (copied) {
     ElMessage.success({
-      message: isCardNumber ? t('entry.msg.cardNumberCopied') : t('entry.msg.cvvCopied'),
+      message: appendClipboardClearHint(
+        isCardNumber ? t('entry.msg.cardNumberCopied') : t('entry.msg.cvvCopied'),
+        t
+      ),
       duration: 1500
     })
   } else {
@@ -219,14 +223,8 @@ async function revealAndCopySecret(field: 'cardNumber' | 'cvv'): Promise<void> {
 }
 
 async function copyText(text: string, input: HTMLInputElement): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
-      return true
-    }
-  } catch {
-    // fallback below
-  }
+  const copied = await copySensitiveText(text)
+  if (copied) return true
 
   input.setSelectionRange(0, text.length)
   return document.execCommand('copy')

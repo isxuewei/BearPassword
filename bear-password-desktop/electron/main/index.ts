@@ -20,6 +20,22 @@ import { saveTrayAppearanceSnapshot } from './trayAppearance'
 import { loadDockSettings, saveDockSettings } from './dockConfig'
 import { applyDockIconVisibility, isDockIconAvailable, shouldShowDockOnFocus } from './dock'
 import {
+  getBiometricAvailability,
+  promptBiometricUnlock
+} from './biometricAuth'
+import {
+  isSecurityKeyEncryptionAvailable,
+  loadStoredSecurityKey,
+  removeStoredSecurityKey,
+  saveStoredSecurityKey
+} from './securityKeyStorage'
+import {
+  isAccountPasswordEncryptionAvailable,
+  loadStoredAccountPassword,
+  removeStoredAccountPassword,
+  saveStoredAccountPassword
+} from './accountPasswordStorage'
+import {
   applyWindowState,
   attachMainWindowStateListeners,
   flushPendingWindowStateSave,
@@ -27,6 +43,9 @@ import {
   persistMainWindowState,
   seedCachedWindowState
 } from './windowState'
+
+/** dev 与生产环境统一 userData 目录（~/Library/Application Support/BearPassword） */
+app.setName('BearPassword')
 
 /** 主窗口实例引用，用于窗口控制 IPC */
 let mainWindow: BrowserWindow | null = null
@@ -482,6 +501,52 @@ function registerFileIpc(): void {
   )
 }
 
+/** 注册生物识别解锁 IPC（Touch ID / Windows Hello） */
+function registerBiometricIpc(): void {
+  ipcMain.handle('biometric:getAvailability', async () => getBiometricAvailability())
+
+  ipcMain.handle('biometric:prompt', async (_event, reason: unknown) => {
+    const message = typeof reason === 'string' ? reason : ''
+    return promptBiometricUnlock(message)
+  })
+}
+
+/** 注册安全密钥存储 IPC（系统钥匙串 / 凭据管理器） */
+function registerSecureStorageIpc(): void {
+  ipcMain.handle('secure-storage:isAvailable', () => isSecurityKeyEncryptionAvailable())
+
+  ipcMain.handle('secure-storage:get', async () => loadStoredSecurityKey())
+
+  ipcMain.handle('secure-storage:set', async (_event, key: unknown) => {
+    if (typeof key !== 'string') {
+      return { ok: false as const, error: '安全密钥格式无效' }
+    }
+    return saveStoredSecurityKey(key)
+  })
+
+  ipcMain.handle('secure-storage:remove', async () => {
+    await removeStoredSecurityKey()
+  })
+}
+
+/** 注册账户密码存储 IPC（生物识别解锁时替代手动输入，仍走完整登录验证） */
+function registerAccountPasswordIpc(): void {
+  ipcMain.handle('account-password:isAvailable', () => isAccountPasswordEncryptionAvailable())
+
+  ipcMain.handle('account-password:get', async () => loadStoredAccountPassword())
+
+  ipcMain.handle('account-password:set', async (_event, password: unknown) => {
+    if (typeof password !== 'string') {
+      return { ok: false as const, error: '密码格式无效' }
+    }
+    return saveStoredAccountPassword(password)
+  })
+
+  ipcMain.handle('account-password:remove', async () => {
+    await removeStoredAccountPassword()
+  })
+}
+
 /** 注册 Dock 栏图标 IPC */
 function registerDockIpc(): void {
   ipcMain.handle('dock:get', () => ({
@@ -560,6 +625,9 @@ function startApp(): void {
     registerTrayIpc()
     registerDockIpc()
     registerFileIpc()
+    registerSecureStorageIpc()
+    registerAccountPasswordIpc()
+    registerBiometricIpc()
     registerAppLifecycleHandlers()
 
     const initialBindings = loadShortcutBindings()

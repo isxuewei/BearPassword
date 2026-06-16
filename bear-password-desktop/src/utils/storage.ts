@@ -1,6 +1,6 @@
 /**
  * 本地存储工具
- * 封装 localStorage，统一 key 前缀，便于后续迁移到 Electron safeStorage
+ * 封装 localStorage，统一 key 前缀；安全密钥请使用 securityKeyStorage（系统钥匙串）
  */
 
 const PREFIX = 'bear_password_'

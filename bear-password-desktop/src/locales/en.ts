@@ -85,11 +85,29 @@ const messages: MessageDict = {
   'lock.unlockSuccess': 'Unlocked',
   'lock.welcomeBack': 'Welcome back',
   'lock.locked': 'App Locked',
-  'lock.idleHint': 'Idle timeout reached. Enter your password to unlock.',
+  'lock.lockedTitle': 'BearPassword is locked',
+  'lock.integratedHint': 'Use biometrics or enter the password for user “{user}”.',
+  'lock.passwordInputPlaceholder': 'Enter password',
+  'lock.idleHint':
+    'Enter your password to verify your identity and restore vault access from the system keychain.',
   'lock.passwordPlaceholder': 'Password',
   'lock.unlock': 'Unlock',
   'lock.wrongPassword': 'Incorrect password. Try again.',
   'lock.passwordRequired': 'Please enter your password',
+  'lock.securityKeyMissing':
+    'No security key was found on this device. Configure one in Settings before unlocking.',
+  'lock.biometricOrPassword': 'or',
+  'lock.biometricTouchId': 'Unlock with Touch ID',
+  'lock.biometricWindowsHello': 'Unlock with Windows Hello',
+  'lock.biometricUnlock': 'Unlock with biometrics',
+  'lock.biometricReason': 'Unlock BearPassword and access your vault',
+  'lock.biometricFailed': 'Biometric verification failed. Use your password instead.',
+  'lock.biometricPasswordMissing':
+    'Unlock with your password once to enable biometric unlock.',
+  'lock.biometricPreferHint': 'Unlock with biometrics',
+  'lock.biometricPreferHintTouchId': 'Unlock with Touch ID',
+  'lock.biometricPreferHintWindowsHello': 'Unlock with Windows Hello',
+  'lock.usePasswordInstead': 'Use password instead',
 
   'announcement.defaultTitle': 'Announcement',
   'announcement.gotIt': 'Got it',
@@ -187,6 +205,16 @@ const messages: MessageDict = {
   'settings.securityKeyVerifyFailed': 'Verification failed',
   'settings.autoLock': 'Auto lock',
   'settings.autoLockDesc': 'Lock the app after a period of inactivity',
+  'settings.clipboardClear': 'Clear clipboard automatically',
+  'settings.clipboardClearDesc':
+    'Remove copied passwords and other sensitive data from the clipboard after a delay; also clears on lock',
+  'settings.preferBiometricUnlock': 'Use biometric unlock',
+  'settings.preferBiometricUnlockDesc':
+    'When you open the app while locked, use biometrics instead of typing your login password',
+  'settings.preferBiometricUnlockDescTouchId':
+    'When you open the app while locked, use Touch ID instead of typing your login password',
+  'settings.preferBiometricUnlockDescWindowsHello':
+    'When you open the app while locked, use Windows Hello instead of typing your login password',
   'settings.version': 'Version',
   'settings.systemType': 'System',
   'settings.updateAvailable': 'New version {version} available',
@@ -220,6 +248,12 @@ const messages: MessageDict = {
   'autoLock.180': '3 hours',
   'autoLock.300': '5 hours',
 
+  'clipboardClear.never': 'Never',
+  'clipboardClear.30': '30 seconds',
+  'clipboardClear.60': '1 minute',
+  'clipboardClear.90': '90 seconds',
+  'clipboardClear.120': '2 minutes',
+
   'common.error': 'Operation failed',
   'common.settingsFailed': 'Failed to apply settings',
   'common.saveSuccess': 'Saved',
@@ -242,6 +276,7 @@ const messages: MessageDict = {
   'msg.serverUrlResetWarn': 'Default restored, but the backend is currently unreachable',
   'msg.serverConnectFailed': 'Unable to connect to the server',
   'msg.securityKeyRequired': 'Please enter or generate a security key',
+  'msg.sensitiveCopiedClearHint': 'cleared in {seconds}s',
   'msg.securityKeyInvalidLength': 'Security key must be exactly {length} characters',
   'msg.securityKeyRequiredWrite': 'Configure a security key in Settings before saving or importing passwords',
   'msg.securityKeyBackupSaved': 'Security key backed up to {file}',
@@ -324,7 +359,8 @@ const messages: MessageDict = {
   'profile.confirmPasswordPlaceholder': 'Re-enter new password',
   'profile.savePassword': 'Save new password',
   'profile.session': 'Session',
-  'profile.logoutHint': 'You will return to the login screen; your local session and security key will be cleared.',
+  'profile.logoutHint':
+    'You will return to the login screen and your session will be cleared. Your security key stays in the system keychain on this device.',
   'profile.logout': 'Sign out',
   'profile.oldPasswordRequired': 'Please enter your current password',
   'profile.newPasswordRequired': 'Please enter a new password',

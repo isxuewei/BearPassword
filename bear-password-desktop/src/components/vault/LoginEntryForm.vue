@@ -175,6 +175,7 @@ import TagInput from '@/components/vault/TagInput.vue'
 import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import type { LoginContent } from '@/types'
+import { appendClipboardClearHint, copySensitiveText } from '@/utils/sensitiveClipboard'
 
 const props = withDefaults(
   defineProps<{
@@ -230,21 +231,18 @@ async function revealAndCopyPassword(): Promise<void> {
 
   const copied = await copyText(password, input)
   if (copied) {
-    ElMessage.success({ message: t('entry.msg.passwordCopied'), duration: 1500 })
+    ElMessage.success({
+      message: appendClipboardClearHint(t('entry.msg.passwordCopied'), t),
+      duration: 1500
+    })
   } else {
     ElMessage.warning({ message: t('entry.msg.copyFailed'), duration: 1500 })
   }
 }
 
 async function copyText(text: string, input: HTMLInputElement): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
-      return true
-    }
-  } catch {
-    // fallback below
-  }
+  const copied = await copySensitiveText(text)
+  if (copied) return true
 
   input.setSelectionRange(0, text.length)
   return document.execCommand('copy')

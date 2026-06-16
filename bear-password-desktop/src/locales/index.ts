@@ -56,4 +56,8 @@ export function getAutoLockLabelKey(minutes: number): string {
   return `autoLock.${minutes}`
 }
 
+export function getClipboardClearLabelKey(seconds: number): string {
+  return seconds === 0 ? 'clipboardClear.never' : `clipboardClear.${seconds}`
+}
+
 export default messages

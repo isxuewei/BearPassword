@@ -8,6 +8,8 @@ import router from './router'
 import pinia from './stores'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import { useAutoLockStore } from '@/stores/autoLock'
+import { useSecurityStore } from '@/stores/security'
 import { bindUnauthorizedHandler } from '@/utils/request'
 import { initFontOnBoot } from '@/utils/font'
 import { initLocaleOnBoot } from '@/utils/localePreference'
@@ -23,21 +25,28 @@ initLocaleOnBoot()
  * 应用入口
  * 挂载 Vue 实例，注册 Pinia、Router、Element Plus
  */
-const app = createApp(App)
+async function bootstrap(): Promise<void> {
+  const app = createApp(App)
 
-app.use(pinia)
-app.use(router)
-app.use(ElementPlus, { size: 'default' })
+  app.use(pinia)
+  const autoLockStore = useAutoLockStore()
+  await useSecurityStore().init()
+  autoLockStore.ensureSecureLockState()
+  app.use(router)
+  app.use(ElementPlus, { size: 'default' })
 
-// Pinia 就绪后立即初始化主题与系统外观监听
-void useAppStore().initTheme()
+  // Pinia 就绪后立即初始化主题与系统外观监听
+  void useAppStore().initTheme()
 
-bindUnauthorizedHandler(() => {
-  const authStore = useAuthStore()
-  authStore.clearSession()
-  if (router.currentRoute.value.name !== 'Login') {
-    void router.replace({ name: 'Login' })
-  }
-})
+  bindUnauthorizedHandler(() => {
+    const authStore = useAuthStore()
+    authStore.clearSession()
+    if (router.currentRoute.value.name !== 'Login') {
+      void router.replace({ name: 'Login' })
+    }
+  })
 
-app.mount('#app')
+  app.mount('#app')
+}
+
+void bootstrap()

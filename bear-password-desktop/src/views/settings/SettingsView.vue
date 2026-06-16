@@ -158,6 +158,41 @@
           />
         </el-select>
       </div>
+
+      <div class="settings-view__row settings-view__row--auto-lock">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.clipboardClear') }}</span>
+          <small>{{ t('settings.clipboardClearDesc') }}</small>
+        </div>
+        <el-select
+          v-model="clipboardClearSeconds"
+          size="large"
+          class="settings-view__auto-lock-select"
+          :disabled="securityStore.isMigrating"
+        >
+          <el-option
+            v-for="item in clipboardClearOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </div>
+
+      <div
+        v-if="biometricUnlockSupported"
+        class="settings-view__row settings-view__row--launch"
+      >
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.preferBiometricUnlock') }}</span>
+          <small>{{ preferBiometricUnlockDesc }}</small>
+        </div>
+        <el-switch
+          :model-value="biometricUnlockStore.preferBiometricUnlock"
+          :disabled="securityStore.isMigrating"
+          @change="handlePreferBiometricUnlockChange"
+        />
+      </div>
     </div>
 
     <div class="settings-view__section">
@@ -430,6 +465,8 @@ import { IN_APP_SHORTCUT_OPTIONS } from '@/constants/shortcuts'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
+import { useClipboardClearStore } from '@/stores/clipboardClear'
+import { useBiometricUnlockStore } from '@/stores/biometricUnlock'
 import { useDockStore } from '@/stores/dock'
 import { useLaunchAtLoginStore } from '@/stores/launchAtLogin'
 import { useTrayStore } from '@/stores/tray'
@@ -441,12 +478,17 @@ import { probeServerOrigin } from '@/utils/serverUrl'
 import { formatAccelerator } from '@/utils/shortcut'
 import { AUTO_LOCK_OPTIONS, type AutoLockMinutes } from '@/types'
 import {
+  CLIPBOARD_CLEAR_OPTIONS,
+  type ClipboardClearSeconds
+} from '@/types/clipboardClear'
+import {
   SHORTCUT_ACTION_OPTIONS,
   type ShortcutActionId
 } from '@/types/shortcut'
 import { useI18n } from '@/composables/useI18n'
 import {
   getAutoLockLabelKey,
+  getClipboardClearLabelKey,
   getFontDescKey,
   getThemeDescKey,
   getThemeLabelKey
@@ -467,6 +509,10 @@ import {
   buildSecurityKeyBackupFileName
 } from '@/utils/securityKeyBackup'
 import { isValidSecurityKeyLength, SECURITY_KEY_LENGTH } from '@/utils/contentCrypto'
+import {
+  appendClipboardClearHint,
+  copySensitiveText
+} from '@/utils/sensitiveClipboard'
 
 const HEALTH_CHECK_INTERVAL = 15000
 
@@ -475,6 +521,8 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 const securityStore = useSecurityStore()
 const autoLockStore = useAutoLockStore()
+const clipboardClearStore = useClipboardClearStore()
+const biometricUnlockStore = useBiometricUnlockStore()
 const serverStore = useServerStore()
 const versionStore = useVersionStore()
 const shortcutsStore = useShortcutsStore()
@@ -531,10 +579,54 @@ const localeDescription = computed(() =>
   appStore.localePreference === 'system' ? t('locale.systemDesc') : ''
 )
 
+const biometricUnlockSupported = ref(false)
+const biometricUnlockKind = ref<'touchId' | 'windowsHello' | null>(null)
+
+const preferBiometricUnlockDesc = computed(() => {
+  if (biometricUnlockKind.value === 'touchId') {
+    return t('settings.preferBiometricUnlockDescTouchId')
+  }
+  if (biometricUnlockKind.value === 'windowsHello') {
+    return t('settings.preferBiometricUnlockDescWindowsHello')
+  }
+  return t('settings.preferBiometricUnlockDesc')
+})
+
+function handlePreferBiometricUnlockChange(enabled: boolean | string | number): void {
+  biometricUnlockStore.setPreferBiometricUnlock(enabled === true)
+}
+
+async function refreshBiometricUnlockSupport(): Promise<void> {
+  biometricUnlockSupported.value = false
+  biometricUnlockKind.value = null
+
+  if (!window.biometricApi) return
+
+  try {
+    const availability = await window.biometricApi.getAvailability()
+    biometricUnlockSupported.value = availability.available
+    biometricUnlockKind.value = availability.kind
+    if (!availability.available) {
+      biometricUnlockStore.setPreferBiometricUnlock(false)
+    }
+  } catch {
+    biometricUnlockSupported.value = false
+    biometricUnlockKind.value = null
+    biometricUnlockStore.setPreferBiometricUnlock(false)
+  }
+}
+
 const autoLockOptions = computed(() =>
   AUTO_LOCK_OPTIONS.map((item) => ({
     value: item.value,
     label: t(getAutoLockLabelKey(item.value))
+  }))
+)
+
+const clipboardClearOptions = computed(() =>
+  CLIPBOARD_CLEAR_OPTIONS.map((value) => ({
+    value,
+    label: t(getClipboardClearLabelKey(value))
   }))
 )
 
@@ -579,6 +671,7 @@ async function handleResetServerUrl(): Promise<void> {
 }
 
 onMounted(() => {
+  void refreshBiometricUnlockSupport()
   void window.windowApi?.getPlatform().then((platform) => {
     appPlatform.value = platform
   })
@@ -628,6 +721,11 @@ watch(
 const autoLockMinutes = computed({
   get: () => autoLockStore.lockMinutes,
   set: (value: AutoLockMinutes) => autoLockStore.setLockMinutes(value)
+})
+
+const clipboardClearSeconds = computed({
+  get: () => clipboardClearStore.clearSeconds,
+  set: (value: ClipboardClearSeconds) => clipboardClearStore.setClearSeconds(value)
 })
 
 async function handleLaunchAtLoginChange(value: string | number | boolean): Promise<void> {
@@ -719,14 +817,10 @@ async function handleCopyGeneratedKey(): Promise<void> {
   const key = generatedKeyDisplay.value
   if (!key) return
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(key)
-      ElMessage.success(t('settings.securityKeyCopied'))
-      return
-    }
-  } catch {
-    // fallback below
+  const copied = await copySensitiveText(key)
+  if (copied) {
+    ElMessage.success(appendClipboardClearHint(t('settings.securityKeyCopied'), t))
+    return
   }
 
   ElMessage.warning(t('settings.securityKeyCopyFailed'))
@@ -819,7 +913,7 @@ async function handleSendSecurityKeyVerifyCode(): Promise<void> {
 async function completeSecurityKeySave(oldKey: string | null, newKey: string): Promise<void> {
   try {
     const reencrypted = await runSecurityKeyReencrypt(oldKey, newKey)
-    securityStore.setSecurityKey(newKey)
+    await securityStore.setSecurityKey(newKey)
     securityKeyInput.value = ''
     ElMessage.success(
       reencrypted > 0 ? t('msg.securityKeySavedMigrated', { count: reencrypted }) : t('msg.securityKeySaved')

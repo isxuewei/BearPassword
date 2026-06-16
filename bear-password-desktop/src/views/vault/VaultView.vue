@@ -530,6 +530,7 @@ import {
 } from '@/utils/loginContent'
 import { resolveEntryTitle } from '@/utils/passwordTitle'
 import { SecurityKeyRequiredError } from '@/utils/securityKeyRequired'
+import { appendClipboardClearHint, copySensitiveText } from '@/utils/sensitiveClipboard'
 import { formatWebsitesDisplay, resolveEntryWebsites } from '@/utils/passwordWebsites'
 import { getSecureNoteBodyPreview, normalizeSecureNoteContent } from '@/utils/secureNoteContent'
 import {
@@ -1064,14 +1065,13 @@ async function handleDuplicateEntry(entry: PasswordEntry): Promise<void> {
 }
 
 async function copyText(successMessage: string, text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
-      ElMessage.success({ message: successMessage, duration: 1500 })
-      return true
-    }
-  } catch {
-    // fallback below
+  const copied = await copySensitiveText(text)
+  if (copied) {
+    ElMessage.success({
+      message: appendClipboardClearHint(successMessage, t),
+      duration: 1500
+    })
+    return true
   }
 
   ElMessage.warning({ message: t('entry.msg.copyFailed'), duration: 1500 })

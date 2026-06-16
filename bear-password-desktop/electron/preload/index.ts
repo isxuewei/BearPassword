@@ -141,3 +141,32 @@ const fileApi = {
 }
 
 contextBridge.exposeInMainWorld('fileApi', fileApi)
+
+const secureStorageApi = {
+  isAvailable: (): Promise<boolean> => ipcRenderer.invoke('secure-storage:isAvailable'),
+  get: (): Promise<string | null> => ipcRenderer.invoke('secure-storage:get'),
+  set: (key: string): Promise<{ ok: true } | { ok: false; error: string }> =>
+    ipcRenderer.invoke('secure-storage:set', key),
+  remove: (): Promise<void> => ipcRenderer.invoke('secure-storage:remove')
+}
+
+contextBridge.exposeInMainWorld('secureStorageApi', secureStorageApi)
+
+const accountPasswordApi = {
+  isAvailable: (): Promise<boolean> => ipcRenderer.invoke('account-password:isAvailable'),
+  get: (): Promise<string | null> => ipcRenderer.invoke('account-password:get'),
+  set: (password: string): Promise<{ ok: true } | { ok: false; error: string }> =>
+    ipcRenderer.invoke('account-password:set', password),
+  remove: (): Promise<void> => ipcRenderer.invoke('account-password:remove')
+}
+
+contextBridge.exposeInMainWorld('accountPasswordApi', accountPasswordApi)
+
+const biometricApi = {
+  getAvailability: (): Promise<{ available: boolean; kind: 'touchId' | 'windowsHello' | null }> =>
+    ipcRenderer.invoke('biometric:getAvailability'),
+  prompt: (reason: string): Promise<{ ok: true } | { ok: false; canceled: boolean; error?: string }> =>
+    ipcRenderer.invoke('biometric:prompt', reason)
+}
+
+contextBridge.exposeInMainWorld('biometricApi', biometricApi)

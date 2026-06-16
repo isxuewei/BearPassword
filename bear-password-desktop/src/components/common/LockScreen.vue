@@ -4,69 +4,59 @@
       <div
         v-if="visible"
         class="lock-screen"
-        :class="{
-          'lock-screen--unlocking': phase === 'unlocking',
-          'lock-screen--exiting': exiting
-        }"
         role="dialog"
         aria-modal="true"
         aria-labelledby="lock-screen-title"
       >
         <div class="lock-screen__backdrop" />
 
-        <div
-          class="lock-screen__card"
-          :class="{
-            'lock-screen__card--enter': phase === 'locking',
-            'lock-screen__card--exit': exiting
-          }"
-        >
-          <AnimatedPadlock
-            :phase="padlockPhase"
-            :shaking="shaking"
-          />
-
-          <Transition name="lock-screen-content" mode="out-in">
-            <div v-if="phase === 'locking'" key="locking" class="lock-screen__status">
-              <h2 class="lock-screen__title">{{ t('lock.locking') }}</h2>
-              <p class="lock-screen__hint">{{ t('lock.pleaseWait') }}</p>
+        <div class="lock-screen__card lock-screen__card--integrated">
+          <div class="lock-screen__locked">
+            <div class="lock-screen__app-icon lock-screen__app-icon--static">
+              <img :src="logoUrl" alt="" class="lock-screen__app-icon-image" />
             </div>
 
-            <div v-else-if="phase === 'unlocking'" key="unlocking" class="lock-screen__status">
-              <h2 class="lock-screen__title lock-screen__title--success">{{ t('lock.unlockSuccess') }}</h2>
-              <p class="lock-screen__hint">{{ t('lock.welcomeBack') }}</p>
-            </div>
+            <h2 id="lock-screen-title" class="lock-screen__title lock-screen__title--app">
+              {{ t('lock.lockedTitle') }}
+            </h2>
 
-            <div v-else key="locked" class="lock-screen__locked">
-              <h2 id="lock-screen-title" class="lock-screen__title">{{ t('lock.locked') }}</h2>
-              <p class="lock-screen__subtitle">{{ authStore.username }}</p>
-              <p class="lock-screen__hint">{{ t('lock.idleHint') }}</p>
+            <p class="lock-screen__hint lock-screen__hint--integrated">
+              {{ lockHintText }}
+            </p>
 
-              <el-form class="lock-screen__form" @submit.prevent="handleUnlock">
+            <el-form
+              class="lock-screen__form lock-screen__form--integrated"
+              @submit.prevent="handleUnlock"
+            >
+              <div class="lock-screen__unlock-row">
+                <button
+                  v-if="showBiometricUnlock"
+                  type="button"
+                  class="lock-screen__biometric-btn"
+                  :class="{ 'lock-screen__biometric-btn--waiting': biometricLoading }"
+                  :disabled="unlocking"
+                  :aria-label="biometricButtonLabel"
+                  @click="handleBiometricUnlock()"
+                >
+                  <BiometricFingerprintIcon />
+                </button>
                 <el-input
                   ref="passwordInputRef"
                   v-model="password"
                   type="password"
                   show-password
                   size="large"
-                  :placeholder="t('lock.passwordPlaceholder')"
-                  :prefix-icon="Lock"
+                  class="lock-screen__password-input"
+                  :placeholder="t('lock.passwordInputPlaceholder')"
+                  :disabled="unlocking"
+                  @mousedown="handlePasswordInteraction"
                   @keyup.enter="handleUnlock"
                 />
-                <el-button
-                  type="primary"
-                  size="large"
-                  class="lock-screen__submit"
-                  :loading="loading"
-                  @click="handleUnlock"
-                >
-                  {{ t('lock.unlock') }}
-                </el-button>
-              </el-form>
+              </div>
+            </el-form>
 
-              <p v-if="errorMsg" class="lock-screen__error">{{ errorMsg }}</p>
-            </div>
-          </Transition>
+            <p v-if="errorMsg" class="lock-screen__error">{{ errorMsg }}</p>
+          </div>
         </div>
       </div>
     </Transition>
@@ -74,127 +64,185 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import { Lock } from '@element-plus/icons-vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { InputInstance } from 'element-plus'
-import AnimatedPadlock, { type PadlockPhase } from '@/components/common/AnimatedPadlock.vue'
+import logoUrl from '@/assets/logo.svg'
+import BiometricFingerprintIcon from '@/components/common/BiometricFingerprintIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
+import { useBiometricUnlockStore } from '@/stores/biometricUnlock'
+import { useSecurityStore } from '@/stores/security'
 import { useI18n } from '@/composables/useI18n'
+import {
+  clearPersistedAccountPassword,
+  loadPersistedAccountPassword
+} from '@/utils/accountPasswordStorage'
 
 const { t } = useI18n()
 
-const LOCK_ANIM_MS = 900
-/** 锁头开锁 +「解锁成功」停留 */
-const UNLOCK_PLAY_MS = 1400
-/** 卡片与遮罩淡出 */
-const UNLOCK_EXIT_MS = 800
+const BIOMETRIC_AUTO_PROMPT_DELAY_MS = 350
+const BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS = 2500
 
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
+const biometricUnlockStore = useBiometricUnlockStore()
+const securityStore = useSecurityStore()
 
 const visible = ref(false)
-const phase = ref<'locking' | 'locked' | 'unlocking'>('locking')
-const exiting = ref(false)
-const shaking = ref(false)
 const password = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
+const biometricLoading = ref(false)
+const biometricAvailable = ref(false)
+const biometricKind = ref<'touchId' | 'windowsHello' | null>(null)
 const passwordInputRef = ref<InputInstance>()
 
-let lockTimer: ReturnType<typeof setTimeout> | null = null
-let unlockTimer: ReturnType<typeof setTimeout> | null = null
-let shakeTimer: ReturnType<typeof setTimeout> | null = null
+const unlocking = computed(() => loading.value || biometricLoading.value)
 
-const padlockPhase = computed<PadlockPhase>(() => {
-  if (phase.value === 'locking') return 'locking'
-  if (phase.value === 'unlocking') return 'unlocking'
-  return 'locked'
+const showBiometricUnlock = computed(
+  () => biometricAvailable.value && biometricUnlockStore.preferBiometricUnlock
+)
+
+const lockHintText = computed(() => {
+  if (showBiometricUnlock.value) {
+    return t('lock.integratedHint', { user: authStore.displayName })
+  }
+  return t('lock.idleHint')
 })
 
+const biometricButtonLabel = computed(() => {
+  if (biometricKind.value === 'touchId') return t('lock.biometricTouchId')
+  if (biometricKind.value === 'windowsHello') return t('lock.biometricWindowsHello')
+  return t('lock.biometricUnlock')
+})
+
+let biometricAutoPromptTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearBiometricAutoPromptTimer(): void {
+  if (biometricAutoPromptTimer) {
+    clearTimeout(biometricAutoPromptTimer)
+    biometricAutoPromptTimer = null
+  }
+}
+
 function clearTimers(): void {
-  if (lockTimer) {
-    clearTimeout(lockTimer)
-    lockTimer = null
-  }
-  if (unlockTimer) {
-    clearTimeout(unlockTimer)
-    unlockTimer = null
-  }
-  if (shakeTimer) {
-    clearTimeout(shakeTimer)
-    shakeTimer = null
+  clearBiometricAutoPromptTimer()
+}
+
+function shouldAutoPromptBiometric(autoPromptBiometric: boolean): boolean {
+  return autoPromptBiometric && showBiometricUnlock.value
+}
+
+async function waitForWindowFocus(timeoutMs = BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS): Promise<void> {
+  if (document.hasFocus()) return
+
+  await new Promise<void>((resolve) => {
+    const timeout = window.setTimeout(() => {
+      window.removeEventListener('focus', onFocus)
+      resolve()
+    }, timeoutMs)
+
+    const onFocus = (): void => {
+      window.clearTimeout(timeout)
+      window.removeEventListener('focus', onFocus)
+      resolve()
+    }
+
+    window.addEventListener('focus', onFocus)
+  })
+}
+
+function scheduleBiometricAutoPrompt(): void {
+  clearBiometricAutoPromptTimer()
+  if (!showBiometricUnlock.value) return
+
+  biometricAutoPromptTimer = setTimeout(() => {
+    biometricAutoPromptTimer = null
+    void handleBiometricUnlock({ silent: true })
+  }, BIOMETRIC_AUTO_PROMPT_DELAY_MS)
+}
+
+async function refreshBiometricAvailability(): Promise<void> {
+  biometricAvailable.value = false
+  biometricKind.value = null
+
+  if (!window.biometricApi) return
+
+  try {
+    const availability = await window.biometricApi.getAvailability()
+    biometricAvailable.value = availability.available
+    biometricKind.value = availability.kind
+  } catch {
+    biometricAvailable.value = false
+    biometricKind.value = null
   }
 }
 
-function triggerShake(): void {
-  shaking.value = true
-  if (shakeTimer) clearTimeout(shakeTimer)
-  shakeTimer = setTimeout(() => {
-    shaking.value = false
-  }, 480)
+async function focusPasswordInput(): Promise<void> {
+  await waitForWindowFocus()
+  await nextTick()
+
+  passwordInputRef.value?.focus()
+  passwordInputRef.value?.select()
+
+  const inputEl = passwordInputRef.value?.input
+  if (!(inputEl instanceof HTMLInputElement)) return
+  if (document.activeElement === inputEl) return
+
+  await new Promise<void>((resolve) => {
+    window.setTimeout(resolve, 120)
+  })
+  await nextTick()
+  passwordInputRef.value?.focus()
+  passwordInputRef.value?.select()
 }
 
-function startLockingSequence(): void {
-  clearTimers()
-  visible.value = true
-  phase.value = 'locking'
-  password.value = ''
-  errorMsg.value = ''
-  loading.value = false
+function isBiometricCanceled(result: { canceled: boolean; error?: string }): boolean {
+  if (result.canceled) return true
+  const message = result.error?.trim() ?? ''
+  return message.includes('取消') || /cancel/i.test(message)
+}
 
-  lockTimer = setTimeout(async () => {
-    phase.value = 'locked'
+async function onLockScreenReady(autoPromptBiometric: boolean): Promise<void> {
+  await refreshBiometricAvailability()
+
+  if (shouldAutoPromptBiometric(autoPromptBiometric)) {
+    await waitForWindowFocus()
     await nextTick()
-    passwordInputRef.value?.focus()
-  }, LOCK_ANIM_MS)
-}
-
-/** 展示锁定界面；skipAnimation 用于恢复锁定态或快捷键唤起 */
-function presentLockScreen(skipAnimation: boolean): void {
-  clearTimers()
-  visible.value = true
-  password.value = ''
-  errorMsg.value = ''
-  loading.value = false
-
-  if (skipAnimation) {
-    phase.value = 'locked'
-    void nextTick(() => passwordInputRef.value?.focus())
+    scheduleBiometricAutoPrompt()
     return
   }
 
-  startLockingSequence()
+  await focusPasswordInput()
+}
+
+function presentLockScreen(): void {
+  clearTimers()
+  visible.value = true
+  password.value = ''
+  errorMsg.value = ''
+  loading.value = false
+  void onLockScreenReady(true)
 }
 
 function hideLockScreen(): void {
   clearTimers()
   visible.value = false
-  phase.value = 'locking'
-  exiting.value = false
 }
 
-function finishUnlockingSequence(): void {
-  clearTimers()
-  phase.value = 'unlocking'
-  exiting.value = false
-
-  unlockTimer = setTimeout(() => {
-    exiting.value = true
-    unlockTimer = setTimeout(() => {
-      visible.value = false
-      autoLockStore.unlock()
-      phase.value = 'locking'
-      exiting.value = false
-    }, UNLOCK_EXIT_MS)
-  }, UNLOCK_PLAY_MS)
+function handlePasswordInteraction(): void {
+  clearBiometricAutoPromptTimer()
 }
 
 watch(
   () => autoLockStore.isLocked,
   (locked, previous) => {
     if (locked) {
-      presentLockScreen(previous !== false)
+      if (previous === false) {
+        visible.value = false
+        return
+      }
+      presentLockScreen()
       return
     }
     if (previous) {
@@ -208,32 +256,115 @@ watch(
   () => autoLockStore.lockPresentToken,
   () => {
     if (autoLockStore.isLocked) {
-      presentLockScreen(true)
+      presentLockScreen()
     }
   }
 )
 
+function handleWindowVisibilityChange(): void {
+  if (!autoLockStore.isLocked || visible.value || document.hidden) return
+  autoLockStore.requestLockPresentation()
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', handleWindowVisibilityChange)
+  window.addEventListener('focus', handleWindowVisibilityChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleWindowVisibilityChange)
+  window.removeEventListener('focus', handleWindowVisibilityChange)
+})
+
+async function completeUnlock(): Promise<boolean> {
+  if (!securityStore.hasSecurityKey) {
+    errorMsg.value = t('lock.securityKeyMissing')
+    return false
+  }
+
+  password.value = ''
+  hideLockScreen()
+  autoLockStore.unlock()
+  return true
+}
+
+async function unlockWithAccountPassword(accountPassword: string): Promise<boolean> {
+  await authStore.login({
+    username: authStore.username,
+    password: accountPassword
+  })
+  return completeUnlock()
+}
+
+async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promise<void> {
+  if (!visible.value || unlocking.value || !showBiometricUnlock.value) return
+  if (!window.biometricApi) return
+
+  clearBiometricAutoPromptTimer()
+  biometricLoading.value = true
+  errorMsg.value = ''
+  let focusPasswordAfterCancel = false
+  try {
+    const result = await window.biometricApi.prompt(t('lock.biometricReason'))
+    if (!result.ok) {
+      if (isBiometricCanceled(result)) {
+        errorMsg.value = ''
+        focusPasswordAfterCancel = true
+      } else if (!options.silent && result.error) {
+        errorMsg.value = result.error
+      }
+      return
+    }
+
+    const storedPassword = await loadPersistedAccountPassword()
+    if (!storedPassword) {
+      if (!options.silent) {
+        errorMsg.value = t('lock.biometricPasswordMissing')
+      }
+      focusPasswordAfterCancel = true
+      return
+    }
+
+    try {
+      const unlocked = await unlockWithAccountPassword(storedPassword)
+      if (!unlocked) {
+        focusPasswordAfterCancel = true
+      }
+    } catch (err) {
+      await clearPersistedAccountPassword()
+      if (!options.silent) {
+        errorMsg.value = err instanceof Error ? err.message : t('lock.wrongPassword')
+      }
+      focusPasswordAfterCancel = true
+    }
+  } catch (err) {
+    if (!options.silent) {
+      errorMsg.value = err instanceof Error ? err.message : t('lock.biometricFailed')
+    }
+  } finally {
+    biometricLoading.value = false
+    if (focusPasswordAfterCancel) {
+      void focusPasswordInput()
+    }
+  }
+}
+
 async function handleUnlock(): Promise<void> {
-  if (phase.value !== 'locked' || loading.value) return
+  if (!visible.value || unlocking.value) return
 
   if (!password.value) {
     errorMsg.value = t('lock.passwordRequired')
-    triggerShake()
     return
   }
 
+  clearBiometricAutoPromptTimer()
   loading.value = true
   errorMsg.value = ''
   try {
-    await authStore.login({
-      username: authStore.username,
-      password: password.value
-    })
-    password.value = ''
-    finishUnlockingSequence()
+    const unlocked = await unlockWithAccountPassword(password.value)
+    if (!unlocked) return
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : t('lock.wrongPassword')
-    triggerShake()
   } finally {
     loading.value = false
   }
@@ -267,26 +398,85 @@ async function handleUnlock(): Promise<void> {
     text-align: center;
     overflow: hidden;
 
-    &--enter {
-      animation: lock-card-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    &--exit {
-      animation: lock-card-exit 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    &--integrated {
+      width: min(420px, 100%);
+      padding: $spacing-xl $spacing-xl $spacing-xl;
+      border-radius: 18px;
     }
   }
 
-  &--unlocking &__backdrop {
-    background: rgba(0, 0, 0, 0.58);
-  }
-
-  &--exiting &__backdrop {
-    animation: lock-backdrop-out 0.8s ease forwards;
-  }
-
-  &__status,
   &__locked {
     min-height: 120px;
+  }
+
+  &__app-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto $spacing-md;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    background: transparent;
+
+    &--static {
+      cursor: default;
+    }
+  }
+
+  &__app-icon-image {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  &__unlock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__biometric-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: $radius-md;
+    background: $color-bg-elevated;
+    box-shadow: 0 0 0 1px $color-border inset;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+    &--waiting {
+      animation: lock-touch-id-pulse 1.4s ease-in-out infinite;
+    }
+
+    &:hover:not(:disabled) {
+      background: $color-surface-hover;
+      box-shadow: 0 0 0 1px $color-border-hover inset;
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.72;
+    }
+  }
+
+  &__password-input {
+    flex: 1;
+    min-width: 0;
   }
 
   &__title {
@@ -295,36 +485,37 @@ async function handleUnlock(): Promise<void> {
     font-weight: 700;
     color: $color-text-primary;
 
-    &--success {
-      color: $color-success;
-      animation: lock-success-pop 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) 0.35s both;
+    &--app {
+      margin-top: 0;
+      font-size: $font-size-lg;
+      font-weight: 600;
     }
-  }
-
-  &__subtitle {
-    margin: 0 0 $spacing-xs;
-    font-size: $font-size-md;
-    color: $color-text-secondary;
   }
 
   &__hint {
     margin: 0 0 $spacing-lg;
     font-size: $font-size-sm;
     color: $color-text-muted;
-  }
+    line-height: 1.55;
 
-  &__status &__hint {
-    margin-bottom: 0;
+    &--integrated {
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: $spacing-md;
+      color: $color-text-secondary;
+    }
   }
 
   &__form {
     display: flex;
     flex-direction: column;
     gap: $spacing-md;
-  }
 
-  &__submit {
-    width: 100%;
+    &--integrated {
+      max-width: 300px;
+      margin: 0 auto;
+    }
   }
 
   &__error {
@@ -344,66 +535,13 @@ async function handleUnlock(): Promise<void> {
   opacity: 0;
 }
 
-.lock-screen-content-enter-active,
-.lock-screen-content-leave-active {
-  transition: opacity 0.32s ease, transform 0.32s ease;
-}
-
-.lock-screen-content-enter-active {
-  transition-delay: 0.08s;
-}
-
-.lock-screen-content-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.lock-screen-content-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-
-@keyframes lock-card-enter {
-  0% {
-    opacity: 0;
-    transform: scale(0.88) translateY(24px);
-  }
+@keyframes lock-touch-id-pulse {
+  0%,
   100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1);
   }
-}
-
-@keyframes lock-card-exit {
-  0% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.06) translateY(-18px);
-  }
-}
-
-@keyframes lock-backdrop-out {
-  0% {
-    opacity: 1;
-    backdrop-filter: blur(10px);
-  }
-  100% {
-    opacity: 0;
-    backdrop-filter: blur(0);
-  }
-}
-
-@keyframes lock-success-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.88) translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+  50% {
+    transform: scale(1.04);
   }
 }
 </style>

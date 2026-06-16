@@ -5,18 +5,18 @@ import {
   DEFAULT_AUTO_LOCK_MINUTES,
   type AutoLockMinutes
 } from '@/types/autoLock'
+import { useAuthStore } from '@/stores/auth'
 import { useSecurityStore } from '@/stores/security'
+import { useVaultStore } from '@/stores/vault'
 import { storage } from '@/utils/storage'
+import { clearSensitiveClipboardOnLock } from '@/utils/sensitiveClipboard'
 
 const STORAGE_KEY = 'auto_lock_minutes'
 const LOCK_STATE_KEY = 'app_locked'
 const ALLOWED_MINUTES = AUTO_LOCK_OPTIONS.map((item) => item.value)
 const CHECK_INTERVAL_MS = 1000
-/** 锁定后自动隐藏窗口的延迟 */
-const LOCK_HIDE_DELAY_MS = 3000
 
 let checkInterval: ReturnType<typeof setInterval> | null = null
-let hideAfterLockTimer: ReturnType<typeof setTimeout> | null = null
 let lastActivityAt = Date.now()
 
 function normalizeLockMinutes(value: unknown): AutoLockMinutes {
@@ -33,23 +33,19 @@ function clearCheckInterval(): void {
   }
 }
 
-function clearHideAfterLockTimer(): void {
-  if (hideAfterLockTimer) {
-    clearTimeout(hideAfterLockTimer)
-    hideAfterLockTimer = null
-  }
-}
-
-function scheduleHideAfterLock(): void {
-  clearHideAfterLockTimer()
-  hideAfterLockTimer = setTimeout(() => {
-    hideAfterLockTimer = null
-    window.windowApi?.hide()
-  }, LOCK_HIDE_DELAY_MS)
+function hideWindowAfterLock(): void {
+  window.windowApi?.hide()
 }
 
 function isMigrationActive(): boolean {
   return useSecurityStore().isMigrating
+}
+
+/** 锁定时清除内存中的安全密钥与已解密的密码库缓存 */
+function applySecureLockSideEffects(): void {
+  useSecurityStore().unloadFromMemory()
+  useVaultStore().reset()
+  void clearSensitiveClipboardOnLock()
 }
 
 /**
@@ -74,7 +70,6 @@ export const useAutoLockStore = defineStore('autoLock', () => {
   function requestLockPresentation(): void {
     if (isLocked.value) {
       lockPresentToken.value += 1
-      clearHideAfterLockTimer()
     }
   }
 
@@ -118,17 +113,20 @@ export const useAutoLockStore = defineStore('autoLock', () => {
     const wasLocked = isLocked.value
     isLocked.value = true
     persistLockState(true)
+    applySecureLockSideEffects()
     if (!wasLocked) {
-      scheduleHideAfterLock()
+      hideWindowAfterLock()
     }
   }
 
   function unlock(): void {
-    clearHideAfterLockTimer()
     isLocked.value = false
     persistLockState(false)
     lastActivityAt = Date.now()
     startChecker()
+    if (useAuthStore().isLoggedIn) {
+      void useVaultStore().ensureLoaded()
+    }
   }
 
   function start(): void {
@@ -143,10 +141,16 @@ export const useAutoLockStore = defineStore('autoLock', () => {
 
   /** 停止检测并清除锁定（登出时使用） */
   function stop(): void {
-    clearHideAfterLockTimer()
     pauseMonitoring()
     isLocked.value = false
     persistLockState(false)
+  }
+
+  /** 应用启动时若处于锁定态，确保内存中无密钥与明文缓存 */
+  function ensureSecureLockState(): void {
+    if (isLocked.value) {
+      applySecureLockSideEffects()
+    }
   }
 
   return {
@@ -160,6 +164,7 @@ export const useAutoLockStore = defineStore('autoLock', () => {
     start,
     pauseMonitoring,
     stop,
-    requestLockPresentation
+    requestLockPresentation,
+    ensureSecureLockState
   }
 })

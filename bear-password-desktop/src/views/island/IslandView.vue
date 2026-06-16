@@ -107,6 +107,7 @@ import {
   resolveEntryType
 } from '@/utils/vaultEntryDisplay'
 import { storage } from '@/utils/storage'
+import { appendClipboardClearHint, copySensitiveText } from '@/utils/sensitiveClipboard'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
@@ -215,17 +216,13 @@ async function copyEntrySecret(entry: PasswordEntry): Promise<void> {
     return
   }
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(secret)
-    } else {
-      throw new Error('clipboard unavailable')
-    }
-    ElMessage.success(t('island.copied'))
-    window.islandApi?.touchActivity()
-  } catch {
+  const copied = await copySensitiveText(secret)
+  if (!copied) {
     ElMessage.error(t('island.copyFailed'))
+    return
   }
+  ElMessage.success(appendClipboardClearHint(t('island.copied'), t))
+  window.islandApi?.touchActivity()
 }
 
 function getEntryTypeLabel(entry: PasswordEntry): string {
