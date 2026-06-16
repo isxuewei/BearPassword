@@ -74,6 +74,14 @@ public class AuthController {
     }
 
     /**
+     * 获取当前用户保险库加密元数据
+     */
+    @GetMapping("/vault-crypto")
+    public Result<VaultCryptoResponse> vaultCrypto() {
+        return Result.success(authService.getVaultCrypto());
+    }
+
+    /**
      * 修改当前用户登录密码
      */
     @PutMapping("/password")

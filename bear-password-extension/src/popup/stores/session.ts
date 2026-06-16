@@ -20,7 +20,7 @@ export const useSessionStore = defineStore('session', () => {
 
   const isLoggedIn = computed(() => !!session.value?.token)
   const username = computed(() => session.value?.username ?? '')
-  const hasSecurityKey = computed(() => !!session.value?.securityKey)
+  const hasSecurityKey = computed(() => !!session.value?.vukBase64)
   const securityKey = computed(() => session.value?.securityKey ?? '')
   const success = ref('')
 
@@ -52,7 +52,8 @@ export const useSessionStore = defineStore('session', () => {
         username: result.username,
         avatar: result.avatar,
         serverOrigin: origin,
-        securityKey: null
+        securityKey: null,
+        vukBase64: null
       }
       session.value = await sendMessage<ExtensionSession>({
         type: 'SET_SESSION',
@@ -106,14 +107,14 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  async function applySecurityKey(securityKey: string): Promise<void> {
+  async function applySecurityKey(securityKey: string, masterPassword: string): Promise<void> {
     loading.value = true
     error.value = ''
     success.value = ''
     try {
       const result = await sendMessage<SecurityKeyApplyResult>({
         type: 'SET_SECURITY_KEY',
-        payload: { securityKey }
+        payload: { securityKey, masterPassword }
       })
       session.value = result.session
       success.value = formatSecurityKeySuccess(result.usableCount, result.encryptedTotal)

@@ -31,7 +31,8 @@ export function createEmptySession(serverOrigin: string): ExtensionSession {
     token: '',
     username: '',
     serverOrigin,
-    securityKey: null
+    securityKey: null,
+    vukBase64: null
   }
 }
 
@@ -45,6 +46,7 @@ export function normalizeSession(raw: unknown): ExtensionSession | null {
     username: String(record.username ?? ''),
     avatar: record.avatar ? String(record.avatar) : undefined,
     serverOrigin: String(record.serverOrigin ?? getDefaultServerOrigin()),
-    securityKey: record.securityKey ? String(record.securityKey) : null
+    securityKey: record.securityKey ? String(record.securityKey) : null,
+    vukBase64: record.vukBase64 ? String(record.vukBase64) : null
   }
 }

@@ -30,8 +30,17 @@ async function bootstrap(): Promise<void> {
 
   app.use(pinia)
   const autoLockStore = useAutoLockStore()
+  const authStore = useAuthStore()
   await useSecurityStore().init()
+  if (authStore.isLoggedIn) {
+    try {
+      await useSecurityStore().refreshVaultCryptoMeta()
+    } catch {
+      authStore.clearSession()
+    }
+  }
   autoLockStore.ensureSecureLockState()
+  autoLockStore.ensureVaultSessionLocked()
   app.use(router)
   app.use(ElementPlus, { size: 'default' })
 

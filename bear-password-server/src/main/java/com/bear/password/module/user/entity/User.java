@@ -35,4 +35,10 @@ public class User extends BaseEntity {
 
     /** 上次登录时间 */
     private LocalDateTime lastLoginTime;
+
+    /** 保险库 KDF 盐（Base64，公开） */
+    private String vaultSalt;
+
+    /** 账户密钥 SHA-256 指纹（Base64） */
+    private String secretKeyFingerprint;
 }

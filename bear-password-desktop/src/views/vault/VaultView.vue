@@ -1190,7 +1190,7 @@ function onSearchHotkey(event: KeyboardEvent): void {
 }
 
 function ensureSecurityKeyConfigured(): boolean {
-  if (securityStore.hasSecurityKey) return true
+  if (securityStore.hasVaultAccess) return true
   ElMessage.warning(t('msg.securityKeyRequiredWrite'))
   return false
 }

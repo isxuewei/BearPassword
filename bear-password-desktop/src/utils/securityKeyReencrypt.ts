@@ -3,7 +3,8 @@ import { fetchAllPasswordEntriesRaw, updatePasswordRawApi } from '@/api/vaultRaw
 import {
   decryptContentObject,
   encryptContentObject,
-  isEncryptedContent
+  isEncryptedContent,
+  type VaultUnlockContext
 } from '@/utils/contentCrypto'
 
 export interface SecurityKeyReencryptProgress {
@@ -28,72 +29,72 @@ interface PreparedReencryptItem {
 
 async function decryptPlainContent(
   rawContent: PasswordContent,
-  oldKey: string | null,
-  newKey: string | null
+  oldUnlock: VaultUnlockContext | null,
+  newUnlock: VaultUnlockContext | null
 ): Promise<PasswordContent> {
   if (!isEncryptedContent(rawContent)) {
     return rawContent
   }
-  const decryptKey = oldKey ?? newKey
-  if (!decryptKey) {
+  const unlock = oldUnlock ?? newUnlock
+  if (!unlock) {
     throw new SecurityKeyReencryptError('存在已加密条目，但缺少密钥，无法处理')
   }
   try {
-    return await decryptContentObject(rawContent, decryptKey)
+    return await decryptContentObject(rawContent, unlock)
   } catch {
     throw new SecurityKeyReencryptError(
-      oldKey
+      oldUnlock
         ? '原密钥无法解密已有条目，请确认密钥正确'
-        : '安全密钥无法解密已有条目，请确认与之前使用的密钥完全一致'
+        : '账户密钥无法解密已有条目，请确认与之前使用的密钥完全一致'
     )
   }
 }
 
 async function encryptPlainContent(
   plainContent: PasswordContent,
-  newKey: string | null
+  unlock: VaultUnlockContext | null
 ): Promise<PasswordContent> {
-  if (!newKey) {
+  if (!unlock) {
     return plainContent
   }
-  return (await encryptContentObject(plainContent, newKey)) as unknown as PasswordContent
+  return (await encryptContentObject(plainContent, unlock)) as unknown as PasswordContent
 }
 
 function needsContentRewrite(
   rawContent: PasswordContent,
-  oldKey: string | null,
-  newKey: string | null
+  oldUnlock: VaultUnlockContext | null,
+  newUnlock: VaultUnlockContext | null
 ): boolean {
   const encrypted = isEncryptedContent(rawContent)
-  if (newKey) {
+  if (newUnlock) {
     if (!encrypted) return true
-    return !!oldKey
+    return !!oldUnlock
   }
-  return encrypted && !!oldKey
+  return encrypted && !!oldUnlock
 }
 
 async function prepareEntryReencrypt(
   entry: PasswordEntry,
-  oldKey: string | null,
-  newKey: string | null
+  oldUnlock: VaultUnlockContext | null,
+  newUnlock: VaultUnlockContext | null
 ): Promise<PreparedReencryptItem | null> {
-  const plainContent = await decryptPlainContent(entry.content, oldKey, newKey)
-  if (!needsContentRewrite(entry.content, oldKey, newKey)) {
+  const plainContent = await decryptPlainContent(entry.content, oldUnlock, newUnlock)
+  if (!needsContentRewrite(entry.content, oldUnlock, newUnlock)) {
     return null
   }
 
-  const content = await encryptPlainContent(plainContent, newKey)
+  const content = await encryptPlainContent(plainContent, newUnlock)
   return { entry, content }
 }
 
-/** 更换安全密钥时，将全部条目的 content 用新密钥重新加密 */
+/** 更换账户密钥时，将全部条目的 content 用新上下文重新加密 */
 export async function reencryptAllPasswordContents(
-  oldKey: string | null,
-  newKey: string | null,
+  oldUnlock: VaultUnlockContext | null,
+  newUnlock: VaultUnlockContext | null,
   onProgress?: SecurityKeyReencryptProgressHandler
 ): Promise<number> {
-  if (!newKey?.trim()) {
-    throw new SecurityKeyReencryptError('必须配置安全密钥，不允许清除加密或上传明文')
+  if (!newUnlock?.vuk) {
+    throw new SecurityKeyReencryptError('必须配置账户密钥，不允许清除加密或上传明文')
   }
 
   const entries = await fetchAllPasswordEntriesRaw()
@@ -115,7 +116,7 @@ export async function reencryptAllPasswordContents(
       message: `正在校验 ${index + 1}/${total}：条目 #${entry.id}`
     })
 
-    const item = await prepareEntryReencrypt(entry, oldKey, newKey)
+    const item = await prepareEntryReencrypt(entry, oldUnlock, newUnlock)
     if (item) {
       prepared.push(item)
     }

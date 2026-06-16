@@ -121,8 +121,8 @@ interface SecureStorageApi {
   remove: () => Promise<void>
 }
 
-/** Electron preload 暴露的账户密码存储 API（生物识别解锁时替代手动输入） */
-interface AccountPasswordApi {
+/** Electron preload 暴露的主密码存储 API（生物识别解锁保险库时使用） */
+interface VaultPasswordApi {
   isAvailable: () => Promise<boolean>
   get: () => Promise<string | null>
   set: (password: string) => Promise<{ ok: true } | { ok: false; error: string }>
@@ -151,7 +151,7 @@ declare global {
     dockApi?: DockApi
     fileApi?: FileApi
     secureStorageApi?: SecureStorageApi
-    accountPasswordApi?: AccountPasswordApi
+    vaultPasswordApi?: VaultPasswordApi
     biometricApi?: BiometricApi
   }
 }

@@ -8,6 +8,67 @@
     <div class="settings-view__grid">
     <div class="settings-view__section">
       <h3>{{ t('settings.security') }}</h3>
+      <p class="settings-view__vault-crypto-intro">
+        {{ t('settings.vaultCryptoIntro') }}
+      </p>
+
+      <div class="settings-view__row settings-view__row--security">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.masterPassword') }}</span>
+          <small>{{ masterPasswordHint }}</small>
+        </div>
+        <span
+          class="settings-view__badge"
+          :class="{ 'settings-view__badge--active': masterPasswordConfigured }"
+        >
+          {{ masterPasswordConfigured ? t('settings.masterPasswordConfigured') : t('settings.masterPasswordNotConfigured') }}
+        </span>
+      </div>
+
+      <div class="settings-view__security-panel settings-view__security-panel--master-password">
+        <el-input
+          v-model="masterPasswordOld"
+          type="password"
+          show-password
+          :placeholder="t('settings.masterPasswordOldPlaceholder')"
+          size="large"
+          class="settings-view__security-input"
+          :disabled="securityStore.isMigrating"
+        />
+        <el-input
+          v-model="masterPasswordNew"
+          type="password"
+          show-password
+          :placeholder="t('settings.masterPasswordNewPlaceholder')"
+          size="large"
+          class="settings-view__security-input"
+          :disabled="securityStore.isMigrating"
+        />
+        <el-input
+          v-model="masterPasswordConfirm"
+          type="password"
+          show-password
+          :placeholder="t('settings.masterPasswordConfirmPlaceholder')"
+          size="large"
+          class="settings-view__security-input"
+          :disabled="securityStore.isMigrating"
+          @keyup.enter="handleChangeMasterPassword"
+        />
+        <div class="settings-view__security-actions">
+          <el-button
+            type="primary"
+            size="large"
+            :loading="securityStore.isMigrating"
+            :disabled="!masterPasswordConfigured || securityStore.isMigrating"
+            @click="handleChangeMasterPassword"
+          >
+            {{ t('settings.masterPasswordChange') }}
+          </el-button>
+        </div>
+        <p class="settings-view__security-note">
+          {{ t('settings.masterPasswordNote') }}
+        </p>
+      </div>
 
       <div class="settings-view__row settings-view__row--security">
         <div class="settings-view__row-label">
@@ -505,9 +566,14 @@ import {
   SecurityKeyReencryptError
 } from '@/utils/securityKeyReencrypt'
 import {
+  changeMasterPassword,
+  MasterPasswordChangeError
+} from '@/utils/masterPasswordChange'
+import {
   buildSecurityKeyBackupFileContent,
   buildSecurityKeyBackupFileName
 } from '@/utils/securityKeyBackup'
+import { loadPersistedVaultPassword } from '@/utils/vaultPasswordStorage'
 import { isValidSecurityKeyLength, SECURITY_KEY_LENGTH } from '@/utils/contentCrypto'
 import {
   appendClipboardClearHint,
@@ -531,6 +597,9 @@ const trayStore = useTrayStore()
 const dockStore = useDockStore()
 const healthReady = ref(false)
 const securityKeyInput = ref('')
+const masterPasswordOld = ref('')
+const masterPasswordNew = ref('')
+const masterPasswordConfirm = ref('')
 const generatedKeyDialogVisible = ref(false)
 const generatedKeyDisplay = ref('')
 const securityKeyVerifyDialogVisible = ref(false)
@@ -702,6 +771,14 @@ const securityKeyHint = computed(() =>
     : t('settings.securityKeyDisabledHint')
 )
 
+const masterPasswordConfigured = computed(() => !!securityStore.vaultSalt)
+
+const masterPasswordHint = computed(() =>
+  masterPasswordConfigured.value
+    ? t('settings.masterPasswordConfiguredHint')
+    : t('settings.masterPasswordNotConfiguredHint')
+)
+
 const securityKeyPlaceholder = computed(() => {
   if (securityStore.hasSecurityKey && !securityKeyInput.value.trim()) {
     return t('settings.securityKeyConfiguredPlaceholder')
@@ -857,9 +934,15 @@ async function runSecurityKeyReencrypt(
   oldKey: string | null,
   newKey: string | null
 ): Promise<number> {
+  void oldKey
+  const oldUnlock = securityStore.vuk ? { vuk: securityStore.vuk } : null
+  const newUnlock = newKey
+    ? { vuk: await securityStore.deriveVukForAccountKey(newKey) }
+    : null
+
   securityStore.beginMigration('正在准备重新加密…')
   try {
-    return await reencryptAllPasswordContents(oldKey, newKey, (progress) => {
+    return await reencryptAllPasswordContents(oldUnlock, newUnlock, (progress) => {
       securityStore.updateMigrationProgress(progress)
     })
   } finally {
@@ -914,6 +997,10 @@ async function completeSecurityKeySave(oldKey: string | null, newKey: string): P
   try {
     const reencrypted = await runSecurityKeyReencrypt(oldKey, newKey)
     await securityStore.setSecurityKey(newKey)
+    const masterPassword = await loadPersistedVaultPassword()
+    if (masterPassword) {
+      await securityStore.unlockWithMasterPassword(masterPassword)
+    }
     securityKeyInput.value = ''
     ElMessage.success(
       reencrypted > 0 ? t('msg.securityKeySavedMigrated', { count: reencrypted }) : t('msg.securityKeySaved')
@@ -995,6 +1082,77 @@ async function handleSaveKey(): Promise<void> {
   }
 
   await completeSecurityKeySave(oldKey, newKey)
+}
+
+async function handleChangeMasterPassword(): Promise<void> {
+  if (securityStore.isMigrating) return
+
+  if (!masterPasswordConfigured.value) {
+    ElMessage.warning(t('settings.masterPasswordNotConfiguredHint'))
+    return
+  }
+
+  if (!securityStore.hasSecurityKey) {
+    ElMessage.warning(t('settings.masterPasswordNeedSecurityKey'))
+    return
+  }
+
+  const oldPassword = masterPasswordOld.value
+  const newPassword = masterPasswordNew.value.trim()
+  const confirmPassword = masterPasswordConfirm.value.trim()
+
+  if (!oldPassword) {
+    ElMessage.warning(t('settings.masterPasswordOldRequired'))
+    return
+  }
+  if (!newPassword) {
+    ElMessage.warning(t('settings.masterPasswordNewRequired'))
+    return
+  }
+  if (newPassword.length < 6 || newPassword.length > 64) {
+    ElMessage.warning(t('register.passwordLength'))
+    return
+  }
+  if (newPassword !== confirmPassword) {
+    ElMessage.warning(t('settings.masterPasswordMismatch'))
+    return
+  }
+  if (newPassword === oldPassword) {
+    ElMessage.info(t('settings.masterPasswordUnchanged'))
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      t('settings.masterPasswordChangeBody'),
+      t('settings.masterPasswordChangeTitle'),
+      { type: 'warning', confirmButtonText: t('msg.confirm'), cancelButtonText: t('msg.cancel') }
+    )
+  } catch {
+    return
+  }
+
+  try {
+    const count = await changeMasterPassword(oldPassword, newPassword, (progress) => {
+      securityStore.updateMigrationProgress(progress)
+    })
+    masterPasswordOld.value = ''
+    masterPasswordNew.value = ''
+    masterPasswordConfirm.value = ''
+    ElMessage.success(
+      count > 0
+        ? t('settings.masterPasswordChangedWithCount', { count })
+        : t('settings.masterPasswordChanged')
+    )
+  } catch (err) {
+    const message =
+      err instanceof MasterPasswordChangeError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : t('settings.masterPasswordChangeFailed')
+    ElMessage.error(message)
+  }
 }
 
 </script>
@@ -1205,6 +1363,13 @@ async function handleSaveKey(): Promise<void> {
       padding: 1px 6px;
       border-radius: 4px;
     }
+  }
+
+  &__vault-crypto-intro {
+    margin: 0 0 $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    line-height: 1.5;
   }
 
   &__security-panel {

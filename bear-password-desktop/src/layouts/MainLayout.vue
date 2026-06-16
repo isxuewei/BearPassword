@@ -78,7 +78,6 @@
       </div>
     </Teleport>
 
-    <LockScreen />
     <AnnouncementDialog />
   </div>
 </template>
@@ -89,7 +88,6 @@ import { useRoute, useRouter } from 'vue-router'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import TitleBar from '@/components/window/TitleBar.vue'
 import AppLogo from '@/components/common/AppLogo.vue'
-import LockScreen from '@/components/common/LockScreen.vue'
 import AnnouncementDialog from '@/components/common/AnnouncementDialog.vue'
 import SideNav from '@/components/common/SideNav.vue'
 import { getCurrentUserApi } from '@/api'

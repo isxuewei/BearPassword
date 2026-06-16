@@ -6,7 +6,10 @@
       <div class="auth-layout__glow auth-layout__glow--1" />
       <div class="auth-layout__glow auth-layout__glow--2" />
 
-      <div class="auth-layout__card">
+      <div
+        class="auth-layout__card"
+        :class="{ 'auth-layout__card--kit': registerKitStep && !isLogin }"
+      >
         <button
           type="button"
           class="auth-layout__settings-btn"
@@ -19,7 +22,7 @@
 
         <transition name="auth-form" mode="out-in">
           <LoginForm v-if="isLogin" key="login" />
-          <RegisterForm v-else key="register" />
+          <RegisterForm v-else key="register" @kit-step-change="registerKitStep = $event" />
         </transition>
       </div>
     </div>
@@ -41,6 +44,7 @@ import RegisterForm from '@/views/login/RegisterForm.vue'
 const { t } = useI18n()
 const route = useRoute()
 const showServerSettings = ref(false)
+const registerKitStep = ref(false)
 
 const isLogin = computed(() => route.name === 'Login')
 </script>
@@ -92,6 +96,11 @@ const isLogin = computed(() => route.name === 'Login')
     box-shadow: $shadow-lg;
     position: relative;
     z-index: 1;
+    transition: width 0.2s ease;
+
+    &--kit {
+      width: 460px;
+    }
   }
 
   &__settings-btn {

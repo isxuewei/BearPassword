@@ -11,6 +11,7 @@ import type {
   UpdateUsernameParams,
   UserProfile,
   UsernameCheckResult,
+  VaultCryptoMeta,
   VerifySecurityKeyChangeCodeParams
 } from '@/types'
 
@@ -32,6 +33,11 @@ export function logoutApi(): Promise<void> {
 /** 获取当前用户信息 GET /auth/me */
 export function getCurrentUserApi(): Promise<UserProfile> {
   return request.get<UserProfile>('/auth/me')
+}
+
+/** 获取保险库加密元数据 GET /auth/vault-crypto */
+export function getVaultCryptoApi(): Promise<VaultCryptoMeta> {
+  return request.get<VaultCryptoMeta>('/auth/vault-crypto')
 }
 
 /** 修改登录密码 PUT /auth/password */

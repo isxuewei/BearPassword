@@ -1,4 +1,4 @@
-import { logoutApi } from '@/shared/api/auth'
+import { logoutApi, getCurrentUserApi } from '@/shared/api/auth'
 import { addFavoriteApi, getFavoriteIdsApi, removeFavoriteApi } from '@/shared/api/favorites'
 import {
   createPasswordApi,
@@ -6,7 +6,7 @@ import {
   getPasswordDetailApi,
   getPasswordListApi,
   updatePasswordApi,
-  validateSecurityKeyApi
+  validateVaultUnlockApi
 } from '@/shared/api/vault'
 import type {
   AutofillPayload,
@@ -29,6 +29,8 @@ import {
   buildMatchingCredentialsResult,
   toFillCredential
 } from '@/shared/utils/vaultTransform'
+import { deriveVaultUnlockKey, toBase64 } from '@/shared/utils/contentCrypto'
+import { getVaultUnlockFromSession } from '@/shared/utils/vaultUnlock'
 import { generatePassword } from '@/shared/utils/passwordGenerator'
 
 interface CredentialsCacheEntry {
@@ -70,8 +72,9 @@ async function refreshMatchingCredentials(
     return cached.result
   }
 
+  const unlock = getVaultUnlockFromSession(session)
   const [page, favoriteIds] = await Promise.all([
-    getPasswordListApi(session.serverOrigin, session.token, session.securityKey, {
+    getPasswordListApi(session.serverOrigin, session.token, unlock, {
       page: 1,
       pageSize: keyword ? KEYWORD_PAGE_SIZE : 500,
       passwordType: '登录信息',
@@ -124,10 +127,11 @@ async function resolveFillCredential(
     if (matched) return matched
   }
 
+  const unlock = getVaultUnlockFromSession(session)
   const entry = await getPasswordDetailApi(
     session.serverOrigin,
     session.token,
-    session.securityKey,
+    unlock,
     credentialId
   )
   const credential = toFillCredential(entry)
@@ -178,13 +182,14 @@ async function handleCreateCredential(payload: UpsertCredentialPayload): Promise
   const session = await getActiveSession()
   if (!session) throw new Error('请先登录')
 
+  const unlock = getVaultUnlockFromSession(session)
   const params = buildLoginEntryParams(
     payload.title,
     payload.username,
     payload.password,
     payload.websites
   )
-  await createPasswordApi(session.serverOrigin, session.token, session.securityKey, params)
+  await createPasswordApi(session.serverOrigin, session.token, unlock, params)
   clearCredentialsCache()
   await updateBadgeForActiveTab()
 }
@@ -202,10 +207,11 @@ async function handleUpdateCredential(payload: UpdateCredentialPayload): Promise
   const session = await getActiveSession()
   if (!session) throw new Error('请先登录')
 
+  const unlock = getVaultUnlockFromSession(session)
   const existing = await getPasswordDetailApi(
     session.serverOrigin,
     session.token,
-    session.securityKey,
+    unlock,
     payload.credentialId
   )
   const content = existing.content as LoginContent
@@ -222,7 +228,7 @@ async function handleUpdateCredential(payload: UpdateCredentialPayload): Promise
   await updatePasswordApi(
     session.serverOrigin,
     session.token,
-    session.securityKey,
+    unlock,
     payload.credentialId,
     params
   )
@@ -310,21 +316,31 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
     case 'SET_SECURITY_KEY': {
       const session = await loadSession()
       if (!session?.token) throw new Error('请先登录')
-      const securityKey = (message.payload as { securityKey: string }).securityKey.trim()
+      const payload = message.payload as { securityKey: string; masterPassword: string }
+      const securityKey = payload.securityKey.trim()
+      const masterPassword = payload.masterPassword.trim()
       if (!securityKey) throw new Error('请输入安全密钥')
+      if (!masterPassword) throw new Error('请输入主密码')
 
-      const validation = await validateSecurityKeyApi(
+      const profile = await getCurrentUserApi(session.serverOrigin, session.token)
+      if (!profile.vaultSalt) {
+        throw new Error('服务端缺少保险库加密配置')
+      }
+
+      const vuk = await deriveVaultUnlockKey(masterPassword, securityKey, profile.vaultSalt)
+      const unlock = { vuk }
+      const validation = await validateVaultUnlockApi(
         session.serverOrigin,
         session.token,
-        securityKey
+        unlock
       )
       if (!validation.verified) {
         throw new Error(
-          `安全密钥错误，无法解密已加密条目（共 ${validation.encryptedTotal} 条）。请确认与桌面端设置中的密钥完全一致`
+          `密钥或主密码错误，无法解密已加密条目（共 ${validation.encryptedTotal} 条）。请确认与桌面端设置一致`
         )
       }
 
-      const updated = { ...session, securityKey }
+      const updated = { ...session, securityKey, vukBase64: toBase64(vuk) }
       await saveSession(updated)
       clearCredentialsCache()
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -342,7 +358,7 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
     case 'CLEAR_SECURITY_KEY': {
       const session = await loadSession()
       if (!session?.token) return null
-      const updated = { ...session, securityKey: null }
+      const updated = { ...session, securityKey: null, vukBase64: null }
       await saveSession(updated)
       clearCredentialsCache()
       await updateBadgeForActiveTab()
@@ -427,4 +443,3 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
       throw new Error(`未知消息类型: ${message.type}`)
   }
 }
-

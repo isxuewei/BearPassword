@@ -40,18 +40,24 @@
                 >
                   <BiometricFingerprintIcon />
                 </button>
-                <el-input
-                  ref="passwordInputRef"
-                  v-model="password"
-                  type="password"
-                  show-password
-                  size="large"
-                  class="lock-screen__password-input"
-                  :placeholder="t('lock.passwordInputPlaceholder')"
-                  :disabled="unlocking"
-                  @mousedown="handlePasswordInteraction"
-                  @keyup.enter="handleUnlock"
-                />
+                <div
+                  class="lock-screen__password-wrap"
+                  :class="{ 'lock-screen__password-wrap--shake': passwordShaking }"
+                >
+                  <el-input
+                    ref="passwordInputRef"
+                    v-model="password"
+                    type="password"
+                    show-password
+                    size="large"
+                    class="lock-screen__password-input"
+                    :class="{ 'lock-screen__password-input--error': passwordShaking }"
+                    :placeholder="t('lock.passwordInputPlaceholder')"
+                    :disabled="unlocking"
+                    @mousedown="handlePasswordInteraction"
+                    @keyup.enter="handleUnlock"
+                  />
+                </div>
               </div>
             </el-form>
 
@@ -65,6 +71,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import type { InputInstance } from 'element-plus'
 import logoUrl from '@/assets/logo.svg'
 import BiometricFingerprintIcon from '@/components/common/BiometricFingerprintIcon.vue'
@@ -73,16 +80,20 @@ import { useAutoLockStore } from '@/stores/autoLock'
 import { useBiometricUnlockStore } from '@/stores/biometricUnlock'
 import { useSecurityStore } from '@/stores/security'
 import { useI18n } from '@/composables/useI18n'
+import { verifyVaultUnlockContext } from '@/utils/vaultUnlockVerify'
+import { isUnauthorizedError } from '@/utils/request'
 import {
-  clearPersistedAccountPassword,
-  loadPersistedAccountPassword
-} from '@/utils/accountPasswordStorage'
+  clearPersistedVaultPassword,
+  loadPersistedVaultPassword,
+  persistVaultPassword
+} from '@/utils/vaultPasswordStorage'
 
 const { t } = useI18n()
 
 const BIOMETRIC_AUTO_PROMPT_DELAY_MS = 350
 const BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS = 2500
 
+const router = useRouter()
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
 const biometricUnlockStore = useBiometricUnlockStore()
@@ -96,6 +107,7 @@ const biometricLoading = ref(false)
 const biometricAvailable = ref(false)
 const biometricKind = ref<'touchId' | 'windowsHello' | null>(null)
 const passwordInputRef = ref<InputInstance>()
+const passwordShaking = ref(false)
 
 const unlocking = computed(() => loading.value || biometricLoading.value)
 
@@ -105,7 +117,7 @@ const showBiometricUnlock = computed(
 
 const lockHintText = computed(() => {
   if (showBiometricUnlock.value) {
-    return t('lock.integratedHint', { user: authStore.displayName })
+    return t('lock.integratedHint')
   }
   return t('lock.idleHint')
 })
@@ -117,6 +129,9 @@ const biometricButtonLabel = computed(() => {
 })
 
 let biometricAutoPromptTimer: ReturnType<typeof setTimeout> | null = null
+let passwordShakeTimer: ReturnType<typeof setTimeout> | null = null
+
+const PASSWORD_SHAKE_MS = 480
 
 function clearBiometricAutoPromptTimer(): void {
   if (biometricAutoPromptTimer) {
@@ -127,6 +142,32 @@ function clearBiometricAutoPromptTimer(): void {
 
 function clearTimers(): void {
   clearBiometricAutoPromptTimer()
+  if (passwordShakeTimer) {
+    clearTimeout(passwordShakeTimer)
+    passwordShakeTimer = null
+  }
+}
+
+function isWrongPasswordError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false
+  return err.message === t('lock.wrongPassword')
+}
+
+async function triggerPasswordShake(): Promise<void> {
+  errorMsg.value = ''
+  password.value = ''
+  if (passwordShakeTimer) {
+    clearTimeout(passwordShakeTimer)
+    passwordShakeTimer = null
+  }
+  passwordShaking.value = false
+  await nextTick()
+  passwordShaking.value = true
+  passwordShakeTimer = setTimeout(() => {
+    passwordShaking.value = false
+    passwordShakeTimer = null
+  }, PASSWORD_SHAKE_MS)
+  await focusPasswordInput()
 }
 
 function shouldAutoPromptBiometric(autoPromptBiometric: boolean): boolean {
@@ -221,6 +262,7 @@ function presentLockScreen(): void {
   visible.value = true
   password.value = ''
   errorMsg.value = ''
+  passwordShaking.value = false
   loading.value = false
   void onLockScreenReady(true)
 }
@@ -234,20 +276,37 @@ function handlePasswordInteraction(): void {
   clearBiometricAutoPromptTimer()
 }
 
+function redirectToLoginIfNeeded(): void {
+  hideLockScreen()
+  if (authStore.isLoggedIn) return
+  if (router.currentRoute.value.name !== 'Login') {
+    void router.replace({ name: 'Login' })
+  }
+}
+
+function handleUnlockError(err: unknown): void {
+  if (isUnauthorizedError(err)) {
+    redirectToLoginIfNeeded()
+    return
+  }
+  if (isWrongPasswordError(err)) {
+    void triggerPasswordShake()
+    return
+  }
+  errorMsg.value = err instanceof Error ? err.message : t('lock.wrongPassword')
+}
+
 watch(
-  () => autoLockStore.isLocked,
-  (locked, previous) => {
-    if (locked) {
-      if (previous === false) {
-        visible.value = false
-        return
+  () => ({ locked: autoLockStore.isLocked, loggedIn: authStore.isLoggedIn }),
+  ({ locked, loggedIn }) => {
+    if (!loggedIn || !locked) {
+      hideLockScreen()
+      if (!loggedIn && router.currentRoute.value.name !== 'Login') {
+        void router.replace({ name: 'Login' })
       }
-      presentLockScreen()
       return
     }
-    if (previous) {
-      hideLockScreen()
-    }
+    presentLockScreen()
   },
   { immediate: true, flush: 'sync' }
 )
@@ -255,7 +314,7 @@ watch(
 watch(
   () => autoLockStore.lockPresentToken,
   () => {
-    if (autoLockStore.isLocked) {
+    if (autoLockStore.isLocked && authStore.isLoggedIn) {
       presentLockScreen()
     }
   }
@@ -277,7 +336,7 @@ onUnmounted(() => {
 })
 
 async function completeUnlock(): Promise<boolean> {
-  if (!securityStore.hasSecurityKey) {
+  if (!securityStore.hasVaultAccess) {
     errorMsg.value = t('lock.securityKeyMissing')
     return false
   }
@@ -288,11 +347,29 @@ async function completeUnlock(): Promise<boolean> {
   return true
 }
 
-async function unlockWithAccountPassword(accountPassword: string): Promise<boolean> {
-  await authStore.login({
-    username: authStore.username,
-    password: accountPassword
-  })
+async function unlockWithMasterPassword(masterPassword: string): Promise<boolean> {
+  try {
+    await securityStore.unlockWithMasterPassword(masterPassword)
+  } catch (err) {
+    throw err instanceof Error ? err : new Error(t('lock.wrongPassword'))
+  }
+
+  const unlock = securityStore.getUnlockContext()
+  if (!unlock) {
+    throw new Error(t('lock.wrongPassword'))
+  }
+
+  const verified = await verifyVaultUnlockContext(unlock)
+  if (!verified) {
+    securityStore.unloadFromMemory()
+    throw new Error(t('lock.wrongPassword'))
+  }
+
+  const persisted = await persistVaultPassword(masterPassword)
+  if (!persisted.ok && biometricUnlockStore.preferBiometricUnlock) {
+    console.warn('[lock] vault password persist failed:', persisted.error)
+  }
+
   return completeUnlock()
 }
 
@@ -316,7 +393,7 @@ async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promis
       return
     }
 
-    const storedPassword = await loadPersistedAccountPassword()
+    const storedPassword = await loadPersistedVaultPassword()
     if (!storedPassword) {
       if (!options.silent) {
         errorMsg.value = t('lock.biometricPasswordMissing')
@@ -326,13 +403,17 @@ async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promis
     }
 
     try {
-      const unlocked = await unlockWithAccountPassword(storedPassword)
+      const unlocked = await unlockWithMasterPassword(storedPassword)
       if (!unlocked) {
         focusPasswordAfterCancel = true
       }
     } catch (err) {
-      await clearPersistedAccountPassword()
-      if (!options.silent) {
+      await clearPersistedVaultPassword()
+      if (isUnauthorizedError(err)) {
+        redirectToLoginIfNeeded()
+      } else if (isWrongPasswordError(err)) {
+        await triggerPasswordShake()
+      } else if (!options.silent) {
         errorMsg.value = err instanceof Error ? err.message : t('lock.wrongPassword')
       }
       focusPasswordAfterCancel = true
@@ -352,8 +433,8 @@ async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promis
 async function handleUnlock(): Promise<void> {
   if (!visible.value || unlocking.value) return
 
-  if (!password.value) {
-    errorMsg.value = t('lock.passwordRequired')
+  if (!password.value.trim()) {
+    void triggerPasswordShake()
     return
   }
 
@@ -361,10 +442,10 @@ async function handleUnlock(): Promise<void> {
   loading.value = true
   errorMsg.value = ''
   try {
-    const unlocked = await unlockWithAccountPassword(password.value)
+    const unlocked = await unlockWithMasterPassword(password.value)
     if (!unlocked) return
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : t('lock.wrongPassword')
+    handleUnlockError(err)
   } finally {
     loading.value = false
   }
@@ -474,9 +555,22 @@ async function handleUnlock(): Promise<void> {
     }
   }
 
-  &__password-input {
+  &__password-wrap {
     flex: 1;
     min-width: 0;
+
+    &--shake {
+      animation: lock-password-shake 0.48s ease;
+    }
+  }
+
+  &__password-input {
+    width: 100%;
+
+    &--error :deep(.el-input__wrapper),
+    &--error :deep(.el-input__wrapper.is-focus) {
+      box-shadow: 0 0 0 2px $color-danger inset !important;
+    }
   }
 
   &__title {
@@ -542,6 +636,25 @@ async function handleUnlock(): Promise<void> {
   }
   50% {
     transform: scale(1.04);
+  }
+}
+
+@keyframes lock-password-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
   }
 }
 </style>

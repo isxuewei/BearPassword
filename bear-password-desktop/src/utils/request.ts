@@ -51,6 +51,12 @@ function isUnauthorizedPayload(status?: number, code?: number): boolean {
   return status === 401 || code === 401
 }
 
+export function isUnauthorizedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const message = error.message
+  return message.includes('未登录') || message.includes('登录已过期') || /unauthorized/i.test(message)
+}
+
 /** 请求拦截：动态 baseURL + 自动注入 Token */
 service.interceptors.request.use(
   (config) => {

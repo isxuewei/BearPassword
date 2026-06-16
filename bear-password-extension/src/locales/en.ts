@@ -139,7 +139,9 @@ const messages: MessageDict = {
   'settings.securityKeySaving': 'Verifying…',
   'settings.securityKeyClear': 'Clear key',
   'settings.securityKeyNote':
-    'The key is stored in this extension session only. Keep it aligned with Desktop → Settings → Security key.',
+    'Enter your master password and account secret key (same as Desktop → Settings → Security key). Stored only in this extension session; required to save or decrypt passwords.',
+  'settings.masterPasswordPlaceholder': 'Master password (derives unlock key)',
+  'settings.masterPasswordRequired': 'Enter your master password',
   'settings.securityLoginFirst': 'Sign in first, then configure the security key to decrypt vault entries.',
   'settings.securityKeyRequired': 'Enter the security key',
   'settings.about': 'About',

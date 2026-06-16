@@ -28,6 +28,8 @@ export interface UserProfile {
   userId: number
   username: string
   avatar?: string
+  vaultSalt?: string | null
+  secretKeyFingerprint?: string | null
 }
 
 /** 密码库 */
@@ -104,6 +106,7 @@ export interface ExtensionSession {
   avatar?: string
   serverOrigin: string
   securityKey: string | null
+  vukBase64: string | null
 }
 
 export interface SecurityKeyApplyResult {

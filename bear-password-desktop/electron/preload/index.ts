@@ -152,15 +152,15 @@ const secureStorageApi = {
 
 contextBridge.exposeInMainWorld('secureStorageApi', secureStorageApi)
 
-const accountPasswordApi = {
-  isAvailable: (): Promise<boolean> => ipcRenderer.invoke('account-password:isAvailable'),
-  get: (): Promise<string | null> => ipcRenderer.invoke('account-password:get'),
+const vaultPasswordApi = {
+  isAvailable: (): Promise<boolean> => ipcRenderer.invoke('vault-password:isAvailable'),
+  get: (): Promise<string | null> => ipcRenderer.invoke('vault-password:get'),
   set: (password: string): Promise<{ ok: true } | { ok: false; error: string }> =>
-    ipcRenderer.invoke('account-password:set', password),
-  remove: (): Promise<void> => ipcRenderer.invoke('account-password:remove')
+    ipcRenderer.invoke('vault-password:set', password),
+  remove: (): Promise<void> => ipcRenderer.invoke('vault-password:remove')
 }
 
-contextBridge.exposeInMainWorld('accountPasswordApi', accountPasswordApi)
+contextBridge.exposeInMainWorld('vaultPasswordApi', vaultPasswordApi)
 
 const biometricApi = {
   getAvailability: (): Promise<{ available: boolean; kind: 'touchId' | 'windowsHello' | null }> =>

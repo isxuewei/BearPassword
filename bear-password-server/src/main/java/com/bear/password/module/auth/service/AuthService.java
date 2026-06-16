@@ -80,6 +80,15 @@ public class AuthService {
         return toUserInfoResponse(user);
     }
 
+    public VaultCryptoResponse getVaultCrypto() {
+        long userId = StpUtil.getLoginIdAsLong();
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        return toVaultCryptoResponse(user);
+    }
+
     public UsernameCheckResponse checkUsername(String username) {
         String normalized = normalizeUsername(username);
         long userId = StpUtil.getLoginIdAsLong();
@@ -266,6 +275,13 @@ public class AuthService {
         user.setNickname(username);
         user.setStatus(1);
         user.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
+
+        VaultCryptoSetupRequest vaultCrypto = request.getVaultCrypto();
+        if (vaultCrypto == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "注册需要初始化保险库加密");
+        }
+        applyVaultCryptoSetup(user, vaultCrypto.getVaultSalt(), vaultCrypto.getSecretKeyFingerprint());
+
         userService.save(user);
 
         StpUtil.login(user.getId());
@@ -291,8 +307,22 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 resolveNickname(user),
-                normalizeAvatar(user.getAvatar())
+                normalizeAvatar(user.getAvatar()),
+                user.getVaultSalt(),
+                user.getSecretKeyFingerprint()
         );
+    }
+
+    private VaultCryptoResponse toVaultCryptoResponse(User user) {
+        return new VaultCryptoResponse(
+                user.getVaultSalt(),
+                user.getSecretKeyFingerprint()
+        );
+    }
+
+    private void applyVaultCryptoSetup(User user, String vaultSalt, String secretKeyFingerprint) {
+        user.setVaultSalt(vaultSalt.trim());
+        user.setSecretKeyFingerprint(secretKeyFingerprint.trim());
     }
 
     private String resolveNickname(User user) {

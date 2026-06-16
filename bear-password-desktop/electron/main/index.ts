@@ -30,11 +30,11 @@ import {
   saveStoredSecurityKey
 } from './securityKeyStorage'
 import {
-  isAccountPasswordEncryptionAvailable,
-  loadStoredAccountPassword,
-  removeStoredAccountPassword,
-  saveStoredAccountPassword
-} from './accountPasswordStorage'
+  isVaultPasswordEncryptionAvailable,
+  loadStoredVaultPassword,
+  removeStoredVaultPassword,
+  saveStoredVaultPassword
+} from './vaultPasswordStorage'
 import {
   applyWindowState,
   attachMainWindowStateListeners,
@@ -529,21 +529,21 @@ function registerSecureStorageIpc(): void {
   })
 }
 
-/** 注册账户密码存储 IPC（生物识别解锁时替代手动输入，仍走完整登录验证） */
-function registerAccountPasswordIpc(): void {
-  ipcMain.handle('account-password:isAvailable', () => isAccountPasswordEncryptionAvailable())
+/** 注册主密码存储 IPC（生物识别解锁保险库时使用，与登录密码分离） */
+function registerVaultPasswordIpc(): void {
+  ipcMain.handle('vault-password:isAvailable', () => isVaultPasswordEncryptionAvailable())
 
-  ipcMain.handle('account-password:get', async () => loadStoredAccountPassword())
+  ipcMain.handle('vault-password:get', async () => loadStoredVaultPassword())
 
-  ipcMain.handle('account-password:set', async (_event, password: unknown) => {
+  ipcMain.handle('vault-password:set', async (_event, password: unknown) => {
     if (typeof password !== 'string') {
       return { ok: false as const, error: '密码格式无效' }
     }
-    return saveStoredAccountPassword(password)
+    return saveStoredVaultPassword(password)
   })
 
-  ipcMain.handle('account-password:remove', async () => {
-    await removeStoredAccountPassword()
+  ipcMain.handle('vault-password:remove', async () => {
+    await removeStoredVaultPassword()
   })
 }
 
@@ -626,7 +626,7 @@ function startApp(): void {
     registerDockIpc()
     registerFileIpc()
     registerSecureStorageIpc()
-    registerAccountPasswordIpc()
+    registerVaultPasswordIpc()
     registerBiometricIpc()
     registerAppLifecycleHandlers()
 

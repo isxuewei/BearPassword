@@ -5,17 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 当前登录用户信息
+ * 保险库加密元数据（不含任何密钥明文）
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserInfoResponse {
+public class VaultCryptoResponse {
 
-    private Long userId;
-    private String username;
-    private String nickname;
-    private String avatar;
     private String vaultSalt;
     private String secretKeyFingerprint;
 }

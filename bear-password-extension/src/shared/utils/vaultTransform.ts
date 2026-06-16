@@ -9,7 +9,8 @@ import type {
 import {
   decryptContentObject,
   encryptContentObject,
-  isEncryptedContent
+  isEncryptedContent,
+  type VaultUnlockContext
 } from '@/shared/utils/contentCrypto'
 import {
   buildPasswordEntryApiParams,
@@ -37,9 +38,9 @@ export function resolveEntryWebsites(entry: PasswordEntry): string[] {
 
 export async function decryptPasswordEntry(
   entry: PasswordEntry,
-  passphrase: string | null
+  unlock: VaultUnlockContext | null
 ): Promise<PasswordEntry> {
-  if (!passphrase) {
+  if (!unlock) {
     if (isEncryptedContent(entry.content)) {
       return {
         ...entry,
@@ -56,7 +57,7 @@ export async function decryptPasswordEntry(
   }
 
   try {
-    const content = await decryptContentObject(entry.content, passphrase)
+    const content = await decryptContentObject(entry.content, unlock)
     return enrichEntryFromContent({ ...entry, content })
   } catch {
     return {
@@ -70,14 +71,14 @@ export async function decryptPasswordEntry(
 
 export async function encryptPasswordEntryParams(
   params: PasswordEntryParams,
-  passphrase: string | null
+  unlock: VaultUnlockContext | null
 ): Promise<PasswordEntryApiParams> {
-  if (!passphrase?.trim()) {
+  if (!unlock?.vuk) {
     throw new SecurityKeyRequiredError()
   }
 
   const apiParams = buildPasswordEntryApiParams(params)
-  const content = await encryptContentObject(apiParams.content, passphrase)
+  const content = await encryptContentObject(apiParams.content, unlock)
   return { passwordType: apiParams.passwordType, content: content as unknown as PasswordContent }
 }
 

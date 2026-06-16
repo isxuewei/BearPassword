@@ -1,7 +1,9 @@
 package com.bear.password.module.auth.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -28,4 +30,9 @@ public class RegisterRequest {
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, max = 64, message = "密码长度需在 6-64 位之间")
     private String password;
+
+    /** 保险库加密 v2 元数据（新用户必填） */
+    @Valid
+    @NotNull(message = "注册需要初始化保险库加密")
+    private VaultCryptoSetupRequest vaultCrypto;
 }

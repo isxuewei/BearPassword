@@ -2,12 +2,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loginApi, logoutApi, registerApi } from '@/api'
 import { useSecurityStore } from '@/stores/security'
+import { useAutoLockStore } from '@/stores/autoLock'
 import { useVaultStore } from '@/stores/vault'
-import {
-  clearPersistedAccountPassword,
-  persistAccountPassword
-} from '@/utils/accountPasswordStorage'
 import { storage } from '@/utils/storage'
+import { clearPersistedVaultPassword } from '@/utils/vaultPasswordStorage'
+import {
+  computeSecretKeyFingerprint,
+  generateVaultSalt
+} from '@/utils/vaultCrypto/vaultKeyDerivation'
 import type { LoginParams, RegisterParams, UserInfo, UserProfile } from '@/types'
 
 function resolveNickname(nickname: string | undefined, username: string): string {
@@ -21,6 +23,29 @@ function toUserInfo(result: { username: string; nickname?: string; avatar?: stri
     nickname: resolveNickname(result.nickname, result.username),
     avatar: result.avatar,
     token: result.token
+  }
+}
+
+async function buildRegisterVaultCrypto(masterPassword: string): Promise<{
+  vaultCrypto: RegisterParams['vaultCrypto']
+  accountSecretKey: string
+}> {
+  const securityStore = useSecurityStore()
+  const accountSecretKey = securityStore.createRandomSecurityKey()
+  const vaultSalt = generateVaultSalt()
+  const secretKeyFingerprint = await computeSecretKeyFingerprint(accountSecretKey)
+  await securityStore.setSecurityKey(accountSecretKey)
+  securityStore.syncVaultCryptoMeta({
+    vaultSalt,
+    secretKeyFingerprint
+  })
+  await securityStore.unlockWithMasterPassword(masterPassword)
+  return {
+    accountSecretKey,
+    vaultCrypto: {
+      vaultSalt,
+      secretKeyFingerprint
+    }
   }
 }
 
@@ -55,15 +80,19 @@ export const useAuthStore = defineStore('auth', () => {
       userInfo.value = info
       storage.set('user', info)
       storage.set('token', result.token)
-      void persistAccountPassword(params.password)
-      await useSecurityStore().reloadFromStorage()
+      await useSecurityStore().onLoginSuccess()
+      if (!useSecurityStore().hasVaultAccess) {
+        useAutoLockStore().lock({ hideWindow: false })
+      }
     } finally {
       loading.value = false
     }
   }
 
-  /** 注册并自动登录 */
-  async function register(params: RegisterParams): Promise<void> {
+  /** 注册并自动登录（需在外部展示 Emergency Kit 后调用） */
+  async function register(
+    params: RegisterParams & { masterPassword?: string }
+  ): Promise<void> {
     loading.value = true
     try {
       const result = await registerApi(params)
@@ -71,14 +100,21 @@ export const useAuthStore = defineStore('auth', () => {
       userInfo.value = info
       storage.set('user', info)
       storage.set('token', result.token)
-      void persistAccountPassword(params.password)
-      await useSecurityStore().reloadFromStorage()
+      await useSecurityStore().onLoginSuccess(params.masterPassword)
     } finally {
       loading.value = false
     }
   }
 
-  /** 退出登录（手动）：清除登录态，安全密钥保留在系统钥匙串 */
+  /** 准备注册：生成账户密钥与 vault 元数据，供 Emergency Kit 展示 */
+  async function prepareRegistrationVault(masterPassword: string): Promise<{
+    accountSecretKey: string
+    vaultCrypto: RegisterParams['vaultCrypto']
+  }> {
+    return buildRegisterVaultCrypto(masterPassword)
+  }
+
+  /** 退出登录（手动）：清除登录态，账户密钥保留在系统钥匙串 */
   async function logout(): Promise<void> {
     try {
       await logoutApi()
@@ -86,7 +122,6 @@ export const useAuthStore = defineStore('auth', () => {
       // 登录过期时 logout 接口可能失败，仍应清理本地状态
     }
     clearSession()
-    useSecurityStore().unloadFromMemory()
   }
 
   /** 清除本地登录态（不请求服务端） */
@@ -95,7 +130,9 @@ export const useAuthStore = defineStore('auth', () => {
     storage.remove('user')
     storage.remove('token')
     useVaultStore().reset()
-    void clearPersistedAccountPassword()
+    useAutoLockStore().stop()
+    useSecurityStore().unloadFromMemory()
+    void clearPersistedVaultPassword()
   }
 
   /** 更新本地头像 URL（上传成功后同步侧边栏等展示） */
@@ -130,6 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
       avatar: profile.avatar
     }
     storage.set('user', userInfo.value)
+    useSecurityStore().syncVaultCryptoMeta(profile)
   }
 
   return {
@@ -142,6 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
     avatar,
     login,
     register,
+    prepareRegistrationVault,
     logout,
     clearSession,
     updateAvatar,

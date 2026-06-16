@@ -1,6 +1,10 @@
 import type { PageResult, PasswordEntry, PasswordEntryParams, PasswordQueryParams } from '@/shared/types'
 import { http } from '@/shared/utils/request'
-import { decryptContentObject, isEncryptedContent } from '@/shared/utils/contentCrypto'
+import {
+  decryptContentObject,
+  isEncryptedContent,
+  type VaultUnlockContext
+} from '@/shared/utils/contentCrypto'
 import { decryptPasswordEntry, encryptPasswordEntryParams } from '@/shared/utils/vaultTransform'
 
 export async function getPasswordListRawApi(
@@ -15,11 +19,11 @@ export async function getPasswordListRawApi(
   })
 }
 
-/** 校验安全密钥能否解密已加密条目 */
-export async function validateSecurityKeyApi(
+/** 校验解锁上下文能否解密已加密条目 */
+export async function validateVaultUnlockApi(
   origin: string,
   token: string,
-  securityKey: string
+  unlock: VaultUnlockContext
 ): Promise<{ encryptedTotal: number; verified: boolean }> {
   const data = await getPasswordListRawApi(origin, token, {
     page: 1,
@@ -34,7 +38,7 @@ export async function validateSecurityKeyApi(
   const samples = encrypted.slice(0, 5)
   for (const entry of samples) {
     try {
-      await decryptContentObject(entry.content, securityKey)
+      await decryptContentObject(entry.content, unlock)
     } catch {
       return { encryptedTotal: encrypted.length, verified: false }
     }
@@ -45,11 +49,11 @@ export async function validateSecurityKeyApi(
 export async function getPasswordListApi(
   origin: string,
   token: string,
-  securityKey: string | null,
+  unlock: VaultUnlockContext | null,
   params: PasswordQueryParams = {}
 ): Promise<PageResult<PasswordEntry>> {
   const data = await getPasswordListRawApi(origin, token, params)
-  const list = await Promise.all(data.list.map((entry) => decryptPasswordEntry(entry, securityKey)))
+  const list = await Promise.all(data.list.map((entry) => decryptPasswordEntry(entry, unlock)))
   return { ...data, list }
 }
 
@@ -60,32 +64,32 @@ export function deletePasswordApi(origin: string, token: string, id: number): Pr
 export async function getPasswordDetailApi(
   origin: string,
   token: string,
-  securityKey: string | null,
+  unlock: VaultUnlockContext | null,
   id: number
 ): Promise<PasswordEntry> {
   const entry = await http.get<PasswordEntry>(`/passwords/${id}`, { origin, token })
-  return decryptPasswordEntry(entry, securityKey)
+  return decryptPasswordEntry(entry, unlock)
 }
 
 export async function createPasswordApi(
   origin: string,
   token: string,
-  securityKey: string | null,
+  unlock: VaultUnlockContext | null,
   data: PasswordEntryParams
 ): Promise<PasswordEntry> {
-  const payload = await encryptPasswordEntryParams(data, securityKey)
+  const payload = await encryptPasswordEntryParams(data, unlock)
   const entry = await http.post<PasswordEntry>('/passwords', payload, { origin, token })
-  return decryptPasswordEntry(entry, securityKey)
+  return decryptPasswordEntry(entry, unlock)
 }
 
 export async function updatePasswordApi(
   origin: string,
   token: string,
-  securityKey: string | null,
+  unlock: VaultUnlockContext | null,
   id: number,
   data: PasswordEntryParams
 ): Promise<PasswordEntry> {
-  const payload = await encryptPasswordEntryParams(data, securityKey)
+  const payload = await encryptPasswordEntryParams(data, unlock)
   const entry = await http.put<PasswordEntry>(`/passwords/${id}`, payload, { origin, token })
-  return decryptPasswordEntry(entry, securityKey)
+  return decryptPasswordEntry(entry, unlock)
 }

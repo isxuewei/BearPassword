@@ -139,7 +139,9 @@ const messages: MessageDict = {
   'settings.securityKeySaving': '確認中…',
   'settings.securityKeyClear': 'キーをクリア',
   'settings.securityKeyNote':
-    'キーはこの拡張機能のセッションにのみ保存されます。デスクトップ版「設定 → セキュリティキー」と一致させてください。',
+    'マスターパスワードとアカウント秘密鍵（デスクトップ版「設定 → セキュリティキー」と同じ）の両方が必要です。拡張機能のセッションにのみ保存され、未設定では保存・復号できません。',
+  'settings.masterPasswordPlaceholder': 'マスターパスワード（復号鍵の導出に使用）',
+  'settings.masterPasswordRequired': 'マスターパスワードを入力してください',
   'settings.securityLoginFirst': '先にサインインしてから、セキュリティキーを設定して保管庫を復号してください。',
   'settings.securityKeyRequired': 'セキュリティキーを入力してください',
   'settings.about': '情報',

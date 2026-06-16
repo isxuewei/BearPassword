@@ -30,6 +30,20 @@ export interface UserProfile {
   username: string
   nickname: string
   avatar?: string
+  vaultSalt?: string | null
+  secretKeyFingerprint?: string | null
+}
+
+/** 保险库加密元数据 */
+export interface VaultCryptoMeta {
+  vaultSalt: string | null
+  secretKeyFingerprint: string | null
+}
+
+/** 保险库加密注册参数 */
+export interface VaultCryptoSetup {
+  vaultSalt: string
+  secretKeyFingerprint: string
 }
 
 /** 修改登录密码参数 */
@@ -69,6 +83,7 @@ export interface RegisterParams {
   code: string
   username: string
   password: string
+  vaultCrypto: VaultCryptoSetup
 }
 
 /** 更换密钥验证码校验参数 */

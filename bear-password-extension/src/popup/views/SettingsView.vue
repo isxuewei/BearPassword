@@ -25,6 +25,7 @@ const localeStore = useLocaleStore()
 const versionStore = useVersionStore()
 const serverInput = ref('')
 const securityKeyInput = ref('')
+const masterPasswordInput = ref('')
 const showSecurityKey = ref(false)
 const healthReady = ref(false)
 let healthTimer: ReturnType<typeof setInterval> | null = null
@@ -105,8 +106,13 @@ async function handleApplyKey(): Promise<void> {
     sessionStore.error = t('settings.securityKeyRequired')
     return
   }
+  if (!masterPasswordInput.value.trim()) {
+    sessionStore.error = t('settings.masterPasswordRequired')
+    return
+  }
   try {
-    await sessionStore.applySecurityKey(securityKeyInput.value)
+    await sessionStore.applySecurityKey(securityKeyInput.value, masterPasswordInput.value)
+    masterPasswordInput.value = ''
     syncSecurityKeyFromSession()
   } catch {
     // error 已在 store 中设置
@@ -116,6 +122,7 @@ async function handleApplyKey(): Promise<void> {
 async function handleClearKey(): Promise<void> {
   await sessionStore.clearSecurityKey()
   securityKeyInput.value = ''
+  masterPasswordInput.value = ''
   showSecurityKey.value = false
 }
 
@@ -164,6 +171,13 @@ async function handleLocaleChange(event: Event): Promise<void> {
         </div>
 
         <div class="setting-panel">
+          <input
+            v-model="masterPasswordInput"
+            class="bear-input security-input"
+            type="password"
+            :placeholder="t('settings.masterPasswordPlaceholder')"
+            autocomplete="current-password"
+          />
           <div class="security-input-wrap">
             <input
               v-model="securityKeyInput"
