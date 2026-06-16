@@ -36,4 +36,11 @@ public class RegisterRequest {
     @Valid
     @NotNull(message = "注册需要初始化保险库加密")
     private VaultCryptoSetupRequest vaultCrypto;
+
+    /**
+     * Emergency Kit 文件内容（仅用于注册成功后邮件备份，服务端不持久化）
+     */
+    @NotBlank(message = "Emergency Kit 内容不能为空")
+    @Size(max = 8192, message = "Emergency Kit 内容过长")
+    private String emergencyKitContent;
 }

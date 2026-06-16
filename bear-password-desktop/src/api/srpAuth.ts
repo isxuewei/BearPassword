@@ -58,7 +58,6 @@ export async function loginApi(params: LoginParams): Promise<LoginFlowResult> {
   return {
     token: verified.token,
     username: verified.username,
-    nickname: verified.nickname ?? verified.username,
     avatar: verified.avatar
   }
 }

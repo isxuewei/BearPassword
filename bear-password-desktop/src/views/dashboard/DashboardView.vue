@@ -76,9 +76,6 @@
       >
         <div class="dashboard-view__tip-card-head">
           <h3>{{ t('dashboard.securityKeyAlertTitle') }}</h3>
-          <button type="button" class="dashboard-view__action" @click="goSettings">
-            {{ t('dashboard.securityKeyGoSettings') }}
-          </button>
         </div>
         <p class="dashboard-view__tip-lead">{{ t('dashboard.securityKeyAlertWarning') }}</p>
         <h4 class="dashboard-view__tip-subtitle">{{ t('dashboard.securityKeyExplainTitle') }}</h4>
@@ -142,10 +139,6 @@ function handleImportPassword(): void {
 function handleLockApp(): void {
   if (securityStore.isMigrating || autoLockStore.isLocked) return
   autoLockStore.lock()
-}
-
-function goSettings(): void {
-  void router.push({ name: 'Settings' })
 }
 
 async function loadStats(): Promise<void> {

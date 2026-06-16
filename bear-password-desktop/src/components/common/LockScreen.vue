@@ -306,9 +306,13 @@ function handleUnlockError(err: unknown): void {
 }
 
 watch(
-  () => ({ locked: autoLockStore.isLocked, loggedIn: authStore.isLoggedIn }),
-  ({ locked, loggedIn }) => {
-    if (!loggedIn || !locked) {
+  () => ({
+    locked: autoLockStore.isLocked,
+    loggedIn: authStore.isLoggedIn,
+    needsUnlock: securityStore.needsVaultUnlock
+  }),
+  ({ locked, loggedIn, needsUnlock }) => {
+    if (!loggedIn || !locked || !needsUnlock) {
       hideLockScreen()
       if (!loggedIn && router.currentRoute.value.name !== 'Login') {
         void router.replace({ name: 'Login' })
@@ -323,7 +327,7 @@ watch(
 watch(
   () => autoLockStore.lockPresentToken,
   () => {
-    if (autoLockStore.isLocked && authStore.isLoggedIn) {
+    if (autoLockStore.isLocked && authStore.isLoggedIn && securityStore.needsVaultUnlock) {
       presentLockScreen()
     }
   }

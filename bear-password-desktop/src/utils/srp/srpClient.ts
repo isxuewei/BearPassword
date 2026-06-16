@@ -33,7 +33,6 @@ export interface SrpLoginVerifyResult {
   serverProof: string
   token?: string
   username?: string
-  nickname?: string
   avatar?: string
   passwordChangeToken?: string
   mfaRequired?: boolean

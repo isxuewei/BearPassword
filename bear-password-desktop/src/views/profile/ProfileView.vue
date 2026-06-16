@@ -42,36 +42,6 @@
       </div>
 
       <el-form
-        ref="nicknameFormRef"
-        :model="nicknameForm"
-        :rules="nicknameRules"
-        label-position="top"
-        class="profile-view__username-form"
-        @submit.prevent="handleSaveNickname"
-      >
-        <el-form-item :label="t('profile.nickname')" prop="nickname">
-          <div class="profile-view__username-row">
-            <el-input
-              v-model="nicknameForm.nickname"
-              size="large"
-              :placeholder="t('profile.nicknamePlaceholder')"
-              :disabled="savingNickname"
-              maxlength="32"
-            />
-            <el-button
-              type="primary"
-              size="large"
-              :loading="savingNickname"
-              :disabled="!nicknameChanged"
-              @click="handleSaveNickname"
-            >
-              {{ t('profile.saveNickname') }}
-            </el-button>
-          </div>
-        </el-form-item>
-      </el-form>
-
-      <el-form
         ref="usernameFormRef"
         :model="usernameForm"
         :rules="usernameRules"
@@ -157,9 +127,14 @@
     <div class="profile-view__section">
       <h3>{{ t('profile.session') }}</h3>
       <p class="profile-view__hint">{{ t('profile.logoutHint') }}</p>
-      <el-button size="large" :loading="loggingOut" @click="handleLogout">
-        {{ t('profile.logout') }}
-      </el-button>
+      <div class="profile-view__session-actions">
+        <el-button size="large" :loading="loggingOut" @click="handleLogout">
+          {{ t('profile.logout') }}
+        </el-button>
+        <el-button size="large" type="danger" plain :loading="loggingOutCompletely" @click="handleLogoutCompletely">
+          {{ t('profile.logoutCompletely') }}
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -172,7 +147,6 @@ import {
   changePasswordApi,
   checkUsernameApi,
   getCurrentUserApi,
-  updateNicknameApi,
   updateUsernameApi,
   uploadAvatarApi
 } from '@/api'
@@ -192,15 +166,13 @@ const profile = ref<UserProfile | null>(null)
 const loadingProfile = ref(false)
 const saving = ref(false)
 const savingUsername = ref(false)
-const savingNickname = ref(false)
 const loggingOut = ref(false)
+const loggingOutCompletely = ref(false)
 const uploadingAvatar = ref(false)
 const avatarLoadFailed = ref(false)
 const formRef = ref<FormInstance>()
-const nicknameFormRef = ref<FormInstance>()
 const usernameFormRef = ref<FormInstance>()
 const originalUsername = ref('')
-const originalNickname = ref('')
 
 const form = reactive({
   oldPassword: '',
@@ -212,18 +184,10 @@ const usernameForm = reactive({
   username: ''
 })
 
-const nicknameForm = reactive({
-  nickname: ''
-})
-
-const displayName = computed(() => profile.value?.nickname || authStore.displayName)
+const displayName = computed(() => profile.value?.username || authStore.username)
 
 const usernameChanged = computed(
   () => usernameForm.username.trim() !== originalUsername.value.trim()
-)
-
-const nicknameChanged = computed(
-  () => nicknameForm.nickname.trim() !== originalNickname.value.trim()
 )
 
 const avatarLetter = computed(() => displayName.value.charAt(0).toUpperCase() || 'B')
@@ -232,13 +196,6 @@ const showAvatarImage = computed(() => {
   const avatar = profile.value?.avatar || authStore.avatar
   return !!avatar && !avatarLoadFailed.value
 })
-
-const nicknameRules = computed<FormRules>(() => ({
-  nickname: [
-    { required: true, message: t('profile.nicknameRequired'), trigger: 'blur' },
-    { min: 1, max: 32, message: t('profile.nicknameLength'), trigger: 'blur' }
-  ]
-}))
 
 const usernameRules = computed<FormRules>(() => ({
   username: [
@@ -330,7 +287,6 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
       profile.value = {
         userId: 0,
         username: authStore.username,
-        nickname: authStore.nickname,
         avatar: result.avatar
       }
     }
@@ -352,47 +308,17 @@ function syncUsernameForm(username: string): void {
   usernameFormRef.value?.clearValidate()
 }
 
-function syncNicknameForm(nickname: string): void {
-  originalNickname.value = nickname
-  nicknameForm.nickname = nickname
-  nicknameFormRef.value?.clearValidate()
-}
-
 async function loadProfile(): Promise<void> {
   loadingProfile.value = true
   avatarLoadFailed.value = false
   try {
     profile.value = await getCurrentUserApi()
     syncUsernameForm(profile.value.username)
-    syncNicknameForm(profile.value.nickname)
     authStore.syncProfile(profile.value)
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : t('profile.loadFailed'))
   } finally {
     loadingProfile.value = false
-  }
-}
-
-async function handleSaveNickname(): Promise<void> {
-  if (savingNickname.value || !nicknameChanged.value) return
-
-  const valid = await nicknameFormRef.value?.validate().catch(() => false)
-  if (!valid) return
-
-  const nickname = nicknameForm.nickname.trim()
-  savingNickname.value = true
-  try {
-    await updateNicknameApi({ nickname })
-    if (profile.value) {
-      profile.value = { ...profile.value, nickname }
-    }
-    authStore.updateNickname(nickname)
-    syncNicknameForm(nickname)
-    ElMessage.success(t('profile.nicknameUpdated'))
-  } catch (err) {
-    ElMessage.error(err instanceof Error ? err.message : t('profile.nicknameUpdateFailed'))
-  } finally {
-    savingNickname.value = false
   }
 }
 
@@ -444,7 +370,7 @@ async function handleSubmit(): Promise<void> {
 }
 
 async function handleLogout(): Promise<void> {
-  if (loggingOut.value) return
+  if (loggingOut.value || loggingOutCompletely.value) return
 
   try {
     await ElMessageBox.confirm(t('profile.logoutConfirmBody'), t('profile.logoutConfirmTitle'), {
@@ -465,6 +391,35 @@ async function handleLogout(): Promise<void> {
     ElMessage.error(err instanceof Error ? err.message : t('profile.logoutFailed'))
   } finally {
     loggingOut.value = false
+  }
+}
+
+async function handleLogoutCompletely(): Promise<void> {
+  if (loggingOut.value || loggingOutCompletely.value) return
+
+  try {
+    await ElMessageBox.confirm(
+      t('profile.logoutCompletelyConfirmBody'),
+      t('profile.logoutCompletelyConfirmTitle'),
+      {
+        confirmButtonText: t('profile.logoutCompletelyConfirmBtn'),
+        cancelButtonText: t('msg.cancel'),
+        type: 'warning'
+      }
+    )
+  } catch {
+    return
+  }
+
+  loggingOutCompletely.value = true
+  try {
+    autoLockStore.stop()
+    await authStore.logoutCompletely()
+    router.push({ name: 'Login' })
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('profile.logoutCompletelyFailed'))
+  } finally {
+    loggingOutCompletely.value = false
   }
 }
 
@@ -622,6 +577,12 @@ onMounted(() => {
     font-size: $font-size-sm;
     color: $color-text-muted;
     line-height: 1.5;
+  }
+
+  &__session-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
   }
 
   &__form {

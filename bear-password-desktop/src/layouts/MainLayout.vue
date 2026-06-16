@@ -125,7 +125,7 @@ const migrationPercent = computed(() => {
   return Math.min(100, Math.round((current / total) * 100))
 })
 
-/** 昵称首字母作为头像占位 */
+/** 用户名首字母作为头像占位 */
 const avatarLetter = computed(() => {
   return authStore.displayName.charAt(0).toUpperCase() || 'B'
 })

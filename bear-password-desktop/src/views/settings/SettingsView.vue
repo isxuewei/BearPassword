@@ -27,178 +27,48 @@
 
       <div class="settings-view__security-panel settings-view__security-panel--master-password">
         <el-input
-          v-model="masterPasswordOld"
-          type="password"
-          show-password
-          :placeholder="t('settings.masterPasswordOldPlaceholder')"
-          size="large"
-          class="settings-view__security-input"
-          :disabled="securityStore.isMigrating"
-        />
-        <el-input
-          v-model="masterPasswordNew"
-          type="password"
-          show-password
-          :placeholder="t('settings.masterPasswordNewPlaceholder')"
-          size="large"
-          class="settings-view__security-input"
-          :disabled="securityStore.isMigrating"
-        />
-        <el-input
-          v-model="masterPasswordConfirm"
-          type="password"
-          show-password
-          :placeholder="t('settings.masterPasswordConfirmPlaceholder')"
-          size="large"
-          class="settings-view__security-input"
-          :disabled="securityStore.isMigrating"
-          @keyup.enter="handleChangeMasterPassword"
-        />
-        <div class="settings-view__security-actions">
-          <el-button
-            type="primary"
+            v-model="masterPasswordOld"
+            type="password"
+            show-password
+            :placeholder="t('settings.masterPasswordOldPlaceholder')"
             size="large"
-            :loading="securityStore.isMigrating"
-            :disabled="!masterPasswordConfigured || securityStore.isMigrating"
-            @click="handleChangeMasterPassword"
-          >
-            {{ t('settings.masterPasswordChange') }}
-          </el-button>
-        </div>
-        <p class="settings-view__security-note">
-          {{ t('settings.masterPasswordNote') }}
-        </p>
-      </div>
-
-      <div class="settings-view__row settings-view__row--security">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.securityKey') }}</span>
-          <small>{{ securityKeyHint }}</small>
-        </div>
-        <span
-          class="settings-view__badge"
-          :class="{ 'settings-view__badge--active': securityStore.hasSecurityKey }"
-        >
-          {{ securityStore.hasSecurityKey ? t('settings.securityKeyEnabled') : t('settings.securityKeyDisabled') }}
-        </span>
-      </div>
-
-      <div class="settings-view__security-panel">
-        <el-input
-          v-model="securityKeyInput"
-          type="password"
-          :placeholder="securityKeyPlaceholder"
-          size="large"
-          class="settings-view__security-input"
-          :disabled="securityStore.isMigrating"
-        />
-        <div class="settings-view__security-actions">
-          <el-button size="large" :disabled="securityStore.isMigrating" @click="handleGenerateKey">
-            {{ t('settings.securityKeyAutoGenerate') }}
-          </el-button>
-          <el-button
-            type="primary"
-            size="large"
-            :loading="securityStore.isMigrating"
-            @click="handleSaveKey"
-          >
-            {{ t('settings.securityKeySave') }}
-          </el-button>
-        </div>
-        <p class="settings-view__security-note">
-          {{ t('settings.securityKeyNote') }}
-        </p>
-      </div>
-
-      <el-dialog
-        v-model="generatedKeyDialogVisible"
-        :title="t('settings.securityKeyGeneratedTitle')"
-        width="560px"
-        class="settings-view__key-dialog"
-        :close-on-click-modal="false"
-        append-to-body
-      >
-        <p class="settings-view__key-dialog-tip">{{ t('settings.securityKeyGeneratedBody') }}</p>
-        <el-input
-          :model-value="generatedKeyDisplay"
-          type="textarea"
-          readonly
-          :rows="5"
-          resize="none"
-          class="settings-view__key-dialog-text"
-        />
-        <template #footer>
-          <div class="settings-view__key-dialog-actions">
-            <el-button size="large" @click="handleCopyGeneratedKey">
-              {{ t('settings.securityKeyCopy') }}
-            </el-button>
-            <el-button size="large" @click="handleDownloadGeneratedKey">
-              {{ t('settings.securityKeyDownloadBackup') }}
-            </el-button>
-            <el-button type="primary" size="large" @click="generatedKeyDialogVisible = false">
-              {{ t('settings.securityKeyGeneratedDone') }}
-            </el-button>
-          </div>
-        </template>
-      </el-dialog>
-
-      <el-dialog
-        v-model="securityKeyVerifyDialogVisible"
-        :title="t('settings.securityKeyVerifyTitle')"
-        width="480px"
-        class="settings-view__key-dialog"
-        :close-on-click-modal="false"
-        append-to-body
-        @closed="resetSecurityKeyVerifyState"
-      >
-        <p class="settings-view__key-dialog-tip">
-          {{ t('settings.securityKeyVerifyBody', { email: securityKeyVerifyEmail || t('settings.securityKeyVerifyEmailPending') }) }}
-        </p>
-        <div class="settings-view__verify-code-row">
-          <el-input
-            v-model="securityKeyVerifyCode"
-            :placeholder="t('register.code')"
-            size="large"
-            maxlength="6"
-            :disabled="securityKeyVerifySubmitting"
-            @keyup.enter="handleConfirmSecurityKeyVerify"
+            class="settings-view__security-input"
+            :disabled="securityStore.isMigrating"
           />
-          <el-button
+          <el-input
+            v-model="masterPasswordNew"
+            type="password"
+            show-password
+            :placeholder="t('settings.masterPasswordNewPlaceholder')"
             size="large"
-            class="settings-view__verify-code-btn"
-            :disabled="securityKeyVerifyCountdown > 0 || securityKeyVerifySending || securityKeyVerifySubmitting"
-            :loading="securityKeyVerifySending"
-            @click="handleSendSecurityKeyVerifyCode"
-          >
-            {{
-              securityKeyVerifyCountdown > 0
-                ? `${securityKeyVerifyCountdown}s`
-                : securityKeyVerifyCodeSent
-                  ? t('register.resendCode')
-                  : t('register.sendCode')
-            }}
-          </el-button>
-        </div>
-        <template #footer>
-          <div class="settings-view__key-dialog-actions">
-            <el-button
-              size="large"
-              :disabled="securityKeyVerifySubmitting"
-              @click="securityKeyVerifyDialogVisible = false"
-            >
-              {{ t('msg.cancel') }}
-            </el-button>
+            class="settings-view__security-input"
+            :disabled="securityStore.isMigrating"
+          />
+          <el-input
+            v-model="masterPasswordConfirm"
+            type="password"
+            show-password
+            :placeholder="t('settings.masterPasswordConfirmPlaceholder')"
+            size="large"
+            class="settings-view__security-input"
+            :disabled="securityStore.isMigrating"
+            @keyup.enter="handleChangeMasterPassword"
+          />
+          <div class="settings-view__security-actions">
             <el-button
               type="primary"
               size="large"
-              :loading="securityKeyVerifySubmitting"
-              @click="handleConfirmSecurityKeyVerify"
+              :loading="securityStore.isMigrating"
+              :disabled="!masterPasswordConfigured || !securityStore.hasSecurityKey || securityStore.isMigrating"
+              @click="handleChangeMasterPassword"
             >
-              {{ t('settings.securityKeyVerifyConfirm') }}
+              {{ t('settings.masterPasswordChange') }}
             </el-button>
           </div>
-        </template>
-      </el-dialog>
+          <p class="settings-view__security-note">
+            {{ t('settings.masterPasswordNote') }}
+          </p>
+      </div>
 
       <MfaSettingsPanel />
 
@@ -519,15 +389,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ShortcutInput from '@/components/settings/ShortcutInput.vue'
 import MfaSettingsPanel from '@/components/settings/MfaSettingsPanel.vue'
-import { getHealthApi, sendSecurityKeyChangeCodeApi, verifySecurityKeyChangeCodeApi } from '@/api'
+import { getHealthApi } from '@/api'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/constants/app'
 import { IN_APP_SHORTCUT_OPTIONS } from '@/constants/shortcuts'
 import { useAppStore } from '@/stores/app'
-import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useClipboardClearStore } from '@/stores/clipboardClear'
 import { useBiometricUnlockStore } from '@/stores/biometricUnlock'
@@ -565,29 +434,15 @@ import {
   type TrayClickAction
 } from '@/types/tray'
 import {
-  reencryptAllPasswordContents,
-  SecurityKeyReencryptError
-} from '@/utils/securityKeyReencrypt'
-import {
   changeMasterPassword,
   MasterPasswordChangeError
 } from '@/utils/masterPasswordChange'
-import {
-  buildSecurityKeyBackupFileContent,
-  buildSecurityKeyBackupFileName
-} from '@/utils/securityKeyBackup'
-import { loadPersistedVaultPassword } from '@/utils/vaultPasswordStorage'
-import { isValidSecurityKeyLength, SECURITY_KEY_LENGTH } from '@/utils/contentCrypto'
-import {
-  appendClipboardClearHint,
-  copySensitiveText
-} from '@/utils/sensitiveClipboard'
+import { loadPersistedVaultPassword, persistVaultPassword } from '@/utils/vaultPasswordStorage'
 
 const HEALTH_CHECK_INTERVAL = 15000
 
 const { t } = useI18n()
 const appStore = useAppStore()
-const authStore = useAuthStore()
 const securityStore = useSecurityStore()
 const autoLockStore = useAutoLockStore()
 const clipboardClearStore = useClipboardClearStore()
@@ -599,21 +454,9 @@ const launchAtLoginStore = useLaunchAtLoginStore()
 const trayStore = useTrayStore()
 const dockStore = useDockStore()
 const healthReady = ref(false)
-const securityKeyInput = ref('')
 const masterPasswordOld = ref('')
 const masterPasswordNew = ref('')
 const masterPasswordConfirm = ref('')
-const generatedKeyDialogVisible = ref(false)
-const generatedKeyDisplay = ref('')
-const securityKeyVerifyDialogVisible = ref(false)
-const securityKeyVerifyCode = ref('')
-const securityKeyVerifyEmail = ref('')
-const securityKeyVerifySending = ref(false)
-const securityKeyVerifySubmitting = ref(false)
-const securityKeyVerifyCodeSent = ref(false)
-const securityKeyVerifyCountdown = ref(0)
-const pendingSecurityKey = ref('')
-let securityKeyVerifyCountdownTimer: ReturnType<typeof setInterval> | null = null
 const serverUrlInput = ref(serverStore.serverOrigin)
 const savingServerUrl = ref(false)
 const shortcutSaving = ref<ShortcutActionId | null>(null)
@@ -761,18 +604,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
-  if (securityKeyVerifyCountdownTimer) clearInterval(securityKeyVerifyCountdownTimer)
 })
 
 function formatInAppShortcut(accelerator: string): string {
   return formatAccelerator(accelerator, appPlatform.value)
 }
-
-const securityKeyHint = computed(() =>
-  securityStore.hasSecurityKey
-    ? t('settings.securityKeyEnabledHint')
-    : t('settings.securityKeyDisabledHint')
-)
 
 const masterPasswordConfigured = computed(() => !!securityStore.vaultSalt)
 
@@ -780,22 +616,6 @@ const masterPasswordHint = computed(() =>
   masterPasswordConfigured.value
     ? t('settings.masterPasswordConfiguredHint')
     : t('settings.masterPasswordNotConfiguredHint')
-)
-
-const securityKeyPlaceholder = computed(() => {
-  if (securityStore.hasSecurityKey && !securityKeyInput.value.trim()) {
-    return t('settings.securityKeyConfiguredPlaceholder')
-  }
-  return t('settings.securityKeyPlaceholder')
-})
-
-watch(
-  () => securityStore.hasSecurityKey,
-  (hasKey) => {
-    if (hasKey) {
-      securityKeyInput.value = ''
-    }
-  }
 )
 
 const autoLockMinutes = computed({
@@ -882,209 +702,6 @@ async function handleResetShortcuts(): Promise<void> {
   } finally {
     resettingShortcuts.value = false
   }
-}
-
-function handleGenerateKey(): void {
-  if (securityStore.isMigrating) return
-
-  const key = securityStore.createRandomSecurityKey()
-  securityKeyInput.value = key
-  generatedKeyDisplay.value = key
-  generatedKeyDialogVisible.value = true
-}
-
-async function handleCopyGeneratedKey(): Promise<void> {
-  const key = generatedKeyDisplay.value
-  if (!key) return
-
-  const copied = await copySensitiveText(key)
-  if (copied) {
-    ElMessage.success(appendClipboardClearHint(t('settings.securityKeyCopied'), t))
-    return
-  }
-
-  ElMessage.warning(t('settings.securityKeyCopyFailed'))
-}
-
-async function handleDownloadGeneratedKey(): Promise<void> {
-  const key = generatedKeyDisplay.value
-  if (!key) return
-
-  if (!window.fileApi?.saveSecurityKeyBackup) {
-    ElMessage.warning(t('msg.securityKeyBackupUnavailable'))
-    return
-  }
-
-  try {
-    const result = await window.fileApi.saveSecurityKeyBackup({
-      defaultFileName: buildSecurityKeyBackupFileName(authStore.username),
-      content: buildSecurityKeyBackupFileContent(authStore.username, key)
-    })
-    if (result.ok) {
-      const fileName = result.filePath.split(/[/\\]/).pop() ?? result.filePath
-      ElMessage.success(t('msg.securityKeyBackupSaved', { file: fileName }))
-      return
-    }
-    if (result.canceled) {
-      ElMessage.info(t('msg.securityKeyBackupCanceled'))
-    }
-  } catch {
-    ElMessage.error(t('msg.securityKeyBackupFailed'))
-  }
-}
-
-async function runSecurityKeyReencrypt(
-  oldKey: string | null,
-  newKey: string | null
-): Promise<number> {
-  void oldKey
-  const oldUnlock = securityStore.vuk ? { vuk: securityStore.vuk } : null
-  const newUnlock = newKey
-    ? { vuk: await securityStore.deriveVukForAccountKey(newKey) }
-    : null
-
-  securityStore.beginMigration('正在准备重新加密…')
-  try {
-    return await reencryptAllPasswordContents(oldUnlock, newUnlock, (progress) => {
-      securityStore.updateMigrationProgress(progress)
-    })
-  } finally {
-    securityStore.endMigration()
-  }
-}
-
-function resetSecurityKeyVerifyState(): void {
-  securityKeyVerifyCode.value = ''
-  securityKeyVerifyEmail.value = ''
-  securityKeyVerifySending.value = false
-  securityKeyVerifySubmitting.value = false
-  securityKeyVerifyCodeSent.value = false
-  securityKeyVerifyCountdown.value = 0
-  pendingSecurityKey.value = ''
-  if (securityKeyVerifyCountdownTimer) {
-    clearInterval(securityKeyVerifyCountdownTimer)
-    securityKeyVerifyCountdownTimer = null
-  }
-}
-
-function startSecurityKeyVerifyCountdown(seconds = 60): void {
-  securityKeyVerifyCountdown.value = seconds
-  if (securityKeyVerifyCountdownTimer) clearInterval(securityKeyVerifyCountdownTimer)
-  securityKeyVerifyCountdownTimer = setInterval(() => {
-    securityKeyVerifyCountdown.value -= 1
-    if (securityKeyVerifyCountdown.value <= 0 && securityKeyVerifyCountdownTimer) {
-      clearInterval(securityKeyVerifyCountdownTimer)
-      securityKeyVerifyCountdownTimer = null
-    }
-  }, 1000)
-}
-
-async function handleSendSecurityKeyVerifyCode(): Promise<void> {
-  if (securityKeyVerifySending.value || securityKeyVerifyCountdown.value > 0) return
-
-  securityKeyVerifySending.value = true
-  try {
-    const result = await sendSecurityKeyChangeCodeApi()
-    securityKeyVerifyEmail.value = result.maskedEmail
-    securityKeyVerifyCodeSent.value = true
-    startSecurityKeyVerifyCountdown()
-    ElMessage.success(t('settings.securityKeyVerifyCodeSent'))
-  } catch (err) {
-    ElMessage.error(err instanceof Error ? err.message : t('settings.securityKeyVerifyCodeSendFailed'))
-  } finally {
-    securityKeyVerifySending.value = false
-  }
-}
-
-async function completeSecurityKeySave(oldKey: string | null, newKey: string): Promise<void> {
-  try {
-    const reencrypted = await runSecurityKeyReencrypt(oldKey, newKey)
-    await securityStore.setSecurityKey(newKey)
-    const masterPassword = await loadPersistedVaultPassword()
-    if (masterPassword) {
-      await securityStore.unlockWithMasterPassword(masterPassword)
-    }
-    securityKeyInput.value = ''
-    ElMessage.success(
-      reencrypted > 0 ? t('msg.securityKeySavedMigrated', { count: reencrypted }) : t('msg.securityKeySaved')
-    )
-  } catch (err) {
-    const message = err instanceof SecurityKeyReencryptError
-      ? err.message
-      : err instanceof Error
-        ? err.message
-        : t('msg.securityKeyMigrateFailed')
-    ElMessage.error(message)
-  }
-}
-
-async function handleConfirmSecurityKeyVerify(): Promise<void> {
-  const code = securityKeyVerifyCode.value.trim()
-  if (!/^\d{6}$/.test(code)) {
-    ElMessage.warning(t('register.codeInvalid'))
-    return
-  }
-
-  const newKey = pendingSecurityKey.value.trim()
-  if (!newKey) {
-    securityKeyVerifyDialogVisible.value = false
-    return
-  }
-
-  securityKeyVerifySubmitting.value = true
-  try {
-    await verifySecurityKeyChangeCodeApi({ code })
-    securityKeyVerifyDialogVisible.value = false
-    const oldKey = securityStore.securityKey?.trim() || null
-    await completeSecurityKeySave(oldKey, newKey)
-  } catch (err) {
-    ElMessage.error(err instanceof Error ? err.message : t('settings.securityKeyVerifyFailed'))
-  } finally {
-    securityKeyVerifySubmitting.value = false
-  }
-}
-
-async function handleSaveKey(): Promise<void> {
-  if (securityStore.isMigrating) return
-
-  const newKey = securityKeyInput.value.trim()
-  if (!newKey) {
-    ElMessage.warning(t('msg.securityKeyRequired'))
-    return
-  }
-
-  if (!isValidSecurityKeyLength(newKey)) {
-    ElMessage.warning(t('msg.securityKeyInvalidLength', { length: SECURITY_KEY_LENGTH }))
-    return
-  }
-
-  const oldKey = securityStore.securityKey?.trim() || null
-  if (oldKey === newKey) {
-    ElMessage.info(t('msg.securityKeyUnchanged'))
-    return
-  }
-
-  const isKeyChange = !!oldKey
-  if (isKeyChange) {
-    try {
-      await ElMessageBox.confirm(
-        t('msg.securityKeyChangeBody'),
-        t('msg.securityKeyChangeTitle'),
-        { type: 'warning', confirmButtonText: t('msg.confirm'), cancelButtonText: t('msg.cancel') }
-      )
-    } catch {
-      return
-    }
-
-    pendingSecurityKey.value = newKey
-    securityKeyVerifyCode.value = ''
-    securityKeyVerifyEmail.value = ''
-    securityKeyVerifyCodeSent.value = false
-    securityKeyVerifyDialogVisible.value = true
-    return
-  }
-
-  await completeSecurityKeySave(oldKey, newKey)
 }
 
 async function handleChangeMasterPassword(): Promise<void> {

@@ -35,6 +35,7 @@ async function bootstrap(): Promise<void> {
   if (authStore.isLoggedIn) {
     try {
       await useSecurityStore().refreshVaultCryptoMeta()
+      await useSecurityStore().reloadFromStorage()
     } catch {
       authStore.clearSession()
     }

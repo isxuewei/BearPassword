@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum VerificationPurpose {
 
-    REGISTER("register:code:", "register:send-lock:"),
-    SECURITY_KEY_CHANGE("security-key:code:", "security-key:send-lock:");
+    REGISTER("register:code:", "register:send-lock:");
 
     private final String codeSegment;
     private final String lockSegment;

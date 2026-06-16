@@ -64,6 +64,19 @@ const messages: MessageDict = {
   'login.mfaTotpInvalid': '6 桁の数字を入力してください',
   'login.mfaBack': 'パスワード入力に戻る',
 
+  'vaultSetup.title': 'この端末で保管庫を設定',
+  'vaultSetup.intro':
+    '新しい端末でログインしました。マスターパスワードとアカウントキー（登録メールの Emergency Kit またはローカルバックアップ）を入力して、ここで保管庫を解除してください。',
+  'vaultSetup.masterPasswordLabel': 'マスターパスワード',
+  'vaultSetup.masterPasswordPlaceholder': '保管庫マスターパスワード',
+  'vaultSetup.securityKeyLabel': 'アカウントキー',
+  'vaultSetup.securityKeyPlaceholder': '128 文字のアカウントキー（Emergency Kit）',
+  'vaultSetup.submit': '保存して解除',
+  'vaultSetup.logout': 'ログアウト',
+  'vaultSetup.hint': '情報は端末のキーチェーンにのみ保存され、サーバーには送信されません。設定完了まで保管庫は利用できません。',
+  'vaultSetup.success': 'この端末の保管庫設定が完了しました',
+  'vaultSetup.failed': '設定に失敗しました。マスターパスワードとアカウントキーを確認してください',
+
   'register.title': '保管庫を作成',
   'register.email': 'メール',
   'register.code': '確認コード',
@@ -98,12 +111,15 @@ const messages: MessageDict = {
   'register.failed': '登録に失敗しました',
   'register.emergencyKitTitle': 'Emergency Kit を保存',
   'register.emergencyKitBody':
-    'アカウントキーとマスターパスワードが保管庫を保護します。必ずバックアップし、安全な場所に保管してください。',
+    'アカウントキーとマスターパスワードが保管庫を保護します。必ずバックアップし、安全な場所に保管してください。登録完了後、同じ内容が登録メールにも送信されます。',
   'register.emergencyKitFingerprint': 'キー指紋：{fingerprint}',
   'register.emergencyKitConfirm': 'アカウントキーをバックアップしました',
   'register.emergencyKitDownload': 'Emergency Kit をダウンロード',
   'register.emergencyKitDownloaded': 'Emergency Kit を保存しました',
   'register.emergencyKitDone': '登録を完了',
+  'register.emergencyKitEmailSent': '登録が完了しました。Emergency Kit をメールに送信しました。',
+  'register.emergencyKitEmailSkipped':
+    '登録は完了しましたが、Emergency Kit のメール送信に失敗しました。ローカルバックアップを大切に保管してください。',
   'register.emergencyKitKeyLabel': 'アカウントキー',
   'register.emergencyKitStepHint': '最終ステップ：アカウントキーをバックアップしてください',
   'register.emergencyKitBack': '登録情報に戻る',
@@ -123,7 +139,7 @@ const messages: MessageDict = {
   'lock.wrongPassword': 'マスターパスワードが正しくありません',
   'lock.passwordRequired': 'マスターパスワードを入力してください',
   'lock.securityKeyMissing':
-    'この端末にアカウントキーが見つかりません。設定で構成してから解除してください。',
+    'この端末にアカウントキーが見つかりません。ダイアログで本機設定を完了してから解除してください。',
   'lock.biometricOrPassword': 'または',
   'lock.biometricTouchId': 'Touch ID で解除',
   'lock.biometricWindowsHello': 'Windows Hello で解除',
@@ -154,11 +170,10 @@ const messages: MessageDict = {
   'dashboard.actionLockApp': 'BearPassword をロック',
   'dashboard.securityKeyAlertTitle': 'アカウントキー',
   'dashboard.securityKeyAlertWarning':
-    'アカウントキーが未設定です。設定でキーを保存するまで、パスワードの保存やインポートはできません。',
+    'この端末にアカウントキーが未設定です。ダイアログの案内に従って設定を完了してください。',
   'dashboard.securityKeyExplainTitle': 'アカウントキーとは？',
   'dashboard.securityKeyExplainBody':
-    'マスターパスワードと組み合わせて使用する 128 文字のランダムキーです。両方で保管庫の解読キーを生成します。キーは端末のキーチェーンに保存され、サーバーには送信されません。サーバーのデータだけでは、マスターパスワードとアカウントキーがなければパスワードを読み取れません。',
-  'dashboard.securityKeyGoSettings': '設定する',
+    'マスターパスワードと組み合わせて使用する 128 文字のランダムキーです。登録メールの Emergency Kit またはローカルバックアップから取得できます。',
   'dashboard.updateTitle': 'アップデート',
   'dashboard.updateBody': '新しいバージョン {version} が利用可能です。最新の機能と修正のため更新をおすすめします。',
   'dashboard.updateDownload': '更新をダウンロード',
@@ -222,7 +237,16 @@ const messages: MessageDict = {
   'settings.masterPasswordNewRequired': '新しいマスターパスワードを入力してください',
   'settings.masterPasswordMismatch': '新しいパスワードが一致しません',
   'settings.masterPasswordUnchanged': '新しいマスターパスワードは現在のものと異なる必要があります',
-  'settings.masterPasswordNeedSecurityKey': 'マスターパスワードを変更する前にアカウントキーを設定してください',
+  'settings.masterPasswordNeedSecurityKey':
+    'マスターパスワードを変更する前に、ダイアログで本機のアカウントキー設定を完了してください',
+  'settings.vaultSetupMasterPasswordOrderHint':
+    'マスターパスワードはサーバー側で設定済みです。下でマスターパスワードとアカウントキーを保存して本機設定を完了してから、変更できます。',
+  'settings.vaultSetupMasterPasswordPlaceholder': 'マスターパスワード（登録時の保管庫パスフレーズ）',
+  'settings.vaultSetupMasterPasswordRequired': 'マスターパスワードを入力してください',
+  'settings.vaultSetupSecurityKeyNote':
+    '初めてこの端末で使う場合：マスターパスワードを入力し、Emergency Kit のアカウントキーを貼り付け（またはサーバー指紋と一致するキーを生成）してから保存してください。',
+  'settings.securityKeyFingerprintMismatch':
+    'アカウントキーがサーバー指紋と一致しません。新規生成ではなく Emergency Kit から正しいキーを復元してください。',
   'settings.masterPasswordChangeTitle': 'マスターパスワードを変更',
   'settings.masterPasswordChangeBody':
     '新しいマスターパスワードですべてのエントリを再暗号化します。時間がかかる場合があります。続行しますか？',
@@ -339,9 +363,10 @@ const messages: MessageDict = {
   'msg.serverUrlResetWarn': 'デフォルトに戻しましたが、バックエンドに接続できません',
   'msg.serverConnectFailed': 'サーバーに接続できません',
   'msg.securityKeyRequired': 'アカウントキーを入力または生成してください',
+  'msg.vaultSetupRedirect': '保管庫を使う前に、本機のアカウントキーとマスターパスワードの設定を完了してください',
   'msg.sensitiveCopiedClearHint': '{seconds} 秒後に消去',
   'msg.securityKeyInvalidLength': 'アカウントキーは {length} 文字である必要があります',
-  'msg.securityKeyRequiredWrite': '保存またはインポートする前に、設定でアカウントキーを構成してください',
+  'msg.securityKeyRequiredWrite': '保存またはインポートする前に、本機のアカウントキー設定を完了してください',
   'msg.securityKeyBackupSaved': 'アカウントキーを {file} にバックアップしました',
   'msg.securityKeyBackupCanceled': 'バックアップをキャンセルしました。「キーを保存」をクリックして設定を完了してください',
   'msg.securityKeyBackupFailed': 'アカウントキーのバックアップファイルの保存に失敗しました',
@@ -394,13 +419,6 @@ const messages: MessageDict = {
   'profile.uploading': 'アップロード中…',
   'profile.changeAvatar': 'アバターを変更',
   'profile.userId': 'ID: {id}',
-  'profile.nickname': 'ニックネーム',
-  'profile.nicknamePlaceholder': '1〜32 文字、アプリ内で表示されます',
-  'profile.saveNickname': 'ニックネームを保存',
-  'profile.nicknameRequired': 'ニックネームを入力してください',
-  'profile.nicknameLength': 'ニックネームは 1〜32 文字です',
-  'profile.nicknameUpdated': 'ニックネームを更新しました',
-  'profile.nicknameUpdateFailed': 'ニックネームの更新に失敗しました',
   'profile.username': 'ユーザー名',
   'profile.usernamePlaceholder': '2〜32 文字。中国語、英数字、アンダースコア',
   'profile.saveUsername': 'ユーザー名を保存',
@@ -426,6 +444,12 @@ const messages: MessageDict = {
   'profile.logoutHint':
     'ログイン画面に戻り、ローカルのログイン状態はクリアされます。アカウントキーはこの端末のキーチェーンに残ります。',
   'profile.logout': 'ログアウト',
+  'profile.logoutCompletely': '完全にログアウト',
+  'profile.logoutCompletelyConfirmTitle': '完全にログアウト',
+  'profile.logoutCompletelyConfirmBody':
+    'ログアウトし、この端末に保存されたマスターパスワードとアカウントキーを削除します。次回この端末でログインする際は再入力が必要です。続行しますか？',
+  'profile.logoutCompletelyConfirmBtn': '完全にログアウト',
+  'profile.logoutCompletelyFailed': '完全ログアウトに失敗しました',
   'profile.oldPasswordRequired': '現在のパスワードを入力してください',
   'profile.newPasswordRequired': '新しいパスワードを入力してください',
   'profile.newPasswordLength': '新しいパスワードは 6〜64 文字です',

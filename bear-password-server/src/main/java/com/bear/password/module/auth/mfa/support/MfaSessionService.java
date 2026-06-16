@@ -30,7 +30,6 @@ public class MfaSessionService {
         MfaSessionData data = new MfaSessionData();
         data.setUserId(user.getId());
         data.setUsername(user.getUsername());
-        data.setNickname(resolveNickname(user));
         data.setAvatar(user.getAvatar() != null ? user.getAvatar() : "");
 
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -76,13 +75,6 @@ public class MfaSessionService {
         }
         stringRedisTemplate.delete(key);
         return secret.trim();
-    }
-
-    private String resolveNickname(User user) {
-        if (StringUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
-        }
-        return user.getUsername();
     }
 
     private String sessionKey(String token) {

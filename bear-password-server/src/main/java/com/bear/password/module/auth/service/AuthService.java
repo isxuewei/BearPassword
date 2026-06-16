@@ -105,7 +105,6 @@ public class AuthService {
         LoginResponse loginResponse = buildLoginResponse(user);
         response.setToken(loginResponse.getToken());
         response.setUsername(loginResponse.getUsername());
-        response.setNickname(loginResponse.getNickname());
         response.setAvatar(loginResponse.getAvatar());
         return response;
     }
@@ -180,23 +179,6 @@ public class AuthService {
         update.setUsername(username);
         userService.updateById(update);
         StpUtil.getSession().set(AuthConstants.SESSION_USERNAME, username);
-    }
-
-    public void updateNickname(UpdateNicknameRequest request) {
-        long userId = StpUtil.getLoginIdAsLong();
-        String nickname = normalizeNickname(request.getNickname());
-        User user = userService.getById(userId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
-        }
-        if (nickname.equals(resolveNickname(user))) {
-            return;
-        }
-
-        User update = new User();
-        update.setId(userId);
-        update.setNickname(nickname);
-        userService.updateById(update);
     }
 
     public void changePassword(ChangePasswordRequest request) {
@@ -278,43 +260,6 @@ public class AuthService {
         );
     }
 
-    public SecurityKeyChangeCodeResponse sendSecurityKeyChangeCode() {
-        long userId = StpUtil.getLoginIdAsLong();
-        User user = userService.getById(userId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
-        }
-
-        String email = normalizeEmail(user.getEmail());
-        if (!StringUtils.hasText(email)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "账户未绑定邮箱，无法更换密钥");
-        }
-
-        verificationCodeService.sendCode(
-                VerificationPurpose.SECURITY_KEY_CHANGE,
-                String.valueOf(userId),
-                code -> emailService.sendSecurityKeyChangeCode(email, code)
-        );
-        return new SecurityKeyChangeCodeResponse(maskEmail(email));
-    }
-
-    public void verifySecurityKeyChangeCode(VerifySecurityKeyChangeCodeRequest request) {
-        long userId = StpUtil.getLoginIdAsLong();
-        User user = userService.getById(userId);
-        if (user == null) {
-            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
-        }
-        if (!StringUtils.hasText(normalizeEmail(user.getEmail()))) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "账户未绑定邮箱，无法更换密钥");
-        }
-
-        verificationCodeService.verifyAndConsume(
-                VerificationPurpose.SECURITY_KEY_CHANGE,
-                String.valueOf(userId),
-                request.getCode()
-        );
-    }
-
     public LoginResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
         String username = request.getUsername().trim();
@@ -337,7 +282,6 @@ public class AuthService {
         user.setEmail(email);
         srpAuthService.validateCredentialsSetup(request.getSrp());
         srpAuthService.applyCredentials(user, request.getSrp());
-        user.setNickname(username);
         user.setStatus(1);
         user.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
 
@@ -349,21 +293,31 @@ public class AuthService {
 
         userService.save(user);
 
+        boolean emergencyKitEmailSent = emailService.trySendEmergencyKitBackup(
+                email,
+                username,
+                request.getEmergencyKitContent()
+        );
+
         StpUtil.login(user.getId());
         StpUtil.getSession().set(AuthConstants.SESSION_USERNAME, user.getUsername());
         String avatar = normalizeAvatar(user.getAvatar());
         StpUtil.getSession().set(AuthConstants.SESSION_AVATAR, avatar);
 
-        return buildLoginResponse(user);
+        return buildLoginResponse(user, emergencyKitEmailSent);
     }
 
     private LoginResponse buildLoginResponse(User user) {
+        return buildLoginResponse(user, null);
+    }
+
+    private LoginResponse buildLoginResponse(User user, Boolean emergencyKitEmailSent) {
         String avatar = normalizeAvatar(user.getAvatar());
         return new LoginResponse(
                 StpUtil.getTokenValue(),
                 user.getUsername(),
-                resolveNickname(user),
-                avatar
+                avatar,
+                emergencyKitEmailSent
         );
     }
 
@@ -371,7 +325,6 @@ public class AuthService {
         return new UserInfoResponse(
                 user.getId(),
                 user.getUsername(),
-                resolveNickname(user),
                 normalizeAvatar(user.getAvatar()),
                 user.getVaultSalt(),
                 user.getSecretKeyFingerprint()
@@ -398,13 +351,6 @@ public class AuthService {
                 && user.getSrpVerifier().trim().equalsIgnoreCase(setup.getVerifier().trim());
     }
 
-    private String resolveNickname(User user) {
-        if (StringUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
-        }
-        return user.getUsername();
-    }
-
     private void touchLastLoginTime(Long userId) {
         User update = new User();
         update.setId(userId);
@@ -428,13 +374,6 @@ public class AuthService {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户名不能为空");
         }
         return username.trim();
-    }
-
-    private String normalizeNickname(String nickname) {
-        if (!StringUtils.hasText(nickname)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "昵称不能为空");
-        }
-        return nickname.trim();
     }
 
     private String normalizeEmail(String email) {

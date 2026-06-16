@@ -101,13 +101,17 @@ async function handleLogin(): Promise<void> {
       mfaChallenge.value = result
       return
     }
-    void router.replace({ name: 'Dashboard' })
+    navigateAfterLogin()
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : String(err)
   }
 }
 
-function onMfaSuccess(): void {
+function navigateAfterLogin(): void {
   void router.replace({ name: 'Dashboard' })
+}
+
+function onMfaSuccess(): void {
+  navigateAfterLogin()
 }
 </script>

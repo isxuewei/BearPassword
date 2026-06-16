@@ -64,6 +64,20 @@ const messages: MessageDict = {
   'login.mfaTotpInvalid': 'Enter a 6-digit code',
   'login.mfaBack': 'Back to password',
 
+  'vaultSetup.title': 'Set up vault on this device',
+  'vaultSetup.intro':
+    'You signed in on a new device. Enter your master password and account secret key (from the Emergency Kit in your registration email or local backup) to unlock the vault here.',
+  'vaultSetup.masterPasswordLabel': 'Master password',
+  'vaultSetup.masterPasswordPlaceholder': 'Vault master password',
+  'vaultSetup.securityKeyLabel': 'Account secret key',
+  'vaultSetup.securityKeyPlaceholder': '128-character key from Emergency Kit',
+  'vaultSetup.submit': 'Save and unlock',
+  'vaultSetup.logout': 'Sign out',
+  'vaultSetup.hint':
+    'Credentials are stored only in the local keychain and never uploaded. The vault stays unavailable until setup is complete.',
+  'vaultSetup.success': 'Local vault is ready',
+  'vaultSetup.failed': 'Setup failed. Check your master password and account secret key',
+
   'register.title': 'Create your vault',
   'register.email': 'Email',
   'register.code': 'Verification code',
@@ -98,12 +112,15 @@ const messages: MessageDict = {
   'register.failed': 'Registration failed',
   'register.emergencyKitTitle': 'Save your Emergency Kit',
   'register.emergencyKitBody':
-    'Your Account Secret Key and master password together protect your vault. Download or copy this file and store it safely.',
+    'Your Account Secret Key and master password together protect your vault. Download or copy this file and store it safely—the same content will also be emailed to you after registration.',
   'register.emergencyKitFingerprint': 'Key fingerprint: {fingerprint}',
   'register.emergencyKitConfirm': 'I have backed up my Account Secret Key',
   'register.emergencyKitDownload': 'Download Emergency Kit',
   'register.emergencyKitDownloaded': 'Emergency Kit saved',
   'register.emergencyKitDone': 'Complete registration',
+  'register.emergencyKitEmailSent': 'Registration complete. Emergency Kit sent to your email.',
+  'register.emergencyKitEmailSkipped':
+    'Registration complete, but the Emergency Kit email could not be sent. Keep your local backup safe.',
   'register.emergencyKitKeyLabel': 'Account Secret Key',
   'register.emergencyKitStepHint': 'Final step: back up your Account Secret Key',
   'register.emergencyKitBack': 'Back to edit registration',
@@ -123,7 +140,7 @@ const messages: MessageDict = {
   'lock.wrongPassword': 'Incorrect master password. Try again.',
   'lock.passwordRequired': 'Please enter your master password',
   'lock.securityKeyMissing':
-    'No account secret key was found on this device. Configure one in Settings before unlocking.',
+    'No account secret key was found on this device. Complete the setup dialog before unlocking.',
   'lock.biometricOrPassword': 'or',
   'lock.biometricTouchId': 'Unlock with Touch ID',
   'lock.biometricWindowsHello': 'Unlock with Windows Hello',
@@ -154,11 +171,10 @@ const messages: MessageDict = {
   'dashboard.actionLockApp': 'Lock BearPassword',
   'dashboard.securityKeyAlertTitle': 'Account secret key',
   'dashboard.securityKeyAlertWarning':
-    'No account secret key configured. You cannot save or import passwords until you set one in Settings.',
+    'This device has no account secret key configured. You cannot save or import passwords until you complete the setup dialog.',
   'dashboard.securityKeyExplainTitle': 'What is an account secret key?',
   'dashboard.securityKeyExplainBody':
-    'A 128-character random key that works with your master password—together they derive the vault decryption key. The key stays in your system keychain and is never uploaded. Even if server data is exposed, passwords cannot be read without both your master password and account secret key.',
-  'dashboard.securityKeyGoSettings': 'Configure',
+    'A 128-character random key that works with your master password. You can find it in the Emergency Kit from your registration email or local backup.',
   'dashboard.updateTitle': 'Update available',
   'dashboard.updateBody': 'Version {version} is available. Download the update for the latest features and fixes.',
   'dashboard.updateDownload': 'Download update',
@@ -222,7 +238,16 @@ const messages: MessageDict = {
   'settings.masterPasswordNewRequired': 'Enter a new master password',
   'settings.masterPasswordMismatch': 'New passwords do not match',
   'settings.masterPasswordUnchanged': 'New master password must differ from the current one',
-  'settings.masterPasswordNeedSecurityKey': 'Configure your account secret key before changing the master password',
+  'settings.masterPasswordNeedSecurityKey':
+    'Complete local account secret key setup in the dialog before changing the master password',
+  'settings.vaultSetupMasterPasswordOrderHint':
+    'Master password is already configured on the server. Enter it below with your account secret key to finish local setup; you can change the master password afterward.',
+  'settings.vaultSetupMasterPasswordPlaceholder': 'Master password (vault passphrase from registration)',
+  'settings.vaultSetupMasterPasswordRequired': 'Enter your master password first',
+  'settings.vaultSetupSecurityKeyNote':
+    'First time on this device: enter your master password, paste the account secret key from your Emergency Kit (or generate one that matches the server fingerprint), then save.',
+  'settings.securityKeyFingerprintMismatch':
+    'This account secret key does not match the server fingerprint. Restore the correct key from your Emergency Kit instead of generating a new one.',
   'settings.masterPasswordChangeTitle': 'Change master password',
   'settings.masterPasswordChangeBody':
     'All vault entries will be re-encrypted with the new master password. This may take a while. Continue?',
@@ -341,9 +366,12 @@ const messages: MessageDict = {
   'msg.serverUrlResetWarn': 'Default restored, but the backend is currently unreachable',
   'msg.serverConnectFailed': 'Unable to connect to the server',
   'msg.securityKeyRequired': 'Please enter or generate an account secret key',
+  'msg.vaultSetupRedirect':
+    'Complete local account secret key and master password setup before using the vault',
   'msg.sensitiveCopiedClearHint': 'cleared in {seconds}s',
   'msg.securityKeyInvalidLength': 'Account secret key must be exactly {length} characters',
-  'msg.securityKeyRequiredWrite': 'Configure an account secret key in Settings before saving or importing passwords',
+  'msg.securityKeyRequiredWrite':
+    'Complete local account secret key setup before saving or importing passwords',
   'msg.securityKeyBackupSaved': 'Account secret key backed up to {file}',
   'msg.securityKeyBackupCanceled': 'Backup canceled. Click Save key to finish setup.',
   'msg.securityKeyBackupFailed': 'Failed to save the account secret key backup file',
@@ -396,13 +424,6 @@ const messages: MessageDict = {
   'profile.uploading': 'Uploading…',
   'profile.changeAvatar': 'Change avatar',
   'profile.userId': 'ID: {id}',
-  'profile.nickname': 'Nickname',
-  'profile.nicknamePlaceholder': '1–32 characters, shown in the app',
-  'profile.saveNickname': 'Save nickname',
-  'profile.nicknameRequired': 'Please enter a nickname',
-  'profile.nicknameLength': 'Nickname must be 1–32 characters',
-  'profile.nicknameUpdated': 'Nickname updated',
-  'profile.nicknameUpdateFailed': 'Failed to update nickname',
   'profile.username': 'Username',
   'profile.usernamePlaceholder': '2–32 chars; Chinese, letters, numbers, underscores',
   'profile.saveUsername': 'Save username',
@@ -428,6 +449,12 @@ const messages: MessageDict = {
   'profile.logoutHint':
     'You will return to the login screen and your session will be cleared. Your account secret key stays in the system keychain on this device.',
   'profile.logout': 'Sign out',
+  'profile.logoutCompletely': 'Sign out completely',
+  'profile.logoutCompletelyConfirmTitle': 'Sign out completely',
+  'profile.logoutCompletelyConfirmBody':
+    'This signs you out and removes the master password and account secret key stored on this device. You will need to enter them again on next sign-in here. Continue?',
+  'profile.logoutCompletelyConfirmBtn': 'Sign out completely',
+  'profile.logoutCompletelyFailed': 'Failed to sign out completely',
   'profile.oldPasswordRequired': 'Please enter your current password',
   'profile.newPasswordRequired': 'Please enter a new password',
   'profile.newPasswordLength': 'New password must be 6–64 characters',

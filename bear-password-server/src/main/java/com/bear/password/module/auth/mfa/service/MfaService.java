@@ -12,7 +12,6 @@ import com.bear.password.module.user.entity.User;
 import com.bear.password.module.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -91,8 +90,8 @@ public class MfaService {
         return new LoginResponse(
                 StpUtil.getTokenValue(),
                 user.getUsername(),
-                resolveNickname(user),
-                normalizeAvatar(user.getAvatar())
+                normalizeAvatar(user.getAvatar()),
+                null
         );
     }
 
@@ -101,13 +100,6 @@ public class MfaService {
         update.setId(userId);
         update.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
         userService.updateById(update);
-    }
-
-    private String resolveNickname(User user) {
-        if (StringUtils.hasText(user.getNickname())) {
-            return user.getNickname().trim();
-        }
-        return user.getUsername();
     }
 
     private String normalizeAvatar(String avatar) {

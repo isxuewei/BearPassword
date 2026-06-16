@@ -12,8 +12,9 @@ export interface LoginParams {
 export interface LoginResult {
   token: string
   username: string
-  nickname: string
   avatar?: string
+  /** 注册时 Emergency Kit 是否已成功发送至邮箱 */
+  emergencyKitEmailSent?: boolean
 }
 
 /** MFA 登录挑战（SRP 成功后） */
@@ -33,7 +34,6 @@ export function isMfaLoginChallenge(result: LoginFlowResult): result is MfaLogin
 /** 当前登录用户信息 */
 export interface UserInfo {
   username: string
-  nickname: string
   avatar?: string
   token: string
 }
@@ -42,7 +42,6 @@ export interface UserInfo {
 export interface UserProfile {
   userId: number
   username: string
-  nickname: string
   avatar?: string
   vaultSalt?: string | null
   secretKeyFingerprint?: string | null
@@ -77,11 +76,6 @@ export interface UpdateUsernameParams {
   username: string
 }
 
-/** 修改昵称参数 */
-export interface UpdateNicknameParams {
-  nickname: string
-}
-
 /** 用户名可用性校验结果 */
 export interface UsernameCheckResult {
   available: boolean
@@ -104,14 +98,5 @@ export interface RegisterParams {
   username: string
   srp: SrpCredentialsSetup
   vaultCrypto: VaultCryptoSetup
-}
-
-/** 更换密钥验证码校验参数 */
-export interface VerifySecurityKeyChangeCodeParams {
-  code: string
-}
-
-/** 更换密钥验证码发送结果 */
-export interface SecurityKeyChangeCodeResult {
-  maskedEmail: string
+  emergencyKitContent: string
 }

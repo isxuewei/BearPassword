@@ -38,6 +38,22 @@ export const useSecurityStore = defineStore('security', () => {
 
   const hasSecurityKey = computed(() => !!securityKey.value?.trim())
   const hasVaultAccess = computed(() => !!vuk.value)
+  /** 本机钥匙串是否已保存账户密钥（与内存态无关，锁屏判定用） */
+  const hasPersistedSecurityKey = ref(false)
+  /** 服务端已配置保险库加密（vault_salt） */
+  const isVaultConfigured = computed(() => !!vaultSalt.value)
+  /** 本机具备解锁条件，但当前会话尚未解锁 */
+  const needsVaultUnlock = computed(
+    () => isVaultConfigured.value && hasPersistedSecurityKey.value && !hasVaultAccess.value
+  )
+  /** 需完成本机保险库配置（缺 vault 元数据或本机账户密钥） */
+  const needsVaultSetup = computed(
+    () => !isVaultConfigured.value || !hasPersistedSecurityKey.value
+  )
+  /** 已具备锁屏条件（服务端与本机均已配置保险库） */
+  const canUseVaultLock = computed(
+    () => isVaultConfigured.value && hasPersistedSecurityKey.value
+  )
 
   function readVaultCryptoField(
     meta: Record<string, unknown>,
@@ -98,6 +114,7 @@ export const useSecurityStore = defineStore('security', () => {
     if (initialized.value) return
 
     const persistedKey = await loadPersistedSecurityKey()
+    hasPersistedSecurityKey.value = !!persistedKey?.trim()
     if (persistedKey) {
       await migrateLegacySecurityKeyIfNeeded(persistedKey)
       if (!useAutoLockStore().isLocked) {
@@ -116,11 +133,13 @@ export const useSecurityStore = defineStore('security', () => {
         throw new Error(result.error ?? '账户密钥保存失败')
       }
       securityKey.value = normalized
+      hasPersistedSecurityKey.value = true
       return
     }
 
     securityKey.value = null
     vuk.value = null
+    hasPersistedSecurityKey.value = false
     await clearPersistedSecurityKey()
   }
 
@@ -131,6 +150,7 @@ export const useSecurityStore = defineStore('security', () => {
 
   async function reloadFromStorage(): Promise<void> {
     const key = await loadPersistedSecurityKey()
+    hasPersistedSecurityKey.value = !!key?.trim()
     securityKey.value = key?.trim() || null
     vuk.value = null
   }
@@ -147,13 +167,17 @@ export const useSecurityStore = defineStore('security', () => {
     vuk.value = await deriveVaultUnlockKey(masterPassword, key, vaultSalt.value!)
   }
 
-  async function deriveVukForAccountKey(accountSecretKey: string): Promise<Uint8Array> {
-    const masterPassword = await loadPersistedVaultPassword()
-    if (!masterPassword) {
-      throw new Error('需要主密码才能处理账户密钥，请先在锁屏界面解锁保险库')
+  async function deriveVukForAccountKey(
+    accountSecretKey: string,
+    masterPassword?: string
+  ): Promise<Uint8Array> {
+    const resolvedMasterPassword =
+      masterPassword?.trim() || (await loadPersistedVaultPassword())?.trim() || ''
+    if (!resolvedMasterPassword) {
+      throw new Error('请输入主密码以配置账户密钥')
     }
     await ensureVaultCryptoMeta()
-    return deriveVaultUnlockKey(masterPassword, accountSecretKey, vaultSalt.value!)
+    return deriveVaultUnlockKey(resolvedMasterPassword, accountSecretKey, vaultSalt.value!)
   }
 
   async function setupNewVaultCrypto(
@@ -178,6 +202,16 @@ export const useSecurityStore = defineStore('security', () => {
     }
     await ensureVaultCryptoMeta()
     return deriveVaultUnlockKey(masterPassword, key, vaultSalt.value!)
+  }
+
+  function clearVaultMeta(): void {
+    vaultSalt.value = null
+    secretKeyFingerprint.value = null
+  }
+
+  async function clearLocalVaultCredentials(): Promise<void> {
+    await setSecurityKey(null)
+    clearVaultMeta()
   }
 
   function applyVaultUnlock(nextVuk: Uint8Array): void {
@@ -219,6 +253,11 @@ export const useSecurityStore = defineStore('security', () => {
     initialized,
     hasSecurityKey,
     hasVaultAccess,
+    hasPersistedSecurityKey,
+    isVaultConfigured,
+    needsVaultUnlock,
+    needsVaultSetup,
+    canUseVaultLock,
     isMigrating,
     migrationProgress,
     init,
@@ -234,6 +273,8 @@ export const useSecurityStore = defineStore('security', () => {
     refreshVaultCryptoMeta,
     ensureVaultCryptoMeta,
     syncVaultCryptoMeta,
+    clearVaultMeta,
+    clearLocalVaultCredentials,
     getUnlockContext,
     createRandomSecurityKey,
     beginMigration,

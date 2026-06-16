@@ -152,6 +152,7 @@ import { sendRegisterCodeApi, createSrpCredentials } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import type { RegisterParams } from '@/types'
+import { buildEmergencyKitFileContent } from '@/utils/vaultCrypto/emergencyKit'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -298,7 +299,7 @@ async function handleRegister(): Promise<void> {
 
   preparingVault.value = true
   try {
-    const prepared = await authStore.prepareRegistrationVault(form.masterPassword)
+    const prepared = await authStore.prepareRegistrationVault()
     pendingVault.value = {
       accountSecretKey: prepared.accountSecretKey,
       secretKeyFingerprint: prepared.vaultCrypto.secretKeyFingerprint,
@@ -306,7 +307,9 @@ async function handleRegister(): Promise<void> {
     }
     step.value = 'kit'
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : t('register.failed')
+    const message = err instanceof Error ? err.message : t('register.failed')
+    errorMsg.value = message
+    ElMessage.error(message)
   } finally {
     preparingVault.value = false
   }
@@ -322,19 +325,36 @@ async function handleEmergencyKitConfirmed(): Promise<void> {
 
   errorMsg.value = ''
   try {
-    const srp = await createSrpCredentials(form.username.trim(), form.password)
-    await authStore.register({
+    const username = form.username.trim()
+    const srp = await createSrpCredentials(username, form.password)
+    const emergencyKitContent = buildEmergencyKitFileContent({
+      version: 2,
+      username,
+      accountSecretKey: pendingVault.value.accountSecretKey,
+      secretKeyFingerprint: pendingVault.value.secretKeyFingerprint,
+      createdAt: new Date().toLocaleString()
+    })
+    const result = await authStore.register({
       email: form.email.trim(),
       code: form.code.trim(),
-      username: form.username.trim(),
+      username,
       srp,
       vaultCrypto: pendingVault.value.vaultCrypto,
-      masterPassword: form.masterPassword
+      emergencyKitContent,
+      masterPassword: form.masterPassword,
+      accountSecretKey: pendingVault.value.accountSecretKey
     })
+    if (result.emergencyKitEmailSent) {
+      ElMessage.success(t('register.emergencyKitEmailSent'))
+    } else {
+      ElMessage.warning(t('register.emergencyKitEmailSkipped'))
+    }
     router.push({ name: 'Dashboard' })
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : t('register.failed')
-    step.value = 'form'
+    const message = err instanceof Error ? err.message : t('register.failed')
+    errorMsg.value = message
+    ElMessage.error(message)
+    step.value = 'kit'
   }
 }
 

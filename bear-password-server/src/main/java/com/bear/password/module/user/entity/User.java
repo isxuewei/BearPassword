@@ -31,11 +31,6 @@ public class User extends BaseEntity {
     private String srpVerifier;
 
     /**
-     * 昵称
-     */
-    private String nickname;
-
-    /**
      * 头像 URL
      */
     private String avatar;

@@ -14,7 +14,6 @@ public class UserInfoResponse {
 
     private Long userId;
     private String username;
-    private String nickname;
     private String avatar;
     private String vaultSalt;
     private String secretKeyFingerprint;

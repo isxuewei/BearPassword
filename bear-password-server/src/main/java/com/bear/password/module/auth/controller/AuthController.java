@@ -109,25 +109,6 @@ public class AuthController {
     }
 
     /**
-     * 发送更换安全密钥邮箱验证码
-     */
-    @PostMapping("/security-key/code")
-    public Result<SecurityKeyChangeCodeResponse> sendSecurityKeyChangeCode() {
-        return Result.success(authService.sendSecurityKeyChangeCode());
-    }
-
-    /**
-     * 校验更换安全密钥邮箱验证码
-     */
-    @PostMapping("/security-key/verify")
-    public Result<Void> verifySecurityKeyChangeCode(
-            @Valid @RequestBody VerifySecurityKeyChangeCodeRequest request
-    ) {
-        authService.verifySecurityKeyChangeCode(request);
-        return Result.success();
-    }
-
-    /**
      * 校验用户名是否可用（排除当前用户）
      */
     @GetMapping("/username/check")
@@ -141,15 +122,6 @@ public class AuthController {
     @PutMapping("/username")
     public Result<Void> updateUsername(@Valid @RequestBody UpdateUsernameRequest request) {
         authService.updateUsername(request);
-        return Result.success();
-    }
-
-    /**
-     * 修改当前用户昵称
-     */
-    @PutMapping("/nickname")
-    public Result<Void> updateNickname(@Valid @RequestBody UpdateNicknameRequest request) {
-        authService.updateNickname(request);
         return Result.success();
     }
 

@@ -1,6 +1,7 @@
 <template>
   <el-config-provider :locale="elementLocale">
     <router-view />
+    <VaultLocalSetupDialog />
     <LockScreen />
   </el-config-provider>
 </template>
@@ -9,6 +10,7 @@
 import { computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import LockScreen from '@/components/common/LockScreen.vue'
+import VaultLocalSetupDialog from '@/components/common/VaultLocalSetupDialog.vue'
 import { useAppStore } from '@/stores/app'
 import { useShortcutsStore } from '@/stores/shortcuts'
 import { useI18n } from '@/composables/useI18n'
