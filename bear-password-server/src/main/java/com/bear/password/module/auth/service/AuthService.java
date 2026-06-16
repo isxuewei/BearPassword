@@ -8,6 +8,7 @@ import com.bear.password.common.result.ResultCode;
 import com.bear.password.module.auth.dto.*;
 import com.bear.password.module.auth.srp.SrpAuthService;
 import com.bear.password.module.auth.srp.SrpEncoding;
+import com.bear.password.module.auth.mfa.service.MfaService;
 import com.bear.password.module.user.entity.User;
 import com.bear.password.module.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class AuthService {
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
     private final VerificationCodeService verificationCodeService;
+    private final MfaService mfaService;
 
     public SrpLoginInitResponse srpLoginInit(SrpLoginInitRequest request) {
         User user = resolveUserByAccount(request.getUsername());
@@ -85,6 +87,13 @@ public class AuthService {
 
         if (verified.isPasswordChange()) {
             response.setPasswordChangeToken(srpAuthService.issuePasswordChangeToken(user.getId()));
+            return response;
+        }
+
+        if (mfaService.isMfaRequired(user)) {
+            response.setMfaRequired(true);
+            response.setMfaToken(mfaService.createMfaChallenge(user));
+            response.setMfaMethods(mfaService.getAvailableMethods(user));
             return response;
         }
 

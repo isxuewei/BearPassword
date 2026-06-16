@@ -36,6 +36,9 @@ export interface SrpLoginVerifyResult {
   nickname?: string
   avatar?: string
   passwordChangeToken?: string
+  mfaRequired?: boolean
+  mfaToken?: string
+  mfaMethods?: string[]
 }
 
 function toHex(value: bigint): string {

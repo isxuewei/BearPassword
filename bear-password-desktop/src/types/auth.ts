@@ -16,6 +16,20 @@ export interface LoginResult {
   avatar?: string
 }
 
+/** MFA 登录挑战（SRP 成功后） */
+export interface MfaLoginChallenge {
+  mfaRequired: true
+  mfaToken: string
+  mfaMethods: string[]
+  serverProof: string
+}
+
+export type LoginFlowResult = LoginResult | MfaLoginChallenge
+
+export function isMfaLoginChallenge(result: LoginFlowResult): result is MfaLoginChallenge {
+  return 'mfaRequired' in result && result.mfaRequired === true
+}
+
 /** 当前登录用户信息 */
 export interface UserInfo {
   username: string

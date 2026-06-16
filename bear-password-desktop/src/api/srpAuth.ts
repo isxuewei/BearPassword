@@ -1,11 +1,13 @@
 import { request } from '@/utils/request'
 import type { ChangePasswordParams, LoginParams, LoginResult, RegisterParams } from '@/types'
+import { isMfaLoginChallenge, type LoginFlowResult } from '@/types/auth'
 import {
   createSrpCredentials,
   performSrpClientSteps,
   type SrpLoginInitResult,
   type SrpLoginVerifyResult
 } from '@/utils/srp/srpClient'
+import { verifyTotpLoginApi } from '@/api/mfa'
 
 async function srpLoginInitApi(username: string): Promise<SrpLoginInitResult> {
   return request.post<SrpLoginInitResult>('/auth/login/init', { username })
@@ -19,8 +21,8 @@ async function srpLoginVerifyApi(payload: {
   return request.post<SrpLoginVerifyResult>('/auth/login/verify', payload)
 }
 
-/** SRP 登录：密码不出设备 */
-export async function loginApi(params: LoginParams): Promise<LoginResult> {
+/** SRP 登录：密码不出设备；若启用 MFA 则返回挑战 */
+export async function loginApi(params: LoginParams): Promise<LoginFlowResult> {
   const init = await srpLoginInitApi(params.username)
 
   if (!init.sessionId || !init.identity || !init.salt || !init.serverPublicEphemeral) {
@@ -40,6 +42,15 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
 
   await proof.confirmServerProof(verified.serverProof)
 
+  if (verified.mfaRequired && verified.mfaToken) {
+    return {
+      mfaRequired: true,
+      mfaToken: verified.mfaToken,
+      mfaMethods: verified.mfaMethods ?? [],
+      serverProof: verified.serverProof
+    }
+  }
+
   if (!verified.token || !verified.username) {
     throw new Error('登录失败')
   }
@@ -51,6 +62,12 @@ export async function loginApi(params: LoginParams): Promise<LoginResult> {
     avatar: verified.avatar
   }
 }
+
+export async function completeTotpLoginApi(mfaToken: string, code: string): Promise<LoginResult> {
+  return verifyTotpLoginApi(mfaToken, code)
+}
+
+export { isMfaLoginChallenge }
 
 /** 注册：仅上传 SRP 凭证，不上传明文密码 */
 export async function registerApi(params: RegisterParams): Promise<LoginResult> {

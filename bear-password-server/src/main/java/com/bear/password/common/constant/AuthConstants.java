@@ -26,6 +26,7 @@ public final class AuthConstants {
             "/auth/login/verify",
             "/auth/register",
             "/auth/register/code",
+            "/auth/mfa/totp/verify",
             "/health",
             "/version/latest",
             "/error",

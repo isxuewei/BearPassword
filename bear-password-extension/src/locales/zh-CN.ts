@@ -49,6 +49,11 @@ const messages: MessageDict = {
   'login.password': '密码',
   'login.submit': '登录',
   'login.submitting': '登录中…',
+  'login.mfaTitle': '二次验证',
+  'login.mfaHint': '请使用验证器 App 输入 6 位验证码完成登录。',
+  'login.mfaTotpPlaceholder': '6 位验证码',
+  'login.mfaTotpSubmit': '验证并登录',
+  'login.mfaBack': '返回',
   'login.settings': '扩展设置',
 
   'vault.searchPlaceholder': '搜索此网站的登录项…',

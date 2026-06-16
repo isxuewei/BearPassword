@@ -24,6 +24,19 @@ export interface LoginResult {
   avatar?: string
 }
 
+export interface MfaLoginChallenge {
+  mfaRequired: true
+  mfaToken: string
+  mfaMethods: string[]
+  serverProof: string
+}
+
+export type LoginFlowResult = LoginResult | MfaLoginChallenge
+
+export function isMfaLoginChallenge(result: LoginFlowResult): result is MfaLoginChallenge {
+  return 'mfaRequired' in result && result.mfaRequired === true
+}
+
 export interface UserProfile {
   userId: number
   username: string

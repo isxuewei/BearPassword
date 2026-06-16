@@ -64,4 +64,14 @@ public class User extends BaseEntity {
      * 账户密钥 SHA-256 指纹（Base64）
      */
     private String secretKeyFingerprint;
+
+    /**
+     * TOTP 密钥（AES 加密后 Base64）
+     */
+    private String totpSecretEncrypted;
+
+    /**
+     * 是否启用 TOTP：0-否 1-是
+     */
+    private Integer totpEnabled;
 }

@@ -200,6 +200,8 @@
         </template>
       </el-dialog>
 
+      <MfaSettingsPanel />
+
       <div class="settings-view__row settings-view__row--auto-lock">
         <div class="settings-view__row-label">
           <span>{{ t('settings.autoLock') }}</span>
@@ -520,6 +522,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ShortcutInput from '@/components/settings/ShortcutInput.vue'
+import MfaSettingsPanel from '@/components/settings/MfaSettingsPanel.vue'
 import { getHealthApi, sendSecurityKeyChangeCodeApi, verifySecurityKeyChangeCodeApi } from '@/api'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/constants/app'
 import { IN_APP_SHORTCUT_OPTIONS } from '@/constants/shortcuts'

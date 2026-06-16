@@ -1,54 +1,63 @@
 <template>
   <div class="auth-panel">
-    <div class="auth-panel__header">
-      <AppLogo size="lg" />
-      <p class="auth-panel__subtitle">{{ t('login.title') }}</p>
-    </div>
+    <LoginMfaStep
+      v-if="mfaChallenge"
+      :challenge="mfaChallenge"
+      @back="mfaChallenge = null"
+      @success="onMfaSuccess"
+    />
 
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      class="auth-panel__form"
-      @submit.prevent="handleLogin"
-    >
-      <el-form-item prop="username">
-        <el-input
-          v-model="form.username"
-          :placeholder="t('login.username')"
-          size="large"
-          :prefix-icon="User"
-        />
-      </el-form-item>
+    <template v-else>
+      <div class="auth-panel__header">
+        <AppLogo size="lg" />
+        <p class="auth-panel__subtitle">{{ t('login.title') }}</p>
+      </div>
 
-      <el-form-item prop="password">
-        <el-input
-          v-model="form.password"
-          type="password"
-          :placeholder="t('login.password')"
-          size="large"
-          :prefix-icon="Lock"
-          show-password
-          @keyup.enter="handleLogin"
-        />
-      </el-form-item>
-
-      <el-button
-        type="primary"
-        size="large"
-        class="auth-panel__submit"
-        :loading="authStore.loading"
-        @click="handleLogin"
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        class="auth-panel__form"
+        @submit.prevent="handleLogin"
       >
-        {{ t('login.submit') }}
-      </el-button>
-    </el-form>
+        <el-form-item prop="username">
+          <el-input
+            v-model="form.username"
+            :placeholder="t('login.username')"
+            size="large"
+            :prefix-icon="User"
+          />
+        </el-form-item>
 
-    <p class="auth-panel__error">{{ errorMsg }}</p>
+        <el-form-item prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            :placeholder="t('login.password')"
+            size="large"
+            :prefix-icon="Lock"
+            show-password
+            @keyup.enter="handleLogin"
+          />
+        </el-form-item>
 
-    <router-link :to="{ name: 'Register' }" class="auth-panel__link">
-      {{ t('login.registerLink') }}
-    </router-link>
+        <el-button
+          type="primary"
+          size="large"
+          class="auth-panel__submit"
+          :loading="authStore.loading"
+          @click="handleLogin"
+        >
+          {{ t('login.submit') }}
+        </el-button>
+      </el-form>
+
+      <p class="auth-panel__error">{{ errorMsg }}</p>
+
+      <router-link :to="{ name: 'Register' }" class="auth-panel__link">
+        {{ t('login.registerLink') }}
+      </router-link>
+    </template>
   </div>
 </template>
 
@@ -58,8 +67,10 @@ import { useRouter } from 'vue-router'
 import { User, Lock } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import AppLogo from '@/components/common/AppLogo.vue'
+import LoginMfaStep from '@/views/login/LoginMfaStep.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
+import { isMfaLoginChallenge, type MfaLoginChallenge } from '@/types/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -67,6 +78,7 @@ const { t } = useI18n()
 
 const formRef = ref<FormInstance>()
 const errorMsg = ref('')
+const mfaChallenge = ref<MfaLoginChallenge | null>(null)
 
 const form = reactive({
   username: '',
@@ -84,10 +96,18 @@ async function handleLogin(): Promise<void> {
   if (!valid) return
 
   try {
-    await authStore.login({ username: form.username.trim(), password: form.password })
+    const result = await authStore.login({ username: form.username.trim(), password: form.password })
+    if (isMfaLoginChallenge(result)) {
+      mfaChallenge.value = result
+      return
+    }
     void router.replace({ name: 'Dashboard' })
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : String(err)
   }
+}
+
+function onMfaSuccess(): void {
+  void router.replace({ name: 'Dashboard' })
 }
 </script>

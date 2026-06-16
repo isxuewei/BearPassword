@@ -49,6 +49,11 @@ const messages: MessageDict = {
   'login.password': 'パスワード',
   'login.submit': 'サインイン',
   'login.submitting': 'サインイン中…',
+  'login.mfaTitle': '二要素認証',
+  'login.mfaHint': '認証アプリの 6 桁コードを入力してください。',
+  'login.mfaTotpPlaceholder': '6 桁のコード',
+  'login.mfaTotpSubmit': '確認してログイン',
+  'login.mfaBack': '戻る',
   'login.settings': '拡張機能の設定',
 
   'vault.searchPlaceholder': 'このサイトのログインを検索…',

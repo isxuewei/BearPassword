@@ -49,6 +49,11 @@ const messages: MessageDict = {
   'login.password': 'Password',
   'login.submit': 'Sign in',
   'login.submitting': 'Signing in…',
+  'login.mfaTitle': 'Two-factor authentication',
+  'login.mfaHint': 'Enter the 6-digit code from your authenticator app.',
+  'login.mfaTotpPlaceholder': '6-digit code',
+  'login.mfaTotpSubmit': 'Verify and sign in',
+  'login.mfaBack': 'Back',
   'login.settings': 'Extension settings',
 
   'vault.searchPlaceholder': 'Search logins for this site…',

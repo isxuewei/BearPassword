@@ -21,7 +21,8 @@ import type {
  */
 
 /** 用户登录 / 注册 / 改密（SRP） */
-export { loginApi, registerApi, changePasswordApi, createSrpCredentials } from '@/api/srpAuth'
+export { loginApi, registerApi, changePasswordApi, createSrpCredentials, completeTotpLoginApi } from '@/api/srpAuth'
+export { isMfaLoginChallenge } from '@/types/auth'
 
 /** 退出登录 POST /auth/logout */
 export function logoutApi(): Promise<void> {

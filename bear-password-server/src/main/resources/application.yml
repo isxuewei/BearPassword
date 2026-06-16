@@ -142,3 +142,6 @@ bear:
       send-interval-seconds: 60
     redis:
       key-prefix: bear:password
+    mfa:
+      totp-encryption-key: ${MFA_TOTP_ENCRYPTION_KEY:}
+      session-ttl-seconds: 300

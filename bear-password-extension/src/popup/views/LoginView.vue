@@ -4,6 +4,7 @@ import { useI18n } from '@/popup/composables/useI18n'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore } from '@/popup/stores/session'
 import AppLogo from '@/popup/components/AppLogo.vue'
+import type { MfaLoginChallenge } from '@/shared/types'
 
 const { t } = useI18n()
 const popupStore = usePopupStore()
@@ -11,9 +12,26 @@ const sessionStore = useSessionStore()
 
 const username = ref('')
 const password = ref('')
+const mfaChallenge = ref<MfaLoginChallenge | null>(null)
+const totpCode = ref('')
 
 async function handleSubmit(): Promise<void> {
-  await sessionStore.login(username.value, password.value)
+  const result = await sessionStore.login(username.value, password.value)
+  if (result && 'mfaRequired' in result && result.mfaRequired) {
+    mfaChallenge.value = result
+  }
+}
+
+async function handleTotpSubmit(): Promise<void> {
+  if (!mfaChallenge.value) return
+  await sessionStore.completeMfaTotp(mfaChallenge.value.mfaToken, totpCode.value)
+  mfaChallenge.value = null
+}
+
+function handleBack(): void {
+  mfaChallenge.value = null
+  totpCode.value = ''
+  sessionStore.clearFeedback()
 }
 </script>
 
@@ -30,10 +48,10 @@ async function handleSubmit(): Promise<void> {
 
       <header class="header">
         <AppLogo size="lg" />
-        <p class="subtitle">{{ t('login.subtitle') }}</p>
+        <p class="subtitle">{{ mfaChallenge ? t('login.mfaTitle') : t('login.subtitle') }}</p>
       </header>
 
-      <form class="form" @submit.prevent="handleSubmit">
+      <form v-if="!mfaChallenge" class="form" @submit.prevent="handleSubmit">
         <div class="bear-field">
           <label class="bear-label">{{ t('login.username') }}</label>
           <input v-model="username" class="bear-input" type="text" autocomplete="username" required />
@@ -56,6 +74,35 @@ async function handleSubmit(): Promise<void> {
 
         <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
       </form>
+
+      <div v-else class="form">
+        <p class="mfa-hint">{{ t('login.mfaHint') }}</p>
+
+        <div class="bear-field">
+          <label class="bear-label">{{ t('login.mfaTotpPlaceholder') }}</label>
+          <input
+            v-model="totpCode"
+            class="bear-input"
+            inputmode="numeric"
+            maxlength="6"
+            @keyup.enter="handleTotpSubmit"
+          />
+          <button
+            class="bear-btn bear-btn-primary submit-btn"
+            type="button"
+            :disabled="sessionStore.loading"
+            @click="handleTotpSubmit"
+          >
+            {{ t('login.mfaTotpSubmit') }}
+          </button>
+        </div>
+
+        <button class="bear-btn bear-btn-text back-btn" type="button" @click="handleBack">
+          {{ t('login.mfaBack') }}
+        </button>
+
+        <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -115,5 +162,17 @@ async function handleSubmit(): Promise<void> {
   width: 100%;
   height: 44px;
   margin-top: 4px;
+}
+
+.mfa-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--bear-text-secondary);
+  line-height: 1.5;
+}
+
+.back-btn {
+  width: 100%;
+  margin-top: 8px;
 }
 </style>

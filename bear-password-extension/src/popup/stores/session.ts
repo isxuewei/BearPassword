@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { loginApi } from '@/shared/api/auth'
-import type {
-  ExtensionSession,
-  FillCredential,
-  MatchingCredentialsResult,
-  SecurityKeyApplyResult
+import { loginApi, completeTotpLoginApi } from '@/shared/api/srpAuth'
+import {
+  type ExtensionSession,
+  type FillCredential,
+  type LoginFlowResult,
+  type LoginResult,
+  type MatchingCredentialsResult,
+  type SecurityKeyApplyResult
 } from '@/shared/types'
 import { loadServerOrigin, saveServerOrigin } from '@/shared/storage/session'
 import { sendMessage } from '@/shared/utils/messaging'
@@ -38,7 +40,7 @@ export const useSessionStore = defineStore('session', () => {
     session.value = await sendMessage<ExtensionSession | null>({ type: 'GET_SESSION' })
   }
 
-  async function login(usernameInput: string, password: string): Promise<void> {
+  async function login(usernameInput: string, password: string): Promise<LoginFlowResult | void> {
     loading.value = true
     error.value = ''
     try {
@@ -47,6 +49,37 @@ export const useSessionStore = defineStore('session', () => {
       serverOrigin.value = origin
 
       const result = await loginApi(origin, { username: usernameInput, password })
+      if ('mfaRequired' in result && result.mfaRequired) {
+        return result
+      }
+
+      const { token, username, avatar } = result as LoginResult
+      const newSession: ExtensionSession = {
+        token,
+        username,
+        avatar,
+        serverOrigin: origin,
+        securityKey: null,
+        vukBase64: null
+      }
+      session.value = await sendMessage<ExtensionSession>({
+        type: 'SET_SESSION',
+        payload: newSession
+      })
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : t('session.loginFailed')
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function completeMfaTotp(mfaToken: string, code: string): Promise<void> {
+    loading.value = true
+    error.value = ''
+    try {
+      const origin = serverOrigin.value || (await loadServerOrigin())
+      const result = await completeTotpLoginApi(origin, mfaToken, code.trim())
       const newSession: ExtensionSession = {
         token: result.token,
         username: result.username,
@@ -155,6 +188,7 @@ export const useSessionStore = defineStore('session', () => {
     init,
     refreshSession,
     login,
+    completeMfaTotp,
     logout,
     updateServer,
     applySecurityKey,

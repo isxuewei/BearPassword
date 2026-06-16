@@ -10,7 +10,15 @@ import {
   computeSecretKeyFingerprint,
   generateVaultSalt
 } from '@/utils/vaultCrypto/vaultKeyDerivation'
-import type { LoginParams, RegisterParams, UserInfo, UserProfile } from '@/types'
+import type {
+  LoginFlowResult,
+  LoginParams,
+  LoginResult,
+  RegisterParams,
+  UserInfo,
+  UserProfile
+} from '@/types'
+import { isMfaLoginChallenge } from '@/types/auth'
 
 function resolveNickname(nickname: string | undefined, username: string): string {
   const trimmed = nickname?.trim()
@@ -71,21 +79,29 @@ export const useAuthStore = defineStore('auth', () => {
   const displayName = computed(() => nickname.value)
   const avatar = computed(() => userInfo.value?.avatar ?? '')
 
-  /** 登录 */
-  async function login(params: LoginParams): Promise<void> {
+  /** 登录；若返回 MFA 挑战，由调用方展示二次验证 */
+  async function login(params: LoginParams): Promise<LoginFlowResult> {
     loading.value = true
     try {
       const result = await loginApi(params)
-      const info = toUserInfo(result)
-      userInfo.value = info
-      storage.set('user', info)
-      storage.set('token', result.token)
-      await useSecurityStore().onLoginSuccess()
-      if (!useSecurityStore().hasVaultAccess) {
-        useAutoLockStore().lock({ hideWindow: false })
+      if (isMfaLoginChallenge(result)) {
+        return result
       }
+      await applyLoginResult(result)
+      return result
     } finally {
       loading.value = false
+    }
+  }
+
+  async function applyLoginResult(result: LoginResult): Promise<void> {
+    const info = toUserInfo(result)
+    userInfo.value = info
+    storage.set('user', info)
+    storage.set('token', result.token)
+    await useSecurityStore().onLoginSuccess()
+    if (!useSecurityStore().hasVaultAccess) {
+      useAutoLockStore().lock({ hideWindow: false })
     }
   }
 
@@ -179,6 +195,7 @@ export const useAuthStore = defineStore('auth', () => {
     displayName,
     avatar,
     login,
+    applyLoginResult,
     register,
     prepareRegistrationVault,
     logout,

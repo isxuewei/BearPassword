@@ -1,7 +1,7 @@
-import type { LoginParams, LoginResult } from '@/shared/types'
+import type { LoginFlowResult, LoginParams, LoginResult } from '@/shared/types'
 import { http } from '@/shared/utils/request'
+import { verifyTotpLoginApi } from '@/shared/api/mfa'
 import {
-  createSrpCredentials,
   performSrpClientSteps,
   type SrpLoginInitResult,
   type SrpLoginVerifyResult
@@ -18,7 +18,7 @@ async function srpLoginVerifyApi(
   return http.post<SrpLoginVerifyResult>('/auth/login/verify', payload, { origin })
 }
 
-export async function loginApi(origin: string, params: LoginParams): Promise<LoginResult> {
+export async function loginApi(origin: string, params: LoginParams): Promise<LoginFlowResult> {
   const init = await srpLoginInitApi(origin, params.username)
 
   if (!init.sessionId || !init.identity || !init.salt || !init.serverPublicEphemeral) {
@@ -38,6 +38,15 @@ export async function loginApi(origin: string, params: LoginParams): Promise<Log
 
   await proof.confirmServerProof(verified.serverProof)
 
+  if (verified.mfaRequired && verified.mfaToken) {
+    return {
+      mfaRequired: true,
+      mfaToken: verified.mfaToken,
+      mfaMethods: verified.mfaMethods ?? [],
+      serverProof: verified.serverProof
+    }
+  }
+
   if (!verified.token || !verified.username) {
     throw new Error('登录失败')
   }
@@ -49,4 +58,12 @@ export async function loginApi(origin: string, params: LoginParams): Promise<Log
   }
 }
 
-export { createSrpCredentials }
+export async function completeTotpLoginApi(
+  origin: string,
+  mfaToken: string,
+  code: string
+): Promise<LoginResult> {
+  return verifyTotpLoginApi(origin, mfaToken, code)
+}
+
+export { createSrpCredentials } from '@/shared/utils/srpClient'
