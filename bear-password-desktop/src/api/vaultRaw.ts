@@ -1,9 +1,10 @@
 import { request } from '@/utils/request'
 import type { PageResult } from '@/types'
-import type { PasswordEntry, PasswordEntryParams, PasswordQueryParams } from '@/types'
+import type { PasswordEntry, PasswordQueryParams } from '@/types'
+import type { PasswordEntryApiParams } from '@/utils/contentMetadata'
 
 /**
- * 密码库原始 API（不做客户端加解密，供密钥迁移使用）
+ * 密码库原始 API（不做客户端加解密，供密钥更换时重新加密使用）
  */
 
 export function getPasswordListRawApi(
@@ -14,7 +15,7 @@ export function getPasswordListRawApi(
 
 export function updatePasswordRawApi(
   id: number,
-  data: PasswordEntryParams
+  data: PasswordEntryApiParams
 ): Promise<PasswordEntry> {
   return request.put<PasswordEntry>(`/passwords/${id}`, data)
 }

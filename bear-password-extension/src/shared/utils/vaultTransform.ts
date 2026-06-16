@@ -11,6 +11,12 @@ import {
   encryptContentObject,
   isEncryptedContent
 } from '@/shared/utils/contentCrypto'
+import {
+  buildPasswordEntryApiParams,
+  enrichEntryFromContent,
+  type PasswordEntryApiParams
+} from '@/shared/utils/contentMetadata'
+import { SecurityKeyRequiredError } from '@/shared/utils/securityKeyRequired'
 import type { WebsiteMatchMode } from '@/shared/types'
 import { entryMatchesPage } from '@/shared/utils/websiteMatch'
 
@@ -19,11 +25,11 @@ export function isDecryptFailedContent(content: PasswordContent): boolean {
 }
 
 export function resolveEntryWebsites(entry: PasswordEntry): string[] {
-  if (entry.websites?.length) {
-    return entry.websites.map((url) => url.trim()).filter(Boolean)
-  }
   if (entry.passwordType !== '登录信息' || isEncryptedContent(entry.content)) {
     return []
+  }
+  if (entry.websites?.length) {
+    return entry.websites.map((url) => url.trim()).filter(Boolean)
   }
   const content = entry.content as LoginContent
   return (content.websites ?? []).map((url) => url.trim()).filter(Boolean)
@@ -37,23 +43,27 @@ export async function decryptPasswordEntry(
     if (isEncryptedContent(entry.content)) {
       return {
         ...entry,
-        content: { title: '内容已加密', __decryptFailed__: true }
+        content: { title: '内容已加密', __decryptFailed__: true },
+        passwordLabels: [],
+        remark: ''
       }
     }
-    return entry
+    return enrichEntryFromContent(entry)
   }
 
   if (!isEncryptedContent(entry.content)) {
-    return entry
+    return enrichEntryFromContent(entry)
   }
 
   try {
     const content = await decryptContentObject(entry.content, passphrase)
-    return { ...entry, content }
+    return enrichEntryFromContent({ ...entry, content })
   } catch {
     return {
       ...entry,
-      content: { title: '解密失败，请检查安全密钥', __decryptFailed__: true }
+      content: { title: '解密失败，请检查安全密钥', __decryptFailed__: true },
+      passwordLabels: [],
+      remark: ''
     }
   }
 }
@@ -61,10 +71,14 @@ export async function decryptPasswordEntry(
 export async function encryptPasswordEntryParams(
   params: PasswordEntryParams,
   passphrase: string | null
-): Promise<PasswordEntryParams> {
-  if (!passphrase) return params
-  const content = await encryptContentObject(params.content, passphrase)
-  return { ...params, content: content as unknown as PasswordContent }
+): Promise<PasswordEntryApiParams> {
+  if (!passphrase?.trim()) {
+    throw new SecurityKeyRequiredError()
+  }
+
+  const apiParams = buildPasswordEntryApiParams(params)
+  const content = await encryptContentObject(apiParams.content, passphrase)
+  return { passwordType: apiParams.passwordType, content: content as unknown as PasswordContent }
 }
 
 /** 条目匹配当前网站但无法解密（未配置或密钥错误） */
@@ -110,7 +124,7 @@ export function toFillCredential(entry: PasswordEntry): FillCredential | null {
   if (isDecryptFailedContent(entry.content)) return null
 
   const content = entry.content as LoginContent
-  const title = entry.passwordTitle || content.title || '未命名'
+  const title = content.title?.trim() || entry.passwordTitle?.trim() || '未命名'
   const username = content.username ?? ''
   const password = content.password ?? ''
   if (!username && !password) return null

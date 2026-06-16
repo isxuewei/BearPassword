@@ -133,7 +133,11 @@ const fileApi = {
     ipcRenderer.invoke('file:pickPasswordCsv') as Promise<{
       fileName: string
       content: string
-    } | null>
+    } | null>,
+  saveSecurityKeyBackup: (payload: { defaultFileName: string; content: string }) =>
+    ipcRenderer.invoke('file:saveSecurityKeyBackup', payload) as Promise<
+      { ok: true; filePath: string } | { ok: false; canceled: true }
+    >
 }
 
 contextBridge.exposeInMainWorld('fileApi', fileApi)

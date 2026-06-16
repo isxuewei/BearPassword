@@ -2,6 +2,7 @@ package com.bear.password.module.recent.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.bear.password.common.dto.PageResult;
+import com.bear.password.common.dto.PasswordRelationMetaItem;
 import com.bear.password.common.result.Result;
 import com.bear.password.module.password.dto.PasswordEntryResponse;
 import com.bear.password.module.recent.service.PasswordRecentVisitService;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 最近访问接口
@@ -33,6 +36,15 @@ public class RecentVisitController {
             @RequestParam(required = false) String keyword) {
         long userId = StpUtil.getLoginIdAsLong();
         return Result.success(passwordRecentVisitService.pageRecentVisits(userId, page, pageSize, keyword));
+    }
+
+    /**
+     * 最近访问元数据（密码 ID + 访问时间，不含 content）
+     */
+    @GetMapping("/meta")
+    public Result<List<PasswordRelationMetaItem>> meta() {
+        long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(passwordRecentVisitService.listRecentVisitMeta(userId));
     }
 
     /**

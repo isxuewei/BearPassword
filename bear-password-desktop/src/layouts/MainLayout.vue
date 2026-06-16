@@ -38,9 +38,15 @@
       <!-- 右侧内容区 -->
       <main class="main-layout__content">
         <div class="main-layout__view">
-          <router-view v-slot="{ Component, route }">
+          <router-view v-slot="{ Component, route: activeRoute }">
             <transition name="page-fade">
-              <component :is="Component" :key="route.path" class="main-layout__page" />
+              <keep-alive :include="['VaultView']">
+                <component
+                  :is="Component"
+                  :key="resolvePageKey(activeRoute)"
+                  class="main-layout__page"
+                />
+              </keep-alive>
             </transition>
           </router-view>
         </div>
@@ -80,6 +86,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import TitleBar from '@/components/window/TitleBar.vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 import LockScreen from '@/components/common/LockScreen.vue'
@@ -102,6 +109,17 @@ const autoLockStore = useAutoLockStore()
 const securityStore = useSecurityStore()
 const serverStore = useServerStore()
 const versionStore = useVersionStore()
+
+const VAULT_PAGE_NAMES = new Set(['Vault', 'Favorites', 'Recent'])
+
+/** 密码库 / 收藏 / 最近访问共用同一组件实例，避免切换时销毁重建 */
+function resolvePageKey(activeRoute: RouteLocationNormalizedLoaded): string {
+  const name = activeRoute.name
+  if (typeof name === 'string' && VAULT_PAGE_NAMES.has(name)) {
+    return 'vault-pages'
+  }
+  return activeRoute.path
+}
 
 const migrationPercent = computed(() => {
   const { current, total } = securityStore.migrationProgress

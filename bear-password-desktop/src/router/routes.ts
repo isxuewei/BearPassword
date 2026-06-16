@@ -5,6 +5,8 @@ import AuthPage from '@/views/login/AuthPage.vue'
  * 路由表定义（模块化）
  * 按功能区域划分：认证区 / 主应用区
  */
+const VaultView = () => import('@/views/vault/VaultView.vue')
+
 export const routes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -33,19 +35,19 @@ export const routes: RouteRecordRaw[] = [
       {
         path: 'vault',
         name: 'Vault',
-        component: () => import('@/views/vault/VaultView.vue'),
+        component: VaultView,
         meta: { title: '密码库', icon: 'vault' }
       },
       {
         path: 'favorites',
         name: 'Favorites',
-        component: () => import('@/views/vault/VaultView.vue'),
+        component: VaultView,
         meta: { title: '收藏夹', icon: 'favorites', mode: 'favorites' }
       },
       {
         path: 'recent',
         name: 'Recent',
-        component: () => import('@/views/vault/VaultView.vue'),
+        component: VaultView,
         meta: { title: '最近访问', icon: 'recent', mode: 'recent' }
       },
       {

@@ -107,6 +107,10 @@ interface DockApi {
 /** Electron preload 暴露的文件选择 API */
 interface FileApi {
   pickPasswordCsv: () => Promise<{ fileName: string; content: string } | null>
+  saveSecurityKeyBackup: (payload: {
+    defaultFileName: string
+    content: string
+  }) => Promise<{ ok: true; filePath: string } | { ok: false; canceled: true }>
 }
 
 declare global {

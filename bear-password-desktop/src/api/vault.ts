@@ -1,7 +1,10 @@
 import { request } from '@/utils/request'
 import type { PageResult } from '@/types'
 import type { PasswordEntry, PasswordEntryParams, PasswordQueryParams } from '@/types'
+import { fetchAllPages } from '@/utils/fetchAllPages'
+import { fetchAllPasswordEntriesRaw } from '@/api/vaultRaw'
 import {
+  decryptPasswordEntries,
   decryptPasswordEntry,
   decryptPasswordPage,
   encryptPasswordEntryParams
@@ -17,6 +20,12 @@ export async function getPasswordListApi(
 ): Promise<PageResult<PasswordEntry>> {
   const data = await request.get<PageResult<PasswordEntry>>('/passwords', { params })
   return decryptPasswordPage(data)
+}
+
+/** 拉取当前用户全部密码条目并本地解密 */
+export async function fetchAllPasswordEntries(): Promise<PasswordEntry[]> {
+  const raw = await fetchAllPasswordEntriesRaw()
+  return decryptPasswordEntries(raw)
 }
 
 /** 获取密码详情 */

@@ -72,10 +72,12 @@ export function normalizeLoginContent(raw: Record<string, unknown>): LoginConten
   }
 }
 
-export function serializeLoginContent(content: LoginContent): Omit<LoginContent, 'title' | 'websites'> {
+export function serializeLoginContent(content: LoginContent): LoginContent {
   return {
+    title: content.title.trim(),
     username: content.username.trim(),
     password: content.password,
+    websites: content.websites.map((url) => url.trim()).filter(Boolean),
     host: content.host.trim(),
     extraFields: content.extraFields.filter((field) => field.label.trim() || field.value.trim())
   }

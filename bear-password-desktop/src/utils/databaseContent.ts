@@ -80,8 +80,9 @@ export function normalizeDatabaseContent(raw: Record<string, unknown>): Database
   }
 }
 
-export function serializeDatabaseContent(content: DatabaseContent): Omit<DatabaseContent, 'title'> {
+export function serializeDatabaseContent(content: DatabaseContent): DatabaseContent {
   return {
+    title: content.title.trim(),
     dbType: content.dbType.trim(),
     host: content.host.trim(),
     port: content.port.trim(),

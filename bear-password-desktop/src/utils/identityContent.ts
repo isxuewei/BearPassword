@@ -40,8 +40,9 @@ export function normalizeIdentityContent(raw: Record<string, unknown>): Identity
   }
 }
 
-export function serializeIdentityContent(content: IdentityContent): Omit<IdentityContent, 'title'> {
+export function serializeIdentityContent(content: IdentityContent): IdentityContent {
   return {
+    title: content.title.trim(),
     name: content.name.trim(),
     idNumber: content.idNumber.trim(),
     birthDate: content.birthDate.trim(),

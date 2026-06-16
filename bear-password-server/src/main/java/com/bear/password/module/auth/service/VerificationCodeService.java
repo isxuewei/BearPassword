@@ -22,16 +22,13 @@ import java.util.function.Consumer;
 public class VerificationCodeService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String REGISTER_CODE_SEGMENT = "register:code:";
-    private static final String REGISTER_SEND_LOCK_SEGMENT = "register:send-lock:";
-
     private final RegisterProperties registerProperties;
     private final AppRedisProperties appRedisProperties;
     private final StringRedisTemplate stringRedisTemplate;
 
-    public void sendCode(String email, Consumer<String> sender) {
-        String normalizedEmail = normalizeEmail(email);
-        String sendLockKey = appRedisProperties.key(REGISTER_SEND_LOCK_SEGMENT + normalizedEmail);
+    public void sendCode(VerificationPurpose purpose, String identifier, Consumer<String> sender) {
+        String normalizedIdentifier = normalizeIdentifier(purpose, identifier);
+        String sendLockKey = appRedisProperties.key(purpose.getLockSegment() + normalizedIdentifier);
 
         Long lockTtl = stringRedisTemplate.getExpire(sendLockKey, TimeUnit.SECONDS);
         if (lockTtl != null && lockTtl > 0) {
@@ -46,15 +43,15 @@ public class VerificationCodeService {
 
         int expireMinutes = registerProperties.getRegister().getCodeExpireMinutes();
         int intervalSeconds = registerProperties.getRegister().getSendIntervalSeconds();
-        String codeKey = appRedisProperties.key(REGISTER_CODE_SEGMENT + normalizedEmail);
+        String codeKey = appRedisProperties.key(purpose.getCodeSegment() + normalizedIdentifier);
 
         stringRedisTemplate.opsForValue().set(codeKey, code, Duration.ofMinutes(expireMinutes));
         stringRedisTemplate.opsForValue().set(sendLockKey, "1", Duration.ofSeconds(intervalSeconds));
     }
 
-    public void verifyAndConsume(String email, String code) {
-        String normalizedEmail = normalizeEmail(email);
-        String codeKey = appRedisProperties.key(REGISTER_CODE_SEGMENT + normalizedEmail);
+    public void verifyAndConsume(VerificationPurpose purpose, String identifier, String code) {
+        String normalizedIdentifier = normalizeIdentifier(purpose, identifier);
+        String codeKey = appRedisProperties.key(purpose.getCodeSegment() + normalizedIdentifier);
         String storedCode = stringRedisTemplate.opsForValue().get(codeKey);
 
         if (!StringUtils.hasText(storedCode)) {
@@ -66,6 +63,16 @@ public class VerificationCodeService {
         }
 
         stringRedisTemplate.delete(codeKey);
+    }
+
+    private String normalizeIdentifier(VerificationPurpose purpose, String identifier) {
+        if (!StringUtils.hasText(identifier)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "验证码标识无效");
+        }
+        if (purpose == VerificationPurpose.REGISTER) {
+            return normalizeEmail(identifier);
+        }
+        return identifier.trim();
     }
 
     private String generateCode() {

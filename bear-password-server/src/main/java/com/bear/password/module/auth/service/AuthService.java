@@ -198,14 +198,59 @@ public class AuthService {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该邮箱已注册");
         }
 
-        verificationCodeService.sendCode(email, code -> emailService.sendRegisterCode(email, code));
+        verificationCodeService.sendCode(
+                VerificationPurpose.REGISTER,
+                email,
+                code -> emailService.sendRegisterCode(email, code)
+        );
+    }
+
+    public SecurityKeyChangeCodeResponse sendSecurityKeyChangeCode() {
+        long userId = StpUtil.getLoginIdAsLong();
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+
+        String email = normalizeEmail(user.getEmail());
+        if (!StringUtils.hasText(email)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "账户未绑定邮箱，无法更换密钥");
+        }
+
+        verificationCodeService.sendCode(
+                VerificationPurpose.SECURITY_KEY_CHANGE,
+                String.valueOf(userId),
+                code -> emailService.sendSecurityKeyChangeCode(email, code)
+        );
+        return new SecurityKeyChangeCodeResponse(maskEmail(email));
+    }
+
+    public void verifySecurityKeyChangeCode(VerifySecurityKeyChangeCodeRequest request) {
+        long userId = StpUtil.getLoginIdAsLong();
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        if (!StringUtils.hasText(normalizeEmail(user.getEmail()))) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "账户未绑定邮箱，无法更换密钥");
+        }
+
+        verificationCodeService.verifyAndConsume(
+                VerificationPurpose.SECURITY_KEY_CHANGE,
+                String.valueOf(userId),
+                request.getCode()
+        );
     }
 
     public LoginResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
         String username = request.getUsername().trim();
 
-        verificationCodeService.verifyAndConsume(email, request.getCode());
+        verificationCodeService.verifyAndConsume(
+                VerificationPurpose.REGISTER,
+                email,
+                request.getCode()
+        );
 
         if (userService.getByEmail(email) != null) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该邮箱已注册");
@@ -296,5 +341,16 @@ public class AuthService {
     /** Sa-Token Session 使用 ConcurrentHashMap，不能存 null */
     private String normalizeAvatar(String avatar) {
         return avatar != null ? avatar : "";
+    }
+
+    private String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 0) {
+            return email;
+        }
+        String local = email.substring(0, at);
+        String domain = email.substring(at);
+        int visible = Math.min(3, local.length());
+        return local.substring(0, visible) + "***" + domain;
     }
 }

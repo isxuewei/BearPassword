@@ -38,8 +38,9 @@ export function normalizeBankCardContent(raw: Record<string, unknown>): BankCard
   }
 }
 
-export function serializeBankCardContent(content: BankCardContent): Omit<BankCardContent, 'title'> {
+export function serializeBankCardContent(content: BankCardContent): BankCardContent {
   return {
+    title: content.title.trim(),
     bankName: content.bankName.trim(),
     cardHolder: content.cardHolder.trim(),
     cardNumber: content.cardNumber.trim(),

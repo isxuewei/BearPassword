@@ -1,5 +1,5 @@
 import { request } from '@/utils/request'
-import type { PageResult } from '@/types'
+import type { PageResult, PasswordRelationMetaItem } from '@/types'
 import type { PasswordEntry } from '@/types'
 import { decryptPasswordPage } from '@/utils/vaultEntryTransform'
 
@@ -11,6 +11,11 @@ export async function getRecentVisitListApi(params: {
 } = {}): Promise<PageResult<PasswordEntry>> {
   const data = await request.get<PageResult<PasswordEntry>>('/recent-visits', { params })
   return decryptPasswordPage(data)
+}
+
+/** 获取最近访问元数据（密码 ID + 访问时间） */
+export function getRecentVisitMetaApi(): Promise<PasswordRelationMetaItem[]> {
+  return request.get<PasswordRelationMetaItem[]>('/recent-visits/meta')
 }
 
 /** 记录一次最近访问（点击明细字段复制时调用） */

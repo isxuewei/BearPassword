@@ -70,3 +70,13 @@ export interface RegisterParams {
   username: string
   password: string
 }
+
+/** 更换密钥验证码校验参数 */
+export interface VerifySecurityKeyChangeCodeParams {
+  code: string
+}
+
+/** 更换密钥验证码发送结果 */
+export interface SecurityKeyChangeCodeResult {
+  maskedEmail: string
+}

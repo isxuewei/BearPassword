@@ -63,12 +63,17 @@ export function isEncryptedContent(content: unknown): content is EncryptedConten
     && typeof record.data === 'string'
 }
 
-/** 生成随机安全密钥（Base64，约 43 字符） */
+/** 自动生成的安全密钥长度（字符） */
+export const SECURITY_KEY_LENGTH = 128
+
+export function isValidSecurityKeyLength(key: string): boolean {
+  return key.trim().length === SECURITY_KEY_LENGTH
+}
+
+/** 生成随机安全密钥（URL 安全 Base64，固定 128 字符） */
 export function generateSecurityKey(): string {
-  return toBase64(crypto.getRandomValues(new Uint8Array(32)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
+  const bytes = crypto.getRandomValues(new Uint8Array(96))
+  return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_')
 }
 
 export async function encryptContentObject(

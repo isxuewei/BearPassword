@@ -26,8 +26,7 @@
         <el-input
           v-model="securityKeyInput"
           type="password"
-          show-password
-          :placeholder="t('settings.securityKeyPlaceholder')"
+          :placeholder="securityKeyPlaceholder"
           size="large"
           class="settings-view__security-input"
           :disabled="securityStore.isMigrating"
@@ -44,18 +43,101 @@
           >
             {{ t('settings.securityKeySave') }}
           </el-button>
-          <el-button
-            size="large"
-            :disabled="!securityStore.hasSecurityKey || securityStore.isMigrating"
-            @click="handleClearKey"
-          >
-            {{ t('settings.securityKeyClear') }}
-          </el-button>
         </div>
         <p class="settings-view__security-note">
           {{ t('settings.securityKeyNote') }}
         </p>
       </div>
+
+      <el-dialog
+        v-model="generatedKeyDialogVisible"
+        :title="t('settings.securityKeyGeneratedTitle')"
+        width="560px"
+        class="settings-view__key-dialog"
+        :close-on-click-modal="false"
+        append-to-body
+      >
+        <p class="settings-view__key-dialog-tip">{{ t('settings.securityKeyGeneratedBody') }}</p>
+        <el-input
+          :model-value="generatedKeyDisplay"
+          type="textarea"
+          readonly
+          :rows="5"
+          resize="none"
+          class="settings-view__key-dialog-text"
+        />
+        <template #footer>
+          <div class="settings-view__key-dialog-actions">
+            <el-button size="large" @click="handleCopyGeneratedKey">
+              {{ t('settings.securityKeyCopy') }}
+            </el-button>
+            <el-button size="large" @click="handleDownloadGeneratedKey">
+              {{ t('settings.securityKeyDownloadBackup') }}
+            </el-button>
+            <el-button type="primary" size="large" @click="generatedKeyDialogVisible = false">
+              {{ t('settings.securityKeyGeneratedDone') }}
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <el-dialog
+        v-model="securityKeyVerifyDialogVisible"
+        :title="t('settings.securityKeyVerifyTitle')"
+        width="480px"
+        class="settings-view__key-dialog"
+        :close-on-click-modal="false"
+        append-to-body
+        @closed="resetSecurityKeyVerifyState"
+      >
+        <p class="settings-view__key-dialog-tip">
+          {{ t('settings.securityKeyVerifyBody', { email: securityKeyVerifyEmail || t('settings.securityKeyVerifyEmailPending') }) }}
+        </p>
+        <div class="settings-view__verify-code-row">
+          <el-input
+            v-model="securityKeyVerifyCode"
+            :placeholder="t('register.code')"
+            size="large"
+            maxlength="6"
+            :disabled="securityKeyVerifySubmitting"
+            @keyup.enter="handleConfirmSecurityKeyVerify"
+          />
+          <el-button
+            size="large"
+            class="settings-view__verify-code-btn"
+            :disabled="securityKeyVerifyCountdown > 0 || securityKeyVerifySending || securityKeyVerifySubmitting"
+            :loading="securityKeyVerifySending"
+            @click="handleSendSecurityKeyVerifyCode"
+          >
+            {{
+              securityKeyVerifyCountdown > 0
+                ? `${securityKeyVerifyCountdown}s`
+                : securityKeyVerifyCodeSent
+                  ? t('register.resendCode')
+                  : t('register.sendCode')
+            }}
+          </el-button>
+        </div>
+        <template #footer>
+          <div class="settings-view__key-dialog-actions">
+            <el-button
+              size="large"
+              :disabled="securityKeyVerifySubmitting"
+              @click="securityKeyVerifyDialogVisible = false"
+            >
+              {{ t('msg.cancel') }}
+            </el-button>
+            <el-button
+              type="primary"
+              size="large"
+              :loading="securityKeyVerifySubmitting"
+              @click="handleConfirmSecurityKeyVerify"
+            >
+              {{ t('settings.securityKeyVerifyConfirm') }}
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
 
       <div class="settings-view__row settings-view__row--auto-lock">
         <div class="settings-view__row-label">
@@ -339,13 +421,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ShortcutInput from '@/components/settings/ShortcutInput.vue'
-import { getHealthApi } from '@/api'
+import { getHealthApi, sendSecurityKeyChangeCodeApi, verifySecurityKeyChangeCodeApi } from '@/api'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/constants/app'
 import { IN_APP_SHORTCUT_OPTIONS } from '@/constants/shortcuts'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useDockStore } from '@/stores/dock'
 import { useLaunchAtLoginStore } from '@/stores/launchAtLogin'
@@ -376,14 +459,20 @@ import {
   type TrayClickAction
 } from '@/types/tray'
 import {
-  migrateAllPasswordContents,
-  SecurityKeyMigrationError
-} from '@/utils/securityKeyMigration'
+  reencryptAllPasswordContents,
+  SecurityKeyReencryptError
+} from '@/utils/securityKeyReencrypt'
+import {
+  buildSecurityKeyBackupFileContent,
+  buildSecurityKeyBackupFileName
+} from '@/utils/securityKeyBackup'
+import { isValidSecurityKeyLength, SECURITY_KEY_LENGTH } from '@/utils/contentCrypto'
 
 const HEALTH_CHECK_INTERVAL = 15000
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const authStore = useAuthStore()
 const securityStore = useSecurityStore()
 const autoLockStore = useAutoLockStore()
 const serverStore = useServerStore()
@@ -393,7 +482,18 @@ const launchAtLoginStore = useLaunchAtLoginStore()
 const trayStore = useTrayStore()
 const dockStore = useDockStore()
 const healthReady = ref(false)
-const securityKeyInput = ref(securityStore.securityKey ?? '')
+const securityKeyInput = ref('')
+const generatedKeyDialogVisible = ref(false)
+const generatedKeyDisplay = ref('')
+const securityKeyVerifyDialogVisible = ref(false)
+const securityKeyVerifyCode = ref('')
+const securityKeyVerifyEmail = ref('')
+const securityKeyVerifySending = ref(false)
+const securityKeyVerifySubmitting = ref(false)
+const securityKeyVerifyCodeSent = ref(false)
+const securityKeyVerifyCountdown = ref(0)
+const pendingSecurityKey = ref('')
+let securityKeyVerifyCountdownTimer: ReturnType<typeof setInterval> | null = null
 const serverUrlInput = ref(serverStore.serverOrigin)
 const savingServerUrl = ref(false)
 const shortcutSaving = ref<ShortcutActionId | null>(null)
@@ -496,6 +596,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
+  if (securityKeyVerifyCountdownTimer) clearInterval(securityKeyVerifyCountdownTimer)
 })
 
 function formatInAppShortcut(accelerator: string): string {
@@ -506,6 +607,22 @@ const securityKeyHint = computed(() =>
   securityStore.hasSecurityKey
     ? t('settings.securityKeyEnabledHint')
     : t('settings.securityKeyDisabledHint')
+)
+
+const securityKeyPlaceholder = computed(() => {
+  if (securityStore.hasSecurityKey && !securityKeyInput.value.trim()) {
+    return t('settings.securityKeyConfiguredPlaceholder')
+  }
+  return t('settings.securityKeyPlaceholder')
+})
+
+watch(
+  () => securityStore.hasSecurityKey,
+  (hasKey) => {
+    if (hasKey) {
+      securityKeyInput.value = ''
+    }
+  }
 )
 
 const autoLockMinutes = computed({
@@ -591,20 +708,155 @@ async function handleResetShortcuts(): Promise<void> {
 
 function handleGenerateKey(): void {
   if (securityStore.isMigrating) return
-  securityKeyInput.value = securityStore.createRandomSecurityKey()
+
+  const key = securityStore.createRandomSecurityKey()
+  securityKeyInput.value = key
+  generatedKeyDisplay.value = key
+  generatedKeyDialogVisible.value = true
 }
 
-async function runSecurityKeyMigration(
+async function handleCopyGeneratedKey(): Promise<void> {
+  const key = generatedKeyDisplay.value
+  if (!key) return
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(key)
+      ElMessage.success(t('settings.securityKeyCopied'))
+      return
+    }
+  } catch {
+    // fallback below
+  }
+
+  ElMessage.warning(t('settings.securityKeyCopyFailed'))
+}
+
+async function handleDownloadGeneratedKey(): Promise<void> {
+  const key = generatedKeyDisplay.value
+  if (!key) return
+
+  if (!window.fileApi?.saveSecurityKeyBackup) {
+    ElMessage.warning(t('msg.securityKeyBackupUnavailable'))
+    return
+  }
+
+  try {
+    const result = await window.fileApi.saveSecurityKeyBackup({
+      defaultFileName: buildSecurityKeyBackupFileName(authStore.username),
+      content: buildSecurityKeyBackupFileContent(authStore.username, key)
+    })
+    if (result.ok) {
+      const fileName = result.filePath.split(/[/\\]/).pop() ?? result.filePath
+      ElMessage.success(t('msg.securityKeyBackupSaved', { file: fileName }))
+      return
+    }
+    if (result.canceled) {
+      ElMessage.info(t('msg.securityKeyBackupCanceled'))
+    }
+  } catch {
+    ElMessage.error(t('msg.securityKeyBackupFailed'))
+  }
+}
+
+async function runSecurityKeyReencrypt(
   oldKey: string | null,
   newKey: string | null
 ): Promise<number> {
-  securityStore.beginMigration('正在准备迁移…')
+  securityStore.beginMigration('正在准备重新加密…')
   try {
-    return await migrateAllPasswordContents(oldKey, newKey, (progress) => {
+    return await reencryptAllPasswordContents(oldKey, newKey, (progress) => {
       securityStore.updateMigrationProgress(progress)
     })
   } finally {
     securityStore.endMigration()
+  }
+}
+
+function resetSecurityKeyVerifyState(): void {
+  securityKeyVerifyCode.value = ''
+  securityKeyVerifyEmail.value = ''
+  securityKeyVerifySending.value = false
+  securityKeyVerifySubmitting.value = false
+  securityKeyVerifyCodeSent.value = false
+  securityKeyVerifyCountdown.value = 0
+  pendingSecurityKey.value = ''
+  if (securityKeyVerifyCountdownTimer) {
+    clearInterval(securityKeyVerifyCountdownTimer)
+    securityKeyVerifyCountdownTimer = null
+  }
+}
+
+function startSecurityKeyVerifyCountdown(seconds = 60): void {
+  securityKeyVerifyCountdown.value = seconds
+  if (securityKeyVerifyCountdownTimer) clearInterval(securityKeyVerifyCountdownTimer)
+  securityKeyVerifyCountdownTimer = setInterval(() => {
+    securityKeyVerifyCountdown.value -= 1
+    if (securityKeyVerifyCountdown.value <= 0 && securityKeyVerifyCountdownTimer) {
+      clearInterval(securityKeyVerifyCountdownTimer)
+      securityKeyVerifyCountdownTimer = null
+    }
+  }, 1000)
+}
+
+async function handleSendSecurityKeyVerifyCode(): Promise<void> {
+  if (securityKeyVerifySending.value || securityKeyVerifyCountdown.value > 0) return
+
+  securityKeyVerifySending.value = true
+  try {
+    const result = await sendSecurityKeyChangeCodeApi()
+    securityKeyVerifyEmail.value = result.maskedEmail
+    securityKeyVerifyCodeSent.value = true
+    startSecurityKeyVerifyCountdown()
+    ElMessage.success(t('settings.securityKeyVerifyCodeSent'))
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('settings.securityKeyVerifyCodeSendFailed'))
+  } finally {
+    securityKeyVerifySending.value = false
+  }
+}
+
+async function completeSecurityKeySave(oldKey: string | null, newKey: string): Promise<void> {
+  try {
+    const reencrypted = await runSecurityKeyReencrypt(oldKey, newKey)
+    securityStore.setSecurityKey(newKey)
+    securityKeyInput.value = ''
+    ElMessage.success(
+      reencrypted > 0 ? t('msg.securityKeySavedMigrated', { count: reencrypted }) : t('msg.securityKeySaved')
+    )
+  } catch (err) {
+    const message = err instanceof SecurityKeyReencryptError
+      ? err.message
+      : err instanceof Error
+        ? err.message
+        : t('msg.securityKeyMigrateFailed')
+    ElMessage.error(message)
+  }
+}
+
+async function handleConfirmSecurityKeyVerify(): Promise<void> {
+  const code = securityKeyVerifyCode.value.trim()
+  if (!/^\d{6}$/.test(code)) {
+    ElMessage.warning(t('register.codeInvalid'))
+    return
+  }
+
+  const newKey = pendingSecurityKey.value.trim()
+  if (!newKey) {
+    securityKeyVerifyDialogVisible.value = false
+    return
+  }
+
+  securityKeyVerifySubmitting.value = true
+  try {
+    await verifySecurityKeyChangeCodeApi({ code })
+    securityKeyVerifyDialogVisible.value = false
+    const oldKey = securityStore.securityKey?.trim() || null
+    await completeSecurityKeySave(oldKey, newKey)
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('settings.securityKeyVerifyFailed'))
+  } finally {
+    securityKeyVerifySubmitting.value = false
   }
 }
 
@@ -614,6 +866,11 @@ async function handleSaveKey(): Promise<void> {
   const newKey = securityKeyInput.value.trim()
   if (!newKey) {
     ElMessage.warning(t('msg.securityKeyRequired'))
+    return
+  }
+
+  if (!isValidSecurityKeyLength(newKey)) {
+    ElMessage.warning(t('msg.securityKeyInvalidLength', { length: SECURITY_KEY_LENGTH }))
     return
   }
 
@@ -634,56 +891,18 @@ async function handleSaveKey(): Promise<void> {
     } catch {
       return
     }
-  }
 
-  try {
-    const migrated = await runSecurityKeyMigration(oldKey, newKey)
-    securityStore.setSecurityKey(newKey)
-    ElMessage.success(
-      migrated > 0 ? t('msg.securityKeySavedMigrated', { count: migrated }) : t('msg.securityKeySaved')
-    )
-  } catch (err) {
-    const message = err instanceof SecurityKeyMigrationError
-      ? err.message
-      : err instanceof Error
-        ? err.message
-        : t('msg.securityKeyMigrateFailed')
-    ElMessage.error(message)
-  }
-}
-
-async function handleClearKey(): Promise<void> {
-  if (securityStore.isMigrating) return
-
-  const oldKey = securityStore.securityKey?.trim() || null
-  if (!oldKey) return
-
-  try {
-    await ElMessageBox.confirm(
-      t('msg.securityKeyClearBody'),
-      t('msg.securityKeyClearTitle'),
-      { type: 'warning', confirmButtonText: t('msg.confirm'), cancelButtonText: t('msg.cancel') }
-    )
-  } catch {
+    pendingSecurityKey.value = newKey
+    securityKeyVerifyCode.value = ''
+    securityKeyVerifyEmail.value = ''
+    securityKeyVerifyCodeSent.value = false
+    securityKeyVerifyDialogVisible.value = true
     return
   }
 
-  try {
-    const migrated = await runSecurityKeyMigration(oldKey, null)
-    securityStore.setSecurityKey(null)
-    securityKeyInput.value = ''
-    ElMessage.success(
-      migrated > 0 ? t('msg.securityKeyClearedMigrated', { count: migrated }) : t('msg.securityKeyCleared')
-    )
-  } catch (err) {
-    const message = err instanceof SecurityKeyMigrationError
-      ? err.message
-      : err instanceof Error
-        ? err.message
-        : t('msg.securityKeyClearFailed')
-    ElMessage.error(message)
-  }
+  await completeSecurityKeySave(oldKey, newKey)
 }
+
 </script>
 
 <style scoped lang="scss">
@@ -918,6 +1137,38 @@ async function handleClearKey(): Promise<void> {
     font-size: $font-size-sm;
     color: $color-text-muted;
     line-height: 1.6;
+  }
+
+  &__key-dialog-tip {
+    margin: 0 0 $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    line-height: 1.6;
+  }
+
+  &__key-dialog-text :deep(textarea) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: $font-size-sm;
+    line-height: 1.5;
+    word-break: break-all;
+  }
+
+  &__key-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+  }
+
+  &__verify-code-row {
+    display: flex;
+    gap: $spacing-sm;
+    width: 100%;
+  }
+
+  &__verify-code-btn {
+    flex-shrink: 0;
+    min-width: 108px;
   }
 
   &__row--auto-lock {

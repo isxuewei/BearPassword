@@ -179,6 +179,7 @@ import {
   normalizeSecureNoteContent,
   serializeSecureNoteContent
 } from '@/utils/secureNoteContent'
+import { isEncryptedContent } from '@/utils/contentCrypto'
 import { isDecryptFailedContent } from '@/utils/vaultEntryTransform'
 import {
   buildPasswordTitleFromForm,
@@ -340,8 +341,19 @@ function fillForm(entry: PasswordEntry): void {
   } else {
     form.passwordType = entry.passwordType
   }
-  form.passwordLabels = [...entry.passwordLabels]
-  form.remark = entry.remark ?? ''
+
+  if (!isEncryptedContent(entry.content) && !isDecryptFailedContent(entry.content)) {
+    const record = entry.content as Record<string, unknown>
+    const labelsFromContent = Array.isArray(record.passwordLabels)
+      ? record.passwordLabels.map((item) => String(item ?? '').trim()).filter(Boolean)
+      : []
+    form.passwordLabels = labelsFromContent
+    form.remark = String(record.remark ?? '').trim()
+  } else {
+    form.passwordLabels = [...(entry.passwordLabels ?? [])]
+    form.remark = entry.remark ?? ''
+  }
+
   fillContentByType(form.passwordType, entry.content)
   applyTitleToForm(form.passwordType, resolveFormTitle(entry, form.passwordType))
   applyWebsitesToForm(form.passwordType, resolveFormWebsites(entry, form.passwordType))

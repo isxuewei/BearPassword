@@ -45,7 +45,7 @@ export function extractTitleFromContent(
   }
 }
 
-/** 解析条目展示标题，优先使用数据库字段 */
+/** 解析条目展示标题（需先 enrichEntryFromContent 或从 content 解析） */
 export function resolveEntryTitle(entry: PasswordEntry): string {
   if (entry.passwordTitle?.trim()) {
     return entry.passwordTitle.trim()
@@ -58,23 +58,6 @@ export function resolveEntryTitle(entry: PasswordEntry): string {
     return '内容已加密'
   }
   return extractTitleFromContent(entryType, entry.content as Record<string, unknown>)
-}
-
-/** 从 content 中移除 title 字段 */
-export function stripTitleFromContent(content: PasswordContent): PasswordContent {
-  if (isEncryptedContent(content)) {
-    return content
-  }
-  const record = { ...(content as Record<string, unknown>) }
-  delete record.title
-  return record as PasswordContent
-}
-
-export function contentHasTitleField(content: PasswordContent): boolean {
-  if (isEncryptedContent(content)) {
-    return false
-  }
-  return typeof (content as Record<string, unknown>).title === 'string'
 }
 
 /** 从表单内容构建待保存的 passwordTitle */
@@ -124,10 +107,13 @@ export function buildPasswordTitleFromForm(
   }
 }
 
-/** 编辑表单回填标题：优先 passwordTitle，否则从 content 提取 */
+import { readExplicitTitleFromContent } from '@/utils/contentMetadata'
+
+/** 编辑表单回填标题 */
 export function resolveFormTitle(entry: PasswordEntry, passwordType: PasswordType): string {
-  if (entry.passwordTitle?.trim()) {
-    return entry.passwordTitle.trim()
+  if (!isEncryptedContent(entry.content)) {
+    const explicit = readExplicitTitleFromContent(entry.content)
+    if (explicit) return explicit
   }
   return extractTitleFromContent(passwordType, entry.content as Record<string, unknown>)
 }

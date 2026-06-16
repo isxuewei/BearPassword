@@ -11,16 +11,13 @@ import com.bear.password.module.password.dto.PasswordEntryResponse;
 import com.bear.password.module.password.entity.PasswordEntry;
 import com.bear.password.module.password.mapper.PasswordEntryMapper;
 import com.bear.password.module.password.service.PasswordEntryService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.bear.password.module.password.support.PasswordEntryContentValidator;
+import com.bear.password.module.password.support.PasswordEntryResponseMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
 
 /**
  * 密码库服务实现
@@ -30,10 +27,8 @@ import java.util.TreeSet;
 public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, PasswordEntry>
         implements PasswordEntryService {
 
-    private static final TypeReference<List<String>> LABEL_TYPE = new TypeReference<>() {};
-    private static final TypeReference<Map<String, Object>> CONTENT_TYPE = new TypeReference<>() {};
-
-    private final ObjectMapper objectMapper;
+    private final PasswordEntryResponseMapper responseMapper;
+    private final PasswordEntryContentValidator contentValidator;
 
     @Override
     public PageResult<PasswordEntryResponse> pageEntries(long userId, long page, long pageSize,
@@ -44,15 +39,12 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
                 .orderByDesc(PasswordEntry::getUpdateTime);
 
         if (StringUtils.hasText(keyword)) {
-            wrapper.and(w -> w.like(PasswordEntry::getPasswordTitle, keyword)
-                    .or().like(PasswordEntry::getPasswordLabels, keyword)
-                    .or().like(PasswordEntry::getWebsites, keyword)
-                    .or().like(PasswordEntry::getRemark, keyword));
+            wrapper.like(PasswordEntry::getContent, keyword);
         }
 
         Page<PasswordEntry> pageResult = page(new Page<>(page, pageSize), wrapper);
         List<PasswordEntryResponse> list = pageResult.getRecords().stream()
-                .map(this::toResponse)
+                .map(responseMapper::toResponse)
                 .toList();
 
         return new PageResult<>(list, pageResult.getTotal(), page, pageSize);
@@ -61,7 +53,7 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
     @Override
     public PasswordEntryResponse getEntry(long userId, Long id) {
         PasswordEntry entry = getOwnedEntry(userId, id);
-        return toResponse(entry);
+        return responseMapper.toResponse(entry);
     }
 
     @Override
@@ -70,7 +62,7 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
         entry.setUserId(userId);
         applyRequest(entry, request);
         save(entry);
-        return toResponse(entry);
+        return responseMapper.toResponse(entry);
     }
 
     @Override
@@ -78,7 +70,7 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
         PasswordEntry entry = getOwnedEntry(userId, id);
         applyRequest(entry, request);
         updateById(entry);
-        return toResponse(entry);
+        return responseMapper.toResponse(entry);
     }
 
     @Override
@@ -91,20 +83,8 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
     public List<String> listUserLabels(long userId) {
         List<PasswordEntry> entries = list(new LambdaQueryWrapper<PasswordEntry>()
                 .eq(PasswordEntry::getUserId, userId)
-                .select(PasswordEntry::getPasswordLabels));
-
-        TreeSet<String> labels = new TreeSet<>();
-        for (PasswordEntry entry : entries) {
-            List<String> entryLabels = fromJson(entry.getPasswordLabels(), LABEL_TYPE);
-            if (entryLabels == null) {
-                continue;
-            }
-            entryLabels.stream()
-                    .filter(StringUtils::hasText)
-                    .map(String::trim)
-                    .forEach(labels::add);
-        }
-        return labels.stream().toList();
+                .select(PasswordEntry::getContent));
+        return responseMapper.collectUserLabels(entries);
     }
 
     private PasswordEntry getOwnedEntry(long userId, Long id) {
@@ -118,44 +98,8 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
     }
 
     private void applyRequest(PasswordEntry entry, PasswordEntryRequest request) {
+        contentValidator.requireEncryptedContent(request.getContent());
         entry.setPasswordType(request.getPasswordType());
-        entry.setPasswordLabels(toJson(request.getPasswordLabels()));
-        entry.setPasswordTitle(StringUtils.hasText(request.getPasswordTitle()) ? request.getPasswordTitle().trim() : "");
-        entry.setContent(toJson(request.getContent()));
-        entry.setWebsites(toJson(request.getWebsites() != null ? request.getWebsites() : List.of()));
-        entry.setRemark(StringUtils.hasText(request.getRemark()) ? request.getRemark() : "");
-    }
-
-    private PasswordEntryResponse toResponse(PasswordEntry entry) {
-        PasswordEntryResponse response = new PasswordEntryResponse();
-        response.setId(entry.getId());
-        response.setPasswordType(entry.getPasswordType());
-        response.setPasswordLabels(fromJson(entry.getPasswordLabels(), LABEL_TYPE));
-        response.setPasswordTitle(entry.getPasswordTitle());
-        response.setContent(fromJson(entry.getContent(), CONTENT_TYPE));
-        response.setWebsites(fromJson(entry.getWebsites(), LABEL_TYPE));
-        response.setRemark(entry.getRemark());
-        response.setCreateTime(entry.getCreateTime());
-        response.setUpdateTime(entry.getUpdateTime());
-        return response;
-    }
-
-    private String toJson(Object value) {
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "JSON 格式错误");
-        }
-    }
-
-    private <T> T fromJson(String json, TypeReference<T> typeReference) {
-        if (!StringUtils.hasText(json)) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(json, typeReference);
-        } catch (JsonProcessingException e) {
-            throw new BusinessException(ResultCode.INTERNAL_ERROR.getCode(), "数据解析失败");
-        }
+        entry.setContent(responseMapper.toJson(request.getContent()));
     }
 }

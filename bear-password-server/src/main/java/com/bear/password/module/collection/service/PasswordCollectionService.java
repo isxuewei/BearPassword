@@ -2,6 +2,7 @@ package com.bear.password.module.collection.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.bear.password.common.dto.PageResult;
+import com.bear.password.common.dto.PasswordRelationMetaItem;
 import com.bear.password.module.collection.entity.PasswordCollection;
 import com.bear.password.module.password.dto.PasswordEntryResponse;
 
@@ -19,6 +20,8 @@ public interface PasswordCollectionService extends IService<PasswordCollection> 
     void removeFavorite(long userId, Long passwordId);
 
     List<Long> listFavoritePasswordIds(long userId);
+
+    List<PasswordRelationMetaItem> listFavoriteMeta(long userId);
 
     long countFavorites(long userId);
 }

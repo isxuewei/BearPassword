@@ -77,6 +77,8 @@ import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { createPasswordApi } from '@/api'
 import { useI18n } from '@/composables/useI18n'
+import { useSecurityStore } from '@/stores/security'
+import { SecurityKeyRequiredError } from '@/utils/securityKeyRequired'
 import {
   buildLoginImportParams,
   getImportFormatLabelKey,
@@ -94,6 +96,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const securityStore = useSecurityStore()
 
 const fileName = ref('')
 const parseResult = ref<PasswordImportParseResult | null>(null)
@@ -159,6 +162,12 @@ async function handleImport(): Promise<void> {
   const rows = parseResult.value?.rows
   if (!rows?.length || importing.value) return
 
+  if (!securityStore.hasSecurityKey) {
+    errorMessage.value = t('msg.securityKeyRequiredWrite')
+    ElMessage.warning(t('msg.securityKeyRequiredWrite'))
+    return
+  }
+
   importing.value = true
   importProgress.value = 0
   errorMessage.value = ''
@@ -170,7 +179,13 @@ async function handleImport(): Promise<void> {
     try {
       await createPasswordApi(buildLoginImportParams(rows[i]))
       success++
-    } catch {
+    } catch (err) {
+      if (err instanceof SecurityKeyRequiredError) {
+        errorMessage.value = t('msg.securityKeyRequiredWrite')
+        importing.value = false
+        ElMessage.warning(t('msg.securityKeyRequiredWrite'))
+        return
+      }
       failed++
     }
     importProgress.value = Math.round(((i + 1) / rows.length) * 100)

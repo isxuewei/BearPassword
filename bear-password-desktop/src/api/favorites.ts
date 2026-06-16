@@ -1,5 +1,5 @@
 import { request } from '@/utils/request'
-import type { PageResult } from '@/types'
+import type { PageResult, PasswordRelationMetaItem } from '@/types'
 import type { PasswordEntry } from '@/types'
 import { decryptPasswordPage } from '@/utils/vaultEntryTransform'
 
@@ -11,6 +11,11 @@ export async function getFavoriteListApi(params: {
 } = {}): Promise<PageResult<PasswordEntry>> {
   const data = await request.get<PageResult<PasswordEntry>>('/favorites', { params })
   return decryptPasswordPage(data)
+}
+
+/** 获取收藏元数据（密码 ID + 收藏时间） */
+export function getFavoriteMetaApi(): Promise<PasswordRelationMetaItem[]> {
+  return request.get<PasswordRelationMetaItem[]>('/favorites/meta')
 }
 
 /** 获取已收藏的 password ID 列表 */

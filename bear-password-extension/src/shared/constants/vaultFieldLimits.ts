@@ -1,5 +1,5 @@
-/** 与数据库 password_title 字段长度一致 */
+/** 密码标题最大长度 */
 export const PASSWORD_TITLE_MAX_LENGTH = 255
 
-/** 与数据库 remark 字段长度一致 */
+/** 与 content.remark 建议长度一致 */
 export const PASSWORD_REMARK_MAX_LENGTH = 500

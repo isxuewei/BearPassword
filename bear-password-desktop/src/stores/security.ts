@@ -1,12 +1,12 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { generateSecurityKey } from '@/utils/contentCrypto'
-import type { SecurityKeyMigrationProgress } from '@/utils/securityKeyMigration'
+import type { SecurityKeyReencryptProgress } from '@/utils/securityKeyReencrypt'
 import { storage } from '@/utils/storage'
 
 const STORAGE_KEY = 'security_key'
 
-const defaultMigrationProgress = (): SecurityKeyMigrationProgress => ({
+const defaultMigrationProgress = (): SecurityKeyReencryptProgress => ({
   current: 0,
   total: 0,
   message: ''
@@ -18,7 +18,7 @@ const defaultMigrationProgress = (): SecurityKeyMigrationProgress => ({
 export const useSecurityStore = defineStore('security', () => {
   const securityKey = ref<string | null>(storage.get<string>(STORAGE_KEY))
   const isMigrating = ref(false)
-  const migrationProgress = ref<SecurityKeyMigrationProgress>(defaultMigrationProgress())
+  const migrationProgress = ref<SecurityKeyReencryptProgress>(defaultMigrationProgress())
 
   const hasSecurityKey = computed(() => !!securityKey.value?.trim())
 
@@ -42,7 +42,7 @@ export const useSecurityStore = defineStore('security', () => {
     migrationProgress.value = { current: 0, total: 0, message }
   }
 
-  function updateMigrationProgress(progress: SecurityKeyMigrationProgress): void {
+  function updateMigrationProgress(progress: SecurityKeyReencryptProgress): void {
     migrationProgress.value = progress
   }
 

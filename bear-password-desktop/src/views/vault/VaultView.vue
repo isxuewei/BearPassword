@@ -55,7 +55,6 @@
           </template>
         </el-dropdown>
         <el-select
-          v-if="!isSpecialListMode"
           v-model="filterType"
           :placeholder="t('vault.allCategories')"
           clearable
@@ -101,7 +100,14 @@
           @keyup.enter="onSearchEnter"
         />
       </div>
-      <el-button v-if="!isSpecialListMode && !selectionMode" type="primary" size="large" :icon="Plus" @click="openCreate">
+      <el-button
+        type="primary"
+        size="large"
+        class="vault-view__new-btn"
+        :class="{ 'is-layout-hidden': isSpecialListMode || selectionMode }"
+        :icon="Plus"
+        @click="openCreate"
+      >
         {{ t('vault.newItem') }}
       </el-button>
     </header>
@@ -239,19 +245,6 @@
             </div>
           </section>
         </div>
-
-        <div v-if="total > pageSize" class="vault-view__list-footer">
-          <el-pagination
-            v-model:current-page="page"
-            v-model:page-size="pageSize"
-            :total="total"
-            :page-sizes="[20, 50, 100]"
-            layout="prev, pager, next"
-            small
-            @current-change="loadEntries"
-            @size-change="handleSizeChange"
-          />
-        </div>
       </aside>
 
       <main class="vault-view__detail-pane">
@@ -348,10 +341,31 @@
             </div>
           </div>
 
-          <div v-if="selectedEntry.passwordLabels.length" class="vault-view__info-panel">
+          <div
+            v-if="getLoginWebsiteLinks(selectedEntry).length"
+            class="vault-view__info-panel vault-view__info-panel--websites"
+          >
+            <h4 class="vault-view__panel-label">{{ previewFieldLabel('网站') }}</h4>
+            <div
+              class="vault-view__websites"
+              @click="handleLoginWebsiteClick(selectedEntry)"
+            >
+              <a
+                v-for="(link, linkIndex) in getLoginWebsiteLinks(selectedEntry)"
+                :key="`${link}-${linkIndex}`"
+                :href="normalizeWebsiteHref(link)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="vault-view__website-link"
+                @click.stop
+              >{{ link }}</a>
+            </div>
+          </div>
+
+          <div v-if="selectedEntry.passwordLabels?.length" class="vault-view__info-panel">
             <h4 class="vault-view__panel-label">{{ t('vault.detail.tags') }}</h4>
             <div class="vault-view__tags">
-              <span v-for="label in selectedEntry.passwordLabels" :key="label" class="vault-view__tag">{{ label }}</span>
+              <span v-for="label in selectedEntry.passwordLabels ?? []" :key="label" class="vault-view__tag">{{ label }}</span>
             </div>
           </div>
 
@@ -448,7 +462,7 @@
 
     <PasswordImportDialog
       v-model:visible="importDialogVisible"
-      @imported="loadEntries"
+      @imported="refreshVaultData"
     />
 
     <PasswordEntryDialog
@@ -460,6 +474,12 @@
     />
   </div>
 </template>
+
+<script lang="ts">
+export default {
+  name: 'VaultView'
+}
+</script>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -485,10 +505,6 @@ import {
   addFavoriteApi,
   createPasswordApi,
   deletePasswordApi,
-  getFavoriteIdsApi,
-  getFavoriteListApi,
-  getPasswordListApi,
-  getRecentVisitListApi,
   recordRecentVisitApi,
   removeFavoriteApi,
   updatePasswordApi
@@ -500,8 +516,10 @@ import {
   getPasswordTypeLabel
 } from '@/utils/passwordTypeI18n'
 import { useServerStore } from '@/stores/server'
+import { useSecurityStore } from '@/stores/security'
 import { useTrayStore } from '@/stores/tray'
-import { isSecretCustomField, normalizeCustomContent } from '@/utils/customContent'
+import { useVaultStore } from '@/stores/vault'
+import { normalizeCustomContent } from '@/utils/customContent'
 import { normalizeDatabaseContent } from '@/utils/databaseContent'
 import { normalizeBankCardContent } from '@/utils/bankCardContent'
 import { normalizeIdentityContent } from '@/utils/identityContent'
@@ -510,12 +528,9 @@ import {
   normalizeWebsiteHref,
   normalizeLoginContent
 } from '@/utils/loginContent'
-import { resolveEntryTitle, stripTitleFromContent } from '@/utils/passwordTitle'
-import {
-  formatWebsitesDisplay,
-  resolveEntryWebsites,
-  stripWebsitesFromContent
-} from '@/utils/passwordWebsites'
+import { resolveEntryTitle } from '@/utils/passwordTitle'
+import { SecurityKeyRequiredError } from '@/utils/securityKeyRequired'
+import { formatWebsitesDisplay, resolveEntryWebsites } from '@/utils/passwordWebsites'
 import { getSecureNoteBodyPreview, normalizeSecureNoteContent } from '@/utils/secureNoteContent'
 import {
   getEntryIconType,
@@ -524,13 +539,15 @@ import {
   getPasswordTypeIconType,
   resolveEntryType
 } from '@/utils/vaultEntryDisplay'
-import { isSecretVaultFieldLabel, translateVaultFieldLabel } from '@/utils/vaultFieldI18n'
+import { translateVaultFieldLabel } from '@/utils/vaultFieldI18n'
+import { filterVaultEntries } from '@/utils/vaultEntrySearch'
 import {
   getVaultSortOrderOptions,
   loadVaultSort,
   recordRecentAccess,
   saveVaultSort,
   sortAndGroupEntries,
+  sortEntries,
   VAULT_SORT_FIELD_OPTIONS,
   type VaultSortField,
   type VaultSortOrder,
@@ -552,7 +569,9 @@ interface EntryGroup {
 const route = useRoute()
 const { t, locale } = useI18n()
 const serverStore = useServerStore()
+const securityStore = useSecurityStore()
 const trayStore = useTrayStore()
+const vaultStore = useVaultStore()
 const listMode = computed(() => (route.meta.mode as string | undefined) ?? 'vault')
 const isFavoritesMode = computed(() => listMode.value === 'favorites')
 const isRecentMode = computed(() => listMode.value === 'recent')
@@ -563,11 +582,49 @@ const emptyListText = computed(() => {
   return t('vault.empty.default')
 })
 
-function previewFieldLabel(label: string): string {
-  return translateVaultFieldLabel(label, locale.value)
+function maskCard(cardNumber?: string): string {
+  if (!cardNumber) return ''
+  const tail = cardNumber.slice(-4)
+  return tail ? ` ···${tail}` : ''
+}
+
+function getEntryTitle(entry: PasswordEntry): string {
+  const base = resolveEntryTitle(entry)
+  if (resolveEntryType(entry) === '银行卡') {
+    const cardNumber = (entry.content as Record<string, string>).cardNumber
+    return base + maskCard(cardNumber)
+  }
+  return base
 }
 
 const sortState = ref<VaultSortState>(loadVaultSort())
+const keyword = ref('')
+const filterType = ref<PasswordType | ''>('')
+
+const sourceEntries = computed(() => {
+  if (isFavoritesMode.value) return vaultStore.favoriteEntries
+  if (isRecentMode.value) return vaultStore.recentEntries
+  return vaultStore.allEntries
+})
+
+const filteredEntries = computed(() =>
+  filterVaultEntries(sourceEntries.value, {
+    keyword: keyword.value,
+    passwordType: filterType.value
+  })
+)
+
+const sortedEntries = computed(() =>
+  sortEntries(filteredEntries.value, sortState.value, getEntryTitle)
+)
+
+const total = computed(() => sortedEntries.value.length)
+
+const entries = computed(() => sortedEntries.value)
+
+function previewFieldLabel(label: string): string {
+  return translateVaultFieldLabel(label, locale.value)
+}
 
 const passwordTypeOptions = computed(() => getPasswordTypeFilterOptions(locale.value))
 
@@ -596,13 +653,7 @@ const sortOrderOptions = computed(() => {
   })
 })
 
-const loading = ref(false)
-const entries = ref<PasswordEntry[]>([])
-const total = ref(0)
-const page = ref(1)
-const pageSize = ref(50)
-const keyword = ref('')
-const filterType = ref<PasswordType | ''>('')
+const loading = computed(() => vaultStore.loading)
 const selectedEntryId = ref<number | null>(null)
 const searchInputRef = ref<InputInstance>()
 let searchTimer: ReturnType<typeof setTimeout> | null = null
@@ -616,7 +667,6 @@ const presetLabel = ref<string | null>(null)
 const visibleFields = ref<Record<string, boolean>>({})
 const fieldHideTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const SECRET_FIELD_AUTO_HIDE_MS = 3000
-const favoriteIds = ref<number[]>([])
 const favoriteLoading = ref(false)
 const selectionMode = ref(false)
 const selectedIds = ref<Set<number>>(new Set())
@@ -682,25 +732,24 @@ watch(
   () => route.name,
   () => {
     exitSelectionMode()
-    page.value = 1
     keyword.value = ''
     filterType.value = ''
-    if (isFavoritesMode.value) {
-      loadEntries()
-      return
-    }
-    loadFavoriteIds().then(() => loadEntries())
   }
 )
 
 watch(
   () => serverStore.revision,
   () => {
-    if (isFavoritesMode.value) {
-      void loadEntries()
-      return
-    }
-    void loadFavoriteIds().then(() => loadEntries())
+    vaultStore.reset()
+    void vaultStore.ensureLoaded()
+  }
+)
+
+watch(
+  () => securityStore.securityKey,
+  () => {
+    if (!vaultStore.loaded) return
+    void vaultStore.refreshAfterMutation()
   }
 )
 
@@ -762,7 +811,7 @@ function reportBatchResult(
 }
 
 async function handleBatchAddFavorite(): Promise<void> {
-  const ids = [...selectedIds.value].filter((id) => !favoriteIds.value.includes(id))
+  const ids = [...selectedIds.value].filter((id) => !vaultStore.favoriteIds.includes(id))
   if (!ids.length) {
     ElMessage.info(t('vault.batch.allFavorited'))
     return
@@ -774,7 +823,7 @@ async function handleBatchAddFavorite(): Promise<void> {
     const success = results.filter((result) => result.status === 'fulfilled').length
     const failed = results.length - success
     reportBatchResult(success, failed, 'vault.batch.favoriteAdded', 'vault.batch.favoritePartial', success)
-    await loadFavoriteIds()
+    await syncFavoriteState()
     exitSelectionMode()
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.operationFailed'))
@@ -799,17 +848,11 @@ async function handleBatchRemoveFavorite(): Promise<void> {
       'vault.batch.unfavoritePartial',
       success
     )
-    favoriteIds.value = favoriteIds.value.filter((id) => !ids.includes(id))
-    await loadFavoriteIds()
+    vaultStore.setFavoriteIds(vaultStore.favoriteIds.filter((id) => !ids.includes(id)))
+    await syncFavoriteState()
     exitSelectionMode()
-    if (isFavoritesMode.value) {
-      if (entries.value.length <= ids.length && page.value > 1) {
-        page.value -= 1
-      }
-      await loadEntries()
-    }
   } catch (err) {
-    await loadFavoriteIds().catch(() => undefined)
+    await syncFavoriteState()
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.operationFailed'))
   } finally {
     batchLoading.value = false
@@ -842,12 +885,9 @@ async function handleBatchDelete(): Promise<void> {
     const success = results.filter((result) => result.status === 'fulfilled').length
     const failed = results.length - success
     reportBatchResult(success, failed, 'vault.batch.deleted', 'vault.batch.deletePartial', success)
-    favoriteIds.value = favoriteIds.value.filter((id) => !ids.includes(id))
+    vaultStore.setFavoriteIds(vaultStore.favoriteIds.filter((id) => !ids.includes(id)))
     exitSelectionMode()
-    if (entries.value.length <= ids.length && page.value > 1) {
-      page.value -= 1
-    }
-    await loadEntries()
+    await refreshVaultData()
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.deleteFailed'))
   } finally {
@@ -857,16 +897,11 @@ async function handleBatchDelete(): Promise<void> {
 
 function isEntryFavorite(entry: PasswordEntry): boolean {
   if (isFavoritesMode.value) return true
-  return favoriteIds.value.includes(Number(entry.id))
+  return vaultStore.favoriteIds.includes(Number(entry.id))
 }
 
-async function loadFavoriteIds(): Promise<void> {
-  try {
-    const ids = await getFavoriteIdsApi()
-    favoriteIds.value = ids.map((id) => Number(id))
-  } catch {
-    // 保留现有状态，避免刷新失败时清空已收藏标记
-  }
+async function syncFavoriteState(): Promise<void> {
+  await vaultStore.refreshMeta()
 }
 
 async function handleToggleFavorite(entry: PasswordEntry): Promise<void> {
@@ -876,24 +911,18 @@ async function handleToggleFavorite(entry: PasswordEntry): Promise<void> {
   try {
     if (favorited) {
       await removeFavoriteApi(entryId)
-      favoriteIds.value = favoriteIds.value.filter((id) => id !== entryId)
+      vaultStore.setFavoriteIds(vaultStore.favoriteIds.filter((id) => id !== entryId))
       ElMessage.success(t('vault.msg.favoriteRemoved'))
-      if (isFavoritesMode.value) {
-        if (entries.value.length === 1 && page.value > 1) {
-          page.value -= 1
-        }
-        await loadEntries()
-      }
     } else {
       await addFavoriteApi(entryId)
-      if (!favoriteIds.value.includes(entryId)) {
-        favoriteIds.value = [...favoriteIds.value, entryId]
+      if (!vaultStore.favoriteIds.includes(entryId)) {
+        vaultStore.setFavoriteIds([...vaultStore.favoriteIds, entryId])
       }
       ElMessage.success(t('vault.msg.favoriteAdded'))
     }
-    await loadFavoriteIds()
+    await syncFavoriteState()
   } catch (err) {
-    await loadFavoriteIds().catch(() => undefined)
+    await syncFavoriteState()
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.operationFailed'))
   } finally {
     favoriteLoading.value = false
@@ -948,11 +977,40 @@ async function handleFieldClick(entryId: number, item: PreviewField): Promise<vo
   if (!copied) return
 
   recordRecentAccess(entryId)
-  void recordRecentVisitApi(entryId).catch(() => {})
+  void recordRecentVisitApi(entryId)
+    .then(() => vaultStore.refreshMeta())
+    .catch(() => {})
+}
+
+function getLoginWebsiteLinks(entry: PasswordEntry): string[] {
+  if (resolveEntryType(entry) !== '登录信息') return []
+  return resolveEntryWebsites(entry).filter((link) => link.trim())
+}
+
+async function handleLoginWebsiteClick(entry: PasswordEntry): Promise<void> {
+  const links = getLoginWebsiteLinks(entry)
+  if (!links.length) return
+
+  const label = previewFieldLabel('网站')
+  const value = formatWebsitesDisplay(links)
+  const copied = await copyText(t('vault.msg.fieldCopied', { label }), value)
+  if (!copied) return
+
+  recordRecentAccess(entry.id)
+  void recordRecentVisitApi(entry.id)
+    .then(() => vaultStore.refreshMeta())
+    .catch(() => {})
 }
 
 function buildEntryCopyText(entry: PasswordEntry): string {
   const lines: string[] = []
+
+  if (resolveEntryType(entry) === '登录信息') {
+    const websiteDisplay = formatWebsitesDisplay(getLoginWebsiteLinks(entry))
+    if (websiteDisplay && websiteDisplay !== '-') {
+      lines.push(`${previewFieldLabel('网站')}: ${websiteDisplay}`)
+    }
+  }
 
   for (const field of getPreviewFields(entry)) {
     if (!field.value || field.value === '-') continue
@@ -978,11 +1036,10 @@ async function handleCopyEntry(entry: PasswordEntry): Promise<void> {
 }
 
 function buildDuplicateEntryParams(entry: PasswordEntry): PasswordEntryParams {
-  const rawContent = JSON.parse(JSON.stringify(entry.content)) as PasswordEntry['content']
-  const content = stripWebsitesFromContent(stripTitleFromContent(rawContent))
+  const content = JSON.parse(JSON.stringify(entry.content)) as PasswordEntry['content']
   return {
     passwordType: resolveEntryType(entry),
-    passwordLabels: [...entry.passwordLabels],
+    passwordLabels: [...(entry.passwordLabels ?? [])],
     passwordTitle: `${getEntryDetailTitle(entry)}_副本`,
     websites: [...resolveEntryWebsites(entry)],
     content,
@@ -991,12 +1048,17 @@ function buildDuplicateEntryParams(entry: PasswordEntry): PasswordEntryParams {
 }
 
 async function handleDuplicateEntry(entry: PasswordEntry): Promise<void> {
+  if (!ensureSecurityKeyConfigured()) return
   try {
     const created = await createPasswordApi(buildDuplicateEntryParams(entry))
     ElMessage.success(t('vault.msg.duplicateCreated'))
-    await loadEntries()
+    await refreshVaultData()
     selectedEntryId.value = created.id
   } catch (err) {
+    if (err instanceof SecurityKeyRequiredError) {
+      ElMessage.warning(t('msg.securityKeyRequiredWrite'))
+      return
+    }
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.duplicateFailed'))
   }
 }
@@ -1090,50 +1152,24 @@ function handleSortCommand(command: { type: 'field' | 'order'; value: VaultSortF
   saveVaultSort(sortState.value)
 }
 
-async function loadEntries(): Promise<void> {
-  loading.value = true
+async function refreshVaultData(): Promise<void> {
   try {
-    if (isFavoritesMode.value) {
-      const data = await getFavoriteListApi({
-        page: page.value,
-        pageSize: pageSize.value,
-        keyword: keyword.value.trim() || undefined
-      })
-      entries.value = data.list.map((entry) => ({ ...entry, favorite: true }))
-      total.value = data.total
-      return
-    }
-
-    if (isRecentMode.value) {
-      const data = await getRecentVisitListApi({
-        page: page.value,
-        pageSize: pageSize.value,
-        keyword: keyword.value.trim() || undefined
-      })
-      entries.value = data.list
-      total.value = data.total
-      return
-    }
-
-    const data = await getPasswordListApi({
-      page: page.value,
-      pageSize: pageSize.value,
-      keyword: keyword.value.trim() || undefined,
-      passwordType: filterType.value || undefined
-    })
-    entries.value = data.list
-    total.value = data.total
+    await vaultStore.refreshAfterMutation()
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : '加载失败')
-  } finally {
-    loading.value = false
+  }
+}
+
+async function ensureVaultData(): Promise<void> {
+  try {
+    await vaultStore.ensureLoaded()
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : '加载失败')
   }
 }
 
 function handleSearch(): void {
   exitSelectionMode()
-  page.value = 1
-  loadEntries()
 }
 
 function scheduleSearch(): void {
@@ -1153,13 +1189,14 @@ function onSearchHotkey(event: KeyboardEvent): void {
   }
 }
 
-function handleSizeChange(): void {
-  exitSelectionMode()
-  page.value = 1
-  loadEntries()
+function ensureSecurityKeyConfigured(): boolean {
+  if (securityStore.hasSecurityKey) return true
+  ElMessage.warning(t('msg.securityKeyRequiredWrite'))
+  return false
 }
 
 function openCreate(): void {
+  if (!ensureSecurityKeyConfigured()) return
   editingEntry.value = null
   presetType.value = null
   presetLabel.value = null
@@ -1167,6 +1204,7 @@ function openCreate(): void {
 }
 
 function openImportDialog(): void {
+  if (!ensureSecurityKeyConfigured()) return
   importDialogVisible.value = true
 }
 
@@ -1188,6 +1226,7 @@ function openEdit(entry: PasswordEntry): void {
 }
 
 async function handleSubmit(data: PasswordEntryParams): Promise<void> {
+  if (!ensureSecurityKeyConfigured()) return
   try {
     if (editingEntry.value) {
       await updatePasswordApi(editingEntry.value.id, data)
@@ -1197,8 +1236,12 @@ async function handleSubmit(data: PasswordEntryParams): Promise<void> {
       ElMessage.success(t('vault.msg.created'))
     }
     dialogVisible.value = false
-    await loadEntries()
+    await refreshVaultData()
   } catch (err) {
+    if (err instanceof SecurityKeyRequiredError) {
+      ElMessage.warning(t('msg.securityKeyRequiredWrite'))
+      return
+    }
     ElMessage.error(err instanceof Error ? err.message : t('vault.msg.saveFailed'))
   }
 }
@@ -1216,10 +1259,7 @@ async function handleDelete(entry: PasswordEntry): Promise<void> {
     )
     await deletePasswordApi(entry.id)
     ElMessage.success(t('vault.msg.deleted'))
-    if (entries.value.length === 1 && page.value > 1) {
-      page.value -= 1
-    }
-    await loadEntries()
+    await refreshVaultData()
   } catch (err) {
     if (err !== 'cancel' && err !== 'close') {
       ElMessage.error(err instanceof Error ? err.message : t('vault.msg.deleteFailed'))
@@ -1233,15 +1273,6 @@ function passwordTypeLabel(type: PasswordType): string {
 
 function getEntryDetailTitle(entry: PasswordEntry): string {
   return resolveEntryTitle(entry)
-}
-
-function getEntryTitle(entry: PasswordEntry): string {
-  const base = resolveEntryTitle(entry)
-  if (resolveEntryType(entry) === '银行卡') {
-    const cardNumber = (entry.content as Record<string, string>).cardNumber
-    return base + maskCard(cardNumber)
-  }
-  return base
 }
 
 function getEntrySubtitle(entry: PasswordEntry): string {
@@ -1266,18 +1297,12 @@ function getEntrySubtitle(entry: PasswordEntry): string {
       return getSecureNoteBodyPreview(content)
     case '自定义': {
       const custom = normalizeCustomContent(content)
-      const first = custom.fields.find((field) => field.value.trim())
-      return first?.value || '-'
+      const first = custom.fields.find((field) => field.label.trim())
+      return first?.label.trim() || passwordTypeLabel('自定义')
     }
     default:
       return '-'
   }
-}
-
-function maskCard(cardNumber?: string): string {
-  if (!cardNumber) return ''
-  const tail = cardNumber.slice(-4)
-  return tail ? ` ···${tail}` : ''
 }
 
 function getPreviewFields(entry: PasswordEntry): PreviewField[] {
@@ -1295,7 +1320,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         if (field.label.trim() || field.value.trim()) {
           fields.push({
             label: previewFieldLabel(field.label),
-            value: field.value || '-'
+            value: field.value || '-',
+            secret: true
           })
         }
       })
@@ -1314,7 +1340,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
           fields.push({
             label: previewFieldLabel(field.label),
             value: field.value || '-',
-            secret: isSecretVaultFieldLabel(field.label)
+            secret: true
           })
         }
       })
@@ -1323,13 +1349,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
     case '登录信息': {
       const content = entry.content as Record<string, unknown>
       const normalized = normalizeLoginContent(content)
-      const websiteList = resolveEntryWebsites(entry)
       const fields: PreviewField[] = [
-        {
-          label: previewFieldLabel('网站'),
-          value: formatWebsitesDisplay(websiteList),
-          links: websiteList
-        },
         { label: previewFieldLabel('用户名'), value: getLoginUsername(content) },
         { label: previewFieldLabel('密码'), value: String(content.password ?? '-'), secret: true }
       ]
@@ -1338,7 +1358,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
           fields.push({
             label: previewFieldLabel(field.label),
             value: field.value || '-',
-            secret: isSecretVaultFieldLabel(field.label)
+            secret: true
           })
         }
       })
@@ -1358,7 +1378,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
           fields.push({
             label: previewFieldLabel(field.label),
             value: field.value || '-',
-            secret: isSecretVaultFieldLabel(field.label)
+            secret: true
           })
         }
       })
@@ -1379,7 +1399,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
           fields.push({
             label: previewFieldLabel(field.label),
             value: field.value || '-',
-            secret: isSecretVaultFieldLabel(field.label)
+            secret: true
           })
         }
       })
@@ -1400,7 +1420,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
           fields.push({
             label: previewFieldLabel(field.label),
             value: field.value || '-',
-            secret: isSecretVaultFieldLabel(field.label)
+            secret: true
           })
         }
       })
@@ -1411,7 +1431,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
       return custom.fields.map((field) => ({
         label: previewFieldLabel(field.label),
         value: field.value || '-',
-        secret: isSecretCustomField(field.label) || isSecretVaultFieldLabel(field.label)
+        secret: true
       }))
     }
     default:
@@ -1440,11 +1460,7 @@ function formatDateTime(dateStr?: string): string {
 }
 
 onMounted(() => {
-  if (isFavoritesMode.value) {
-    loadEntries()
-  } else {
-    loadFavoriteIds().then(() => loadEntries())
-  }
+  void ensureVaultData()
   window.addEventListener('keydown', onSearchHotkey)
 })
 
@@ -1502,6 +1518,16 @@ onUnmounted(() => {
     gap: $spacing-md;
     padding: $vault-edge;
     border-bottom: 1px solid $color-border;
+    flex-shrink: 0;
+    min-height: calc(40px + #{$vault-edge} * 2);
+  }
+
+  &__new-btn.is-layout-hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &__new-btn {
     flex-shrink: 0;
   }
 
@@ -1803,14 +1829,6 @@ onUnmounted(() => {
     align-items: center;
   }
 
-  &__list-footer {
-    flex-shrink: 0;
-    padding: $spacing-sm;
-    border-top: 1px solid $color-border;
-    display: flex;
-    justify-content: center;
-  }
-
   &__detail-pane {
     flex: 1;
     min-width: 360px;
@@ -2071,6 +2089,26 @@ onUnmounted(() => {
     &:hover {
       color: $color-accent-hover;
       background: $color-accent-subtle;
+    }
+  }
+
+  &__websites {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    cursor: pointer;
+  }
+
+  &__website-link {
+    color: $color-accent;
+    text-decoration: none;
+    font-size: $font-size-md;
+    line-height: 1.45;
+    word-break: break-all;
+
+    &:hover {
+      color: $color-accent-hover;
+      text-decoration: underline;
     }
   }
 

@@ -50,4 +50,30 @@ public class EmailService {
             throw new BusinessException(ResultCode.INTERNAL_ERROR.getCode(), "验证码发送失败，请稍后重试");
         }
     }
+
+    public void sendSecurityKeyChangeCode(String toEmail, String code) {
+        if (!StringUtils.hasText(mailFrom)) {
+            throw new BusinessException(ResultCode.INTERNAL_ERROR.getCode(), "邮件服务未配置，请联系管理员");
+        }
+
+        int expireMinutes = registerProperties.getRegister().getCodeExpireMinutes();
+        String fromName = registerProperties.getMail().getFromName();
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(String.format("%s <%s>", fromName, mailFrom));
+        message.setTo(toEmail);
+        message.setSubject("BearPassword 更换密钥验证码");
+        message.setText(String.format(
+                "您好，\n\n您正在更换 BearPassword 安全密钥，验证码为：%s\n\n验证码 %d 分钟内有效，请勿泄露给他人。\n\n如非本人操作，请立即修改登录密码并联系管理员。",
+                code,
+                expireMinutes
+        ));
+
+        try {
+            mailSender.send(message);
+        } catch (Exception ex) {
+            log.error("发送更换密钥验证码失败 to={}", toEmail, ex);
+            throw new BusinessException(ResultCode.INTERNAL_ERROR.getCode(), "验证码发送失败，请稍后重试");
+        }
+    }
 }

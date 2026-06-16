@@ -28,8 +28,9 @@ export function normalizeCustomContent(raw: Record<string, unknown>): CustomCont
   }
 }
 
-export function serializeCustomContent(content: CustomContent): Omit<CustomContent, 'title'> {
+export function serializeCustomContent(content: CustomContent): CustomContent {
   return {
+    title: content.title.trim(),
     fields: content.fields.filter((field) => field.label.trim() || field.value.trim())
   }
 }

@@ -2,6 +2,7 @@ package com.bear.password.module.collection.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.bear.password.common.dto.PageResult;
+import com.bear.password.common.dto.PasswordRelationMetaItem;
 import com.bear.password.common.result.Result;
 import com.bear.password.module.collection.service.PasswordCollectionService;
 import com.bear.password.module.password.dto.PasswordEntryResponse;
@@ -45,6 +46,15 @@ public class FavoriteController {
     public Result<List<Long>> ids() {
         long userId = StpUtil.getLoginIdAsLong();
         return Result.success(passwordCollectionService.listFavoritePasswordIds(userId));
+    }
+
+    /**
+     * 收藏元数据（密码 ID + 收藏时间，不含 content）
+     */
+    @GetMapping("/meta")
+    public Result<List<PasswordRelationMetaItem>> meta() {
+        long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(passwordCollectionService.listFavoriteMeta(userId));
     }
 
     /**

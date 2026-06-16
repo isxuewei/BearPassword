@@ -91,7 +91,8 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getPasswordListApi } from '@/api/vault'
+import { useVaultStore } from '@/stores/vault'
+import { filterVaultEntries } from '@/utils/vaultEntrySearch'
 import { useI18n } from '@/composables/useI18n'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
@@ -111,6 +112,7 @@ const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
 const appStore = useAppStore()
+const vaultStore = useVaultStore()
 
 const expanded = ref(false)
 const keyword = ref('')
@@ -173,12 +175,8 @@ async function loadResults(): Promise<void> {
   window.islandApi?.touchActivity()
 
   try {
-    const data = await getPasswordListApi({
-      page: 1,
-      pageSize: 8,
-      keyword: trimmed
-    })
-    entries.value = data.list
+    await vaultStore.ensureLoaded()
+    entries.value = filterVaultEntries(vaultStore.allEntries, { keyword: trimmed }).slice(0, 8)
     activeIndex.value = 0
   } catch (err) {
     entries.value = []

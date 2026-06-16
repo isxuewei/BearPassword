@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loginApi, logoutApi, registerApi } from '@/api'
+import { useSecurityStore } from '@/stores/security'
+import { useVaultStore } from '@/stores/vault'
 import { storage } from '@/utils/storage'
 import type { LoginParams, RegisterParams, UserInfo, UserProfile } from '@/types'
 
@@ -68,7 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /** 退出登录 */
+  /** 退出登录（手动）：清除登录态与本机安全密钥 */
   async function logout(): Promise<void> {
     try {
       await logoutApi()
@@ -76,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 登录过期时 logout 接口可能失败，仍应清理本地状态
     }
     clearSession()
+    useSecurityStore().setSecurityKey(null)
   }
 
   /** 清除本地登录态（不请求服务端） */
@@ -83,6 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
     userInfo.value = null
     storage.remove('user')
     storage.remove('token')
+    useVaultStore().reset()
   }
 
   /** 更新本地头像 URL（上传成功后同步侧边栏等展示） */

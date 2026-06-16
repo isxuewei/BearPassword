@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
+import { writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { basename, join } from 'path'
@@ -460,6 +461,25 @@ function registerFileIpc(): void {
       content
     }
   })
+
+  ipcMain.handle(
+    'file:saveSecurityKeyBackup',
+    async (_event, payload: { defaultFileName: string; content: string }) => {
+      const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined
+      const result = await dialog.showSaveDialog(parent, {
+        title: '保存安全密钥备份',
+        defaultPath: payload.defaultFileName,
+        filters: [{ name: 'Text', extensions: ['txt'] }]
+      })
+
+      if (result.canceled || !result.filePath) {
+        return { ok: false as const, canceled: true as const }
+      }
+
+      await writeFile(result.filePath, payload.content, 'utf-8')
+      return { ok: true as const, filePath: result.filePath }
+    }
+  )
 }
 
 /** 注册 Dock 栏图标 IPC */

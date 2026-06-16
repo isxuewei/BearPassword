@@ -83,6 +83,25 @@ public class AuthController {
     }
 
     /**
+     * 发送更换安全密钥邮箱验证码
+     */
+    @PostMapping("/security-key/code")
+    public Result<SecurityKeyChangeCodeResponse> sendSecurityKeyChangeCode() {
+        return Result.success(authService.sendSecurityKeyChangeCode());
+    }
+
+    /**
+     * 校验更换安全密钥邮箱验证码
+     */
+    @PostMapping("/security-key/verify")
+    public Result<Void> verifySecurityKeyChangeCode(
+            @Valid @RequestBody VerifySecurityKeyChangeCodeRequest request
+    ) {
+        authService.verifySecurityKeyChangeCode(request);
+        return Result.success();
+    }
+
+    /**
      * 校验用户名是否可用（排除当前用户）
      */
     @GetMapping("/username/check")

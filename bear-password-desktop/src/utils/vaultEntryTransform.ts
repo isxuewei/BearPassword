@@ -4,7 +4,15 @@ import {
   encryptContentObject,
   isEncryptedContent
 } from '@/utils/contentCrypto'
+import {
+  buildPasswordEntryApiParams,
+  enrichEntryFromContent,
+  type PasswordEntryApiParams
+} from '@/utils/contentMetadata'
+import { SecurityKeyRequiredError } from '@/utils/securityKeyRequired'
 import { useSecurityStore } from '@/stores/security'
+
+export { SecurityKeyRequiredError }
 
 function getPassphrase(): string | null {
   const key = useSecurityStore().securityKey?.trim()
@@ -24,22 +32,26 @@ export async function decryptPasswordEntry(entry: PasswordEntry): Promise<Passwo
         content: {
           title: '内容已加密',
           __decryptFailed__: true
-        }
+        },
+        passwordLabels: [],
+        remark: ''
       }
     }
-    return entry
+    return enrichEntryFromContent(entry)
   }
 
   try {
     const content = await decryptContentObject(entry.content, passphrase)
-    return { ...entry, content }
+    return enrichEntryFromContent({ ...entry, content })
   } catch {
     return {
       ...entry,
       content: {
         title: '解密失败，请检查安全密钥',
         __decryptFailed__: true
-      }
+      },
+      passwordLabels: [],
+      remark: ''
     }
   }
 }
@@ -59,15 +71,16 @@ export async function decryptPasswordPage(
 
 export async function encryptPasswordEntryParams(
   params: PasswordEntryParams
-): Promise<PasswordEntryParams> {
+): Promise<PasswordEntryApiParams> {
   const passphrase = getPassphrase()
   if (!passphrase) {
-    return params
+    throw new SecurityKeyRequiredError()
   }
 
-  const content = await encryptContentObject(params.content, passphrase)
+  const apiParams = buildPasswordEntryApiParams(params)
+  const content = await encryptContentObject(apiParams.content, passphrase)
   return {
-    ...params,
+    passwordType: apiParams.passwordType,
     content: content as unknown as PasswordContent
   }
 }

@@ -92,23 +92,24 @@ export type PasswordContent =
   | SecureNoteContent
   | Record<string, unknown>
 
-/** 密码条目 */
+/** 密码条目（服务端仅返回 passwordType + content，衍生字段由客户端解析） */
 export interface PasswordEntry {
   id: number
   passwordType: PasswordType
-  passwordLabels: string[]
-  passwordTitle?: string
   content: PasswordContent
-  websites?: string[]
-  remark: string
   createTime?: string
   updateTime?: string
   favorite?: boolean
   favoriteTime?: string
   recentVisitTime?: string
+  /** 客户端从 content 解析 */
+  passwordLabels?: string[]
+  passwordTitle?: string
+  websites?: string[]
+  remark?: string
 }
 
-/** 创建 / 更新请求 */
+/** 创建 / 更新表单参数（提交前合并进 content） */
 export interface PasswordEntryParams {
   passwordType: PasswordType
   passwordLabels: string[]
@@ -124,6 +125,12 @@ export interface PasswordQueryParams {
   pageSize?: number
   keyword?: string
   passwordType?: PasswordType | ''
+}
+
+/** 收藏 / 最近访问关联元数据（不含 content） */
+export interface PasswordRelationMetaItem {
+  passwordId: number
+  time?: string
 }
 
 /** 新增密码 — 类型选择项 */

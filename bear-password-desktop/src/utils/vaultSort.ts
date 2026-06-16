@@ -112,7 +112,7 @@ function getDateValue(entry: PasswordEntry, field: 'createTime' | 'updateTime'):
   return Number.isNaN(time) ? 0 : time
 }
 
-function sortEntries(
+export function sortEntries(
   list: PasswordEntry[],
   sort: VaultSortState,
   getTitle: (entry: PasswordEntry) => string

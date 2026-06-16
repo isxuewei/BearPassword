@@ -30,8 +30,9 @@ export function normalizeSecureNoteContent(raw: Record<string, unknown>): Secure
   }
 }
 
-export function serializeSecureNoteContent(content: SecureNoteContent): Omit<SecureNoteContent, 'title'> {
+export function serializeSecureNoteContent(content: SecureNoteContent): SecureNoteContent {
   return {
+    title: content.title.trim(),
     body: content.body,
     extraFields: content.extraFields.filter((field) => field.label.trim() || field.value.trim())
   }

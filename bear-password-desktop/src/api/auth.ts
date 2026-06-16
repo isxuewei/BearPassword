@@ -5,11 +5,13 @@ import type {
   LoginParams,
   LoginResult,
   RegisterParams,
+  SecurityKeyChangeCodeResult,
   SendRegisterCodeParams,
   UpdateNicknameParams,
   UpdateUsernameParams,
   UserProfile,
-  UsernameCheckResult
+  UsernameCheckResult,
+  VerifySecurityKeyChangeCodeParams
 } from '@/types'
 
 /**
@@ -67,4 +69,14 @@ export function updateUsernameApi(params: UpdateUsernameParams): Promise<void> {
 /** 修改昵称 PUT /auth/nickname */
 export function updateNicknameApi(params: UpdateNicknameParams): Promise<void> {
   return request.put<void>('/auth/nickname', params)
+}
+
+/** 发送更换密钥验证码 POST /auth/security-key/code */
+export function sendSecurityKeyChangeCodeApi(): Promise<SecurityKeyChangeCodeResult> {
+  return request.post<SecurityKeyChangeCodeResult>('/auth/security-key/code')
+}
+
+/** 校验更换密钥验证码 POST /auth/security-key/verify */
+export function verifySecurityKeyChangeCodeApi(params: VerifySecurityKeyChangeCodeParams): Promise<void> {
+  return request.post<void>('/auth/security-key/verify', params)
 }

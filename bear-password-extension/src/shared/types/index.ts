@@ -61,14 +61,14 @@ export type PasswordContent =
 export interface PasswordEntry {
   id: number
   passwordType: PasswordType
-  passwordLabels: string[]
-  passwordTitle?: string
   content: PasswordContent
-  websites?: string[]
-  remark: string
   createTime?: string
   updateTime?: string
   favorite?: boolean
+  passwordLabels?: string[]
+  passwordTitle?: string
+  websites?: string[]
+  remark?: string
 }
 
 export interface PasswordEntryParams {
