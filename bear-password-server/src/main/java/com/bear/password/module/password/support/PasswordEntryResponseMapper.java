@@ -24,8 +24,10 @@ import java.util.TreeSet;
 public class PasswordEntryResponseMapper {
 
     private static final String LABELS_KEY = "passwordLabels";
-    private static final TypeReference<Map<String, Object>> CONTENT_TYPE = new TypeReference<>() {};
-    private static final TypeReference<List<String>> LABEL_TYPE = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> CONTENT_TYPE = new TypeReference<>() {
+    };
+    private static final TypeReference<List<String>> LABEL_TYPE = new TypeReference<>() {
+    };
 
     private final ObjectMapper objectMapper;
 

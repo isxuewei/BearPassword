@@ -14,13 +14,19 @@ import lombok.EqualsAndHashCode;
 @TableName("bp_version")
 public class AppVersion extends BaseEntity {
 
-    /** 系统类型：MacOS、Windows、Extension */
+    /**
+     * 系统类型：MacOS、Windows、Extension
+     */
     @TableField("system_info")
     private String systemInfo;
 
-    /** 版本号 */
+    /**
+     * 版本号
+     */
     private String versionCode;
 
-    /** 下载地址 */
+    /**
+     * 下载地址
+     */
     private String downloadUrl;
 }

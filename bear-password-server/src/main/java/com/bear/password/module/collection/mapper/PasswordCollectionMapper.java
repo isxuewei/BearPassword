@@ -22,7 +22,9 @@ public interface PasswordCollectionMapper extends BaseMapper<PasswordCollection>
     PasswordCollection selectByUserAndPassword(@Param("userId") Long userId,
                                                @Param("passwordId") Long passwordId);
 
-    /** 恢复逻辑删除的收藏（绕过 MyBatis-Plus 逻辑删除拦截） */
+    /**
+     * 恢复逻辑删除的收藏（绕过 MyBatis-Plus 逻辑删除拦截）
+     */
     @Update("""
             UPDATE bp_password_collection
             SET deleted = 0, update_time = NOW()

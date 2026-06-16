@@ -13,9 +13,13 @@ import lombok.EqualsAndHashCode;
 @TableName("bp_announcement_confirm")
 public class AnnouncementConfirm extends BaseEntity {
 
-    /** 公告 ID */
+    /**
+     * 公告 ID
+     */
     private Long announcementId;
 
-    /** 用户 ID */
+    /**
+     * 用户 ID
+     */
     private Long userId;
 }

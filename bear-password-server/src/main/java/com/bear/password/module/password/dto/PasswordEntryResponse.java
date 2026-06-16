@@ -16,10 +16,16 @@ public class PasswordEntryResponse {
     private Map<String, Object> content;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    /** 是否已收藏（列表/详情可选返回） */
+    /**
+     * 是否已收藏（列表/详情可选返回）
+     */
     private Boolean favorite;
-    /** 收藏时间 */
+    /**
+     * 收藏时间
+     */
     private LocalDateTime favoriteTime;
-    /** 最近访问时间 */
+    /**
+     * 最近访问时间
+     */
     private LocalDateTime recentVisitTime;
 }

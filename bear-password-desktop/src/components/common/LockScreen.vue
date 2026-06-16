@@ -106,13 +106,18 @@ const loading = ref(false)
 const biometricLoading = ref(false)
 const biometricAvailable = ref(false)
 const biometricKind = ref<'touchId' | 'windowsHello' | null>(null)
+/** 本机已保存主密码（至少成功解锁过一次）时才允许生物识别 */
+const hasPersistedVaultPassword = ref(false)
 const passwordInputRef = ref<InputInstance>()
 const passwordShaking = ref(false)
 
 const unlocking = computed(() => loading.value || biometricLoading.value)
 
 const showBiometricUnlock = computed(
-  () => biometricAvailable.value && biometricUnlockStore.preferBiometricUnlock
+  () =>
+    hasPersistedVaultPassword.value &&
+    biometricAvailable.value &&
+    biometricUnlockStore.preferBiometricUnlock
 )
 
 const lockHintText = computed(() => {
@@ -206,6 +211,10 @@ function scheduleBiometricAutoPrompt(): void {
 async function refreshBiometricAvailability(): Promise<void> {
   biometricAvailable.value = false
   biometricKind.value = null
+  hasPersistedVaultPassword.value = false
+
+  const persisted = await loadPersistedVaultPassword()
+  hasPersistedVaultPassword.value = !!persisted
 
   if (!window.biometricApi) return
 

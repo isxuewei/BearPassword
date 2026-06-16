@@ -20,10 +20,8 @@ import type {
  * 对接 bear-password-server AuthController
  */
 
-/** 用户登录 POST /auth/login */
-export function loginApi(params: LoginParams): Promise<LoginResult> {
-  return request.post<LoginResult>('/auth/login', params)
-}
+/** 用户登录 / 注册 / 改密（SRP） */
+export { loginApi, registerApi, changePasswordApi, createSrpCredentials } from '@/api/srpAuth'
 
 /** 退出登录 POST /auth/logout */
 export function logoutApi(): Promise<void> {
@@ -40,10 +38,6 @@ export function getVaultCryptoApi(): Promise<VaultCryptoMeta> {
   return request.get<VaultCryptoMeta>('/auth/vault-crypto')
 }
 
-/** 修改登录密码 PUT /auth/password */
-export function changePasswordApi(params: ChangePasswordParams): Promise<void> {
-  return request.put<void>('/auth/password', params)
-}
 
 /** 上传头像 POST /auth/avatar */
 export function uploadAvatarApi(file: File): Promise<AvatarUploadResult> {
@@ -57,10 +51,6 @@ export function sendRegisterCodeApi(params: SendRegisterCodeParams): Promise<voi
   return request.post<void>('/auth/register/code', params)
 }
 
-/** 注册 POST /auth/register */
-export function registerApi(params: RegisterParams): Promise<LoginResult> {
-  return request.post<LoginResult>('/auth/register', params)
-}
 
 /** 校验用户名是否可用 GET /auth/username/check */
 export function checkUsernameApi(username: string): Promise<UsernameCheckResult> {

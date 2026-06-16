@@ -32,7 +32,7 @@ public class PasswordEntryServiceImpl extends ServiceImpl<PasswordEntryMapper, P
 
     @Override
     public PageResult<PasswordEntryResponse> pageEntries(long userId, long page, long pageSize,
-                                                          String keyword, String passwordType) {
+                                                         String keyword, String passwordType) {
         LambdaQueryWrapper<PasswordEntry> wrapper = new LambdaQueryWrapper<PasswordEntry>()
                 .eq(PasswordEntry::getUserId, userId)
                 .eq(StringUtils.hasText(passwordType), PasswordEntry::getPasswordType, passwordType)

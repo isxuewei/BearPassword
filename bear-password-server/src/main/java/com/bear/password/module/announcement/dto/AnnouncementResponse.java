@@ -14,7 +14,9 @@ public class AnnouncementResponse {
 
     private String title;
 
-    /** Markdown 原文 */
+    /**
+     * Markdown 原文
+     */
     private String content;
 
     private LocalDateTime createTime;

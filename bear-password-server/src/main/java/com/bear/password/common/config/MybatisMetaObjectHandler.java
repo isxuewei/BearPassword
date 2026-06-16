@@ -1,7 +1,6 @@
 package com.bear.password.common.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.bear.password.common.config.TimeZoneConfig;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 

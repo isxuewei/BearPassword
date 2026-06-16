@@ -31,7 +31,11 @@ export function bindUnauthorizedHandler(handler: UnauthorizedHandler): void {
 
 function shouldIgnoreUnauthorized(config?: AxiosRequestConfig): boolean {
   const url = config?.url ?? ''
-  return url.includes('/auth/login') || url.includes('/auth/logout') || url.includes('/auth/register')
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/logout') ||
+    url.includes('/auth/register')
+  )
 }
 
 function triggerUnauthorized(config?: AxiosRequestConfig): void {

@@ -46,6 +46,12 @@ export interface VaultCryptoSetup {
   secretKeyFingerprint: string
 }
 
+/** SRP 凭证（hex） */
+export interface SrpCredentialsSetup {
+  salt: string
+  verifier: string
+}
+
 /** 修改登录密码参数 */
 export interface ChangePasswordParams {
   oldPassword: string
@@ -82,7 +88,7 @@ export interface RegisterParams {
   email: string
   code: string
   username: string
-  password: string
+  srp: SrpCredentialsSetup
   vaultCrypto: VaultCryptoSetup
 }
 

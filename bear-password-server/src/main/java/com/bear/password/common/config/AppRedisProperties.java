@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "bear.password.redis")
 public class AppRedisProperties {
 
-    /** 全局键前缀，避免与其他应用冲突 */
+    /**
+     * 全局键前缀，避免与其他应用冲突
+     */
     private String keyPrefix = "bear:password";
 
     public String key(String segment) {

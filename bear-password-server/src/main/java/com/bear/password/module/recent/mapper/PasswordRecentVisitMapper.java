@@ -20,9 +20,11 @@ public interface PasswordRecentVisitMapper extends BaseMapper<PasswordRecentVisi
             LIMIT 1
             """)
     PasswordRecentVisit selectByUserAndPassword(@Param("userId") Long userId,
-                                                  @Param("passwordId") Long passwordId);
+                                                @Param("passwordId") Long passwordId);
 
-    /** 恢复逻辑删除的访问记录（绕过 MyBatis-Plus 逻辑删除拦截） */
+    /**
+     * 恢复逻辑删除的访问记录（绕过 MyBatis-Plus 逻辑删除拦截）
+     */
     @Update("""
             UPDATE bp_password_recent_visit
             SET deleted = 0, update_time = NOW()

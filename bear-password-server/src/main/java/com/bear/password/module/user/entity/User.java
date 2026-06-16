@@ -15,30 +15,53 @@ import java.time.LocalDateTime;
 @TableName("bp_user")
 public class User extends BaseEntity {
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String username;
 
-    /** 密码（BCrypt 加密存储） */
-    private String password;
+    /**
+     * SRP salt（hex）
+     */
+    private String srpSalt;
 
-    /** 昵称 */
+    /**
+     * SRP verifier（hex）
+     */
+    private String srpVerifier;
+
+    /**
+     * 昵称
+     */
     private String nickname;
 
-    /** 头像 URL */
+    /**
+     * 头像 URL
+     */
     private String avatar;
 
-    /** 邮箱地址 */
+    /**
+     * 邮箱地址
+     */
     private String email;
 
-    /** 状态：0-禁用 1-正常 */
+    /**
+     * 状态：0-禁用 1-正常
+     */
     private Integer status;
 
-    /** 上次登录时间 */
+    /**
+     * 上次登录时间
+     */
     private LocalDateTime lastLoginTime;
 
-    /** 保险库 KDF 盐（Base64，公开） */
+    /**
+     * 保险库 KDF 盐（Base64，公开）
+     */
     private String vaultSalt;
 
-    /** 账户密钥 SHA-256 指纹（Base64） */
+    /**
+     * 账户密钥 SHA-256 指纹（Base64）
+     */
     private String secretKeyFingerprint;
 }

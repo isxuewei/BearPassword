@@ -4,14 +4,14 @@ BearPassword 密码管理工具后端服务，基于 **Spring Boot 3 + MyBatis P
 
 ## 技术栈
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Java | 17 | LTS |
-| Spring Boot | 3.3.5 | Web 框架 |
-| MyBatis Plus | 3.5.9 | ORM |
-| MySQL | 8.x | 数据库 |
-| Druid | 1.2.28 | 连接池 / SQL 监控 |
-| Lombok | - | 简化样板代码 |
+| 技术           | 版本     | 说明           |
+|--------------|--------|--------------|
+| Java         | 17     | LTS          |
+| Spring Boot  | 3.3.5  | Web 框架       |
+| MyBatis Plus | 3.5.9  | ORM          |
+| MySQL        | 8.x    | 数据库          |
+| Druid        | 1.2.28 | 连接池 / SQL 监控 |
+| Lombok       | -      | 简化样板代码       |
 
 ## 目录结构
 
@@ -101,22 +101,22 @@ curl http://localhost:8080/api/dashboard/stats
 
 ## 环境配置
 
-| Profile | 文件 | 用途 |
-|---------|------|------|
-| dev | application-dev.yml | 本地开发 |
-| prod | application-prod.yml | 生产环境（通过环境变量注入数据库配置） |
+| Profile | 文件                   | 用途                  |
+|---------|----------------------|---------------------|
+| dev     | application-dev.yml  | 本地开发                |
+| prod    | application-prod.yml | 生产环境（通过环境变量注入数据库配置） |
 
 生产环境连接池参数继承 `application.yml`，可通过环境变量覆盖 Druid 监控：
 
-| 变量 | 说明 | 默认 |
-|------|------|------|
-| `DB_URL` | JDBC 地址（建议带 `serverTimezone=Asia/Shanghai`） | - |
-| `DB_USERNAME` | 数据库用户名 | - |
-| `DB_PASSWORD` | 数据库密码 | - |
-| `DRUID_STAT_ENABLED` | 是否开启监控页 | `false` |
-| `DRUID_STAT_USERNAME` | 监控页账号 | `admin` |
-| `DRUID_STAT_PASSWORD` | 监控页密码 | 空 |
-| `DRUID_STAT_ALLOW` | 允许访问 IP | `127.0.0.1` |
+| 变量                    | 说明                                          | 默认          |
+|-----------------------|---------------------------------------------|-------------|
+| `DB_URL`              | JDBC 地址（建议带 `serverTimezone=Asia/Shanghai`） | -           |
+| `DB_USERNAME`         | 数据库用户名                                      | -           |
+| `DB_PASSWORD`         | 数据库密码                                       | -           |
+| `DRUID_STAT_ENABLED`  | 是否开启监控页                                     | `false`     |
+| `DRUID_STAT_USERNAME` | 监控页账号                                       | `admin`     |
+| `DRUID_STAT_PASSWORD` | 监控页密码                                       | 空           |
+| `DRUID_STAT_ALLOW`    | 允许访问 IP                                     | `127.0.0.1` |
 
 切换环境：
 

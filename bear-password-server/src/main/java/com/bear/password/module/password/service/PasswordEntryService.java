@@ -14,7 +14,7 @@ import java.util.List;
 public interface PasswordEntryService extends IService<PasswordEntry> {
 
     PageResult<PasswordEntryResponse> pageEntries(long userId, long page, long pageSize,
-                                                   String keyword, String passwordType);
+                                                  String keyword, String passwordType);
 
     PasswordEntryResponse getEntry(long userId, Long id);
 
@@ -24,6 +24,8 @@ public interface PasswordEntryService extends IService<PasswordEntry> {
 
     void deleteEntry(long userId, Long id);
 
-    /** 获取当前用户已使用过的全部标签（去重、排序） */
+    /**
+     * 获取当前用户已使用过的全部标签（去重、排序）
+     */
     List<String> listUserLabels(long userId);
 }

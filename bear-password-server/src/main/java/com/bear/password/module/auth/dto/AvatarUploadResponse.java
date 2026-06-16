@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AvatarUploadResponse {
 
-    /** 头像访问 URL */
+    /**
+     * 头像访问 URL
+     */
     private String avatar;
 }

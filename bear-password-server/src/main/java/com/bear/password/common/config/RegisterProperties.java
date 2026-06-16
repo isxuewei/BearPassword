@@ -17,15 +17,21 @@ public class RegisterProperties {
 
     @Data
     public static class Mail {
-        /** 发件人显示名称 */
+        /**
+         * 发件人显示名称
+         */
         private String fromName = "BearPassword";
     }
 
     @Data
     public static class Register {
-        /** 验证码有效期（分钟） */
+        /**
+         * 验证码有效期（分钟）
+         */
         private int codeExpireMinutes = 5;
-        /** 同一邮箱发送间隔（秒） */
+        /**
+         * 同一邮箱发送间隔（秒）
+         */
         private int sendIntervalSeconds = 60;
     }
 }

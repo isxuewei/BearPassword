@@ -7,14 +7,7 @@ import com.bear.password.module.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -28,12 +21,21 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 用户登录（无需 token）
+     * SRP 登录第一步：获取 salt 与服务端公值 B
      */
     @SaIgnore
-    @PostMapping("/login")
-    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return Result.success(authService.login(request));
+    @PostMapping("/login/init")
+    public Result<SrpLoginInitResponse> srpLoginInit(@Valid @RequestBody SrpLoginInitRequest request) {
+        return Result.success(authService.srpLoginInit(request));
+    }
+
+    /**
+     * SRP 登录第二步：提交客户端证明并获取 token
+     */
+    @SaIgnore
+    @PostMapping("/login/verify")
+    public Result<SrpLoginVerifyResponse> srpLoginVerify(@Valid @RequestBody SrpLoginVerifyRequest request) {
+        return Result.success(authService.srpLoginVerify(request));
     }
 
     /**
@@ -82,12 +84,28 @@ public class AuthController {
     }
 
     /**
-     * 修改当前用户登录密码
+     * 修改登录密码：先 POST /auth/password/srp/init + /verify 获取 passwordChangeToken
      */
     @PutMapping("/password")
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
         return Result.success();
+    }
+
+    /**
+     * 修改密码：SRP 验证当前密码（第一步）
+     */
+    @PostMapping("/password/srp/init")
+    public Result<SrpLoginInitResponse> srpPasswordInit() {
+        return Result.success(authService.srpPasswordInit());
+    }
+
+    /**
+     * 修改密码：SRP 验证当前密码（第二步）
+     */
+    @PostMapping("/password/srp/verify")
+    public Result<SrpLoginVerifyResponse> srpPasswordVerify(@Valid @RequestBody SrpLoginVerifyRequest request) {
+        return Result.success(authService.srpLoginVerify(request));
     }
 
     /**

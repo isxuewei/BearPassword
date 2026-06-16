@@ -1,22 +1,23 @@
 package com.bear.password.module.auth.service;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.bear.password.common.config.TimeZoneConfig;
 import com.bear.password.common.constant.AuthConstants;
 import com.bear.password.common.exception.BusinessException;
 import com.bear.password.common.result.ResultCode;
 import com.bear.password.module.auth.dto.*;
+import com.bear.password.module.auth.srp.SrpAuthService;
+import com.bear.password.module.auth.srp.SrpEncoding;
 import com.bear.password.module.user.entity.User;
 import com.bear.password.module.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.bear.password.common.config.TimeZoneConfig;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -37,34 +38,86 @@ public class AuthService {
     );
 
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
+    private final SrpAuthService srpAuthService;
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
     private final VerificationCodeService verificationCodeService;
 
-    public LoginResponse login(LoginRequest request) {
+    public SrpLoginInitResponse srpLoginInit(SrpLoginInitRequest request) {
         User user = resolveUserByAccount(request.getUsername());
         if (user == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "账号或密码错误");
         }
-
         if (user.getStatus() != null && user.getStatus() == 0) {
             throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "账号已被禁用");
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!srpAuthService.hasSrpCredentials(user)) {
             throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "账号或密码错误");
         }
 
-        touchLastLoginTime(user.getId());
+        SrpAuthService.SrpLoginStartResult start = srpAuthService.startLogin(user, false);
+        SrpLoginInitResponse response = new SrpLoginInitResponse();
+        response.setSessionId(start.getSessionId());
+        response.setIdentity(start.getIdentity());
+        response.setSalt(start.getSalt());
+        response.setServerPublicEphemeral(start.getServerPublicEphemeral());
+        return response;
+    }
 
-        // Sa-Token 登录，以用户 ID 作为 loginId
+    public SrpLoginVerifyResponse srpLoginVerify(SrpLoginVerifyRequest request) {
+        SrpAuthService.SrpLoginVerifyResult verified = srpAuthService.verifyLogin(
+                request.getSessionId(),
+                SrpEncoding.parseHex(request.getClientPublicEphemeral()),
+                SrpEncoding.parseHex(request.getClientProof())
+        );
+
+        User user = userService.getById(verified.getUserId());
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "账号已被禁用");
+        }
+
+        SrpLoginVerifyResponse response = new SrpLoginVerifyResponse();
+        response.setServerProof(verified.getServerProof());
+
+        if (verified.isPasswordChange()) {
+            response.setPasswordChangeToken(srpAuthService.issuePasswordChangeToken(user.getId()));
+            return response;
+        }
+
+        touchLastLoginTime(user.getId());
         StpUtil.login(user.getId());
         StpUtil.getSession().set(AuthConstants.SESSION_USERNAME, user.getUsername());
-        String avatar = normalizeAvatar(user.getAvatar());
-        StpUtil.getSession().set(AuthConstants.SESSION_AVATAR, avatar);
+        StpUtil.getSession().set(AuthConstants.SESSION_AVATAR, normalizeAvatar(user.getAvatar()));
 
-        return buildLoginResponse(user);
+        LoginResponse loginResponse = buildLoginResponse(user);
+        response.setToken(loginResponse.getToken());
+        response.setUsername(loginResponse.getUsername());
+        response.setNickname(loginResponse.getNickname());
+        response.setAvatar(loginResponse.getAvatar());
+        return response;
+    }
+
+    public SrpLoginInitResponse srpPasswordInit() {
+        long userId = StpUtil.getLoginIdAsLong();
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
+        }
+        if (!srpAuthService.hasSrpCredentials(user)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "账户未配置 SRP 登录凭证");
+        }
+
+        SrpAuthService.SrpLoginStartResult start = srpAuthService.startLogin(user, true);
+        SrpLoginInitResponse response = new SrpLoginInitResponse();
+        response.setSessionId(start.getSessionId());
+        response.setIdentity(start.getIdentity());
+        response.setSalt(start.getSalt());
+        response.setServerPublicEphemeral(start.getServerPublicEphemeral());
+        return response;
     }
 
     public void logout() {
@@ -138,23 +191,25 @@ public class AuthService {
     }
 
     public void changePassword(ChangePasswordRequest request) {
-        long userId = StpUtil.getLoginIdAsLong();
+        long userId = srpAuthService.consumePasswordChangeToken(request.getPasswordChangeToken());
+        long currentUserId = StpUtil.getLoginIdAsLong();
+        if (userId != currentUserId) {
+            throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "密码修改凭证无效");
+        }
+
         User user = userService.getById(userId);
         if (user == null) {
             throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在或登录已失效");
         }
 
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "当前密码不正确");
-        }
-
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+        srpAuthService.validateCredentialsSetup(request.getSrp());
+        if (isSameSrpCredentials(user, request.getSrp())) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "新密码不能与当前密码相同");
         }
 
         User update = new User();
         update.setId(userId);
-        update.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        srpAuthService.applyCredentials(update, request.getSrp());
         userService.updateById(update);
     }
 
@@ -271,7 +326,8 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        srpAuthService.validateCredentialsSetup(request.getSrp());
+        srpAuthService.applyCredentials(user, request.getSrp());
         user.setNickname(username);
         user.setStatus(1);
         user.setLastLoginTime(LocalDateTime.now(TimeZoneConfig.APP_ZONE));
@@ -325,6 +381,14 @@ public class AuthService {
         user.setSecretKeyFingerprint(secretKeyFingerprint.trim());
     }
 
+    private boolean isSameSrpCredentials(User user, SrpCredentialsSetup setup) {
+        if (!srpAuthService.hasSrpCredentials(user)) {
+            return false;
+        }
+        return user.getSrpSalt().trim().equalsIgnoreCase(setup.getSalt().trim())
+                && user.getSrpVerifier().trim().equalsIgnoreCase(setup.getVerifier().trim());
+    }
+
     private String resolveNickname(User user) {
         if (StringUtils.hasText(user.getNickname())) {
             return user.getNickname().trim();
@@ -368,7 +432,9 @@ public class AuthService {
         return email == null ? "" : email.trim().toLowerCase();
     }
 
-    /** Sa-Token Session 使用 ConcurrentHashMap，不能存 null */
+    /**
+     * Sa-Token Session 使用 ConcurrentHashMap，不能存 null
+     */
     private String normalizeAvatar(String avatar) {
         return avatar != null ? avatar : "";
     }

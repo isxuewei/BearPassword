@@ -5,11 +5,7 @@ import com.bear.password.common.result.Result;
 import com.bear.password.module.announcement.dto.AnnouncementResponse;
 import com.bear.password.module.announcement.service.AnnouncementService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 公告接口

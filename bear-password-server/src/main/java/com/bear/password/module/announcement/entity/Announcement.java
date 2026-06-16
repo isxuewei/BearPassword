@@ -13,9 +13,13 @@ import lombok.EqualsAndHashCode;
 @TableName("bp_announcement")
 public class Announcement extends BaseEntity {
 
-    /** 标题 */
+    /**
+     * 标题
+     */
     private String title;
 
-    /** 公告内容（Markdown） */
+    /**
+     * 公告内容（Markdown）
+     */
     private String content;
 }

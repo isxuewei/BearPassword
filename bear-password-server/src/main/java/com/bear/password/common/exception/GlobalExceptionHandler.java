@@ -24,14 +24,18 @@ public class GlobalExceptionHandler {
         return Result.fail(e.getCode(), e.getMessage());
     }
 
-    /** Sa-Token：未登录 */
+    /**
+     * Sa-Token：未登录
+     */
     @ExceptionHandler(NotLoginException.class)
     public Result<Void> handleNotLoginException(NotLoginException e) {
         log.warn("未登录访问: {}", e.getMessage());
         return Result.fail(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录已过期");
     }
 
-    /** Sa-Token：无权限 */
+    /**
+     * Sa-Token：无权限
+     */
     @ExceptionHandler({NotPermissionException.class, NotRoleException.class})
     public Result<Void> handleNotPermissionException(Exception e) {
         log.warn("无权限访问: {}", e.getMessage());

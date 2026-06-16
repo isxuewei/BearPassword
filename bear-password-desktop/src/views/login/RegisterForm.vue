@@ -148,7 +148,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import AppLogo from '@/components/common/AppLogo.vue'
 import EmergencyKitStep from '@/components/auth/EmergencyKitStep.vue'
-import { sendRegisterCodeApi } from '@/api'
+import { sendRegisterCodeApi, createSrpCredentials } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import type { RegisterParams } from '@/types'
@@ -322,11 +322,12 @@ async function handleEmergencyKitConfirmed(): Promise<void> {
 
   errorMsg.value = ''
   try {
+    const srp = await createSrpCredentials(form.username.trim(), form.password)
     await authStore.register({
       email: form.email.trim(),
       code: form.code.trim(),
       username: form.username.trim(),
-      password: form.password,
+      srp,
       vaultCrypto: pendingVault.value.vaultCrypto,
       masterPassword: form.masterPassword
     })

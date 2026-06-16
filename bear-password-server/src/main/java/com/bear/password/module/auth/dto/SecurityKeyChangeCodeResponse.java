@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SecurityKeyChangeCodeResponse {
 
-    /** 脱敏后的邮箱地址 */
+    /**
+     * 脱敏后的邮箱地址
+     */
     private String maskedEmail;
 }

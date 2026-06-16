@@ -8,15 +8,22 @@ public final class AuthConstants {
     private AuthConstants() {
     }
 
-    /** Session 中存储的用户名 */
+    /**
+     * Session 中存储的用户名
+     */
     public static final String SESSION_USERNAME = "username";
 
-    /** Session 中存储的头像 */
+    /**
+     * Session 中存储的头像
+     */
     public static final String SESSION_AVATAR = "avatar";
 
-    /** 无需登录即可访问的路径 */
+    /**
+     * 无需登录即可访问的路径
+     */
     public static final String[] EXCLUDE_PATHS = {
-            "/auth/login",
+            "/auth/login/init",
+            "/auth/login/verify",
             "/auth/register",
             "/auth/register/code",
             "/health",

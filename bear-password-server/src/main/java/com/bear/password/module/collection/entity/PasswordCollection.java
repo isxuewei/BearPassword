@@ -13,9 +13,13 @@ import lombok.EqualsAndHashCode;
 @TableName("bp_password_collection")
 public class PasswordCollection extends BaseEntity {
 
-    /** 用户 ID */
+    /**
+     * 用户 ID
+     */
     private Long userId;
 
-    /** 密码条目 ID */
+    /**
+     * 密码条目 ID
+     */
     private Long passwordId;
 }
