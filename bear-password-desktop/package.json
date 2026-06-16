@@ -1,7 +1,7 @@
 {
   "name": "bear-password-desktop",
-  "version": "26.6.13",
-  "displayVersion": "26.6.13",
+  "version": "26.6.16",
+  "displayVersion": "26.6.16",
   "description": "BearPassword - 简洁、安全、专业的桌面密码管理工具",
   "main": "out/main/index.js",
   "author": "薛伟同学",
@@ -74,7 +74,7 @@
       "icon": "resources/icon.icns",
       "category": "public.app-category.productivity",
       "extendInfo": {
-        "CFBundleShortVersionString": "26.6.13"
+        "CFBundleShortVersionString": "26.6.16"
       },
       "target": [
         {
