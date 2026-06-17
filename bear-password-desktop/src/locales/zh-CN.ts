@@ -288,6 +288,27 @@ const messages: MessageDict = {
   'settings.securityKeyVerifyFailed': '验证码校验失败',
   'settings.autoLock': '空闲时自动锁定',
   'settings.autoLockDesc': '一段时间无操作后锁定保险库，解锁需输入主密码',
+  'settings.offlineMode': '离线模式',
+  'settings.offlineModeDesc': '开启后密码库数据仅从本地目录读写，不再向服务器请求',
+  'settings.offlineModeEnableConfirm':
+    '开启后将把当前密码库快照写入本地目录，之后新增、修改、删除均只保存在本地。是否继续？',
+  'settings.offlineModeDisableConfirm':
+    '关闭后将恢复从服务器同步数据，本地目录中的变更不会自动上传。是否继续？',
+  'settings.offlineModeEnabled': '已开启离线模式',
+  'settings.offlineModeDisabled': '已关闭离线模式',
+  'settings.offlineModeSaveFailed': '离线模式设置保存失败',
+  'settings.offlineModeEnabledNote':
+    '离线模式已开启：密码条目、收藏与最近访问均读写于上方目录中的 vault-data.json。',
+  'settings.offlineModeDisabledNote':
+    '离线模式关闭时仍可使用下方目录作为开启后的默认存储位置。',
+  'settings.offlineDataDir': '本地数据目录',
+  'settings.offlineDataDirDesc': '离线模式下密码库数据的存放路径，可随时更换',
+  'settings.offlineDataDirChoose': '选择目录',
+  'settings.offlineDataDirUnset': '未设置（将使用默认目录）',
+  'settings.offlineDataDirChangeConfirm':
+    '更换目录后，将把当前本地密码库复制到新目录。原目录数据不会自动迁移，是否继续？',
+  'settings.offlineDataDirSaveFailed': '本地目录保存失败',
+  'settings.offlineDataDirSaved': '本地目录已更新',
   'settings.clipboardClear': '剪贴板自动清除',
   'settings.clipboardClearDesc': '复制密码等敏感内容后按时长自动清除；应用锁定时立即清除',
   'settings.preferBiometricUnlock': '优先使用生物识别解锁',

@@ -18,6 +18,7 @@ import { getElementPlusLocale } from '@/locales'
 import { Z_INDEX_ELEMENT_PLUS } from '@/constants/zIndex'
 import { initGlobalShortcutBridge } from '@/utils/globalShortcutBridge'
 import { initTrayBridge } from '@/utils/trayBridge'
+import { useOfflineVaultStore } from '@/stores/offlineVault'
 
 const appStore = useAppStore()
 const { t } = useI18n()
@@ -28,6 +29,8 @@ initGlobalShortcutBridge()
 initTrayBridge()
 
 onMounted(async () => {
+  void useOfflineVaultStore().loadSettings()
+
   const shortcutsStore = useShortcutsStore()
   const result = await shortcutsStore.init()
 

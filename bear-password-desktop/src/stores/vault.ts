@@ -11,6 +11,7 @@ import {
   mapFavoriteMeta,
   mapRecentVisitMeta
 } from '@/utils/vaultEntryLists'
+import { isOfflineVaultMode } from '@/utils/offlineVaultMode'
 
 /** 后台定时刷新间隔（毫秒） */
 const BACKGROUND_REFRESH_MS = 5 * 60 * 1000
@@ -44,6 +45,10 @@ export const useVaultStore = defineStore('vault', () => {
   const loading = computed(() => initialLoading.value)
 
   function startBackgroundTimer(): void {
+    if (isOfflineVaultMode()) {
+      stopBackgroundTimer()
+      return
+    }
     stopBackgroundTimer()
     backgroundTimer = setInterval(() => {
       if (loaded.value) {

@@ -159,6 +159,49 @@ interface ExtensionBridgeApi {
   sendResponse: (id: string, result: { ok: boolean; data?: unknown; error?: string }) => void
 }
 
+interface OfflineVaultSettingsState {
+  enabled: boolean
+  dataDir: string
+}
+
+interface OfflineVaultApi {
+  getDefaultDataDir: () => Promise<string>
+  getSettings: () => Promise<OfflineVaultSettingsState>
+  setSettings: (partial: Partial<OfflineVaultSettingsState>) => Promise<
+    | { ok: true; settings: OfflineVaultSettingsState }
+    | { ok: false; error: string }
+  >
+  pickDataDir: (currentDir?: string) => Promise<string | null>
+  readSnapshot: () => Promise<unknown>
+  importSnapshot: (snapshot: unknown) => Promise<
+    | { ok: true; snapshot: unknown }
+    | { ok: false; error: string }
+  >
+  listEntries: () => Promise<unknown[]>
+  createEntry: (entry: unknown) => Promise<
+    | { ok: true; entry: unknown }
+    | { ok: false; error: string }
+  >
+  updateEntry: (id: number, entry: unknown) => Promise<
+    | { ok: true; entry: unknown }
+    | { ok: false; error: string }
+  >
+  updateEntryRaw: (id: number, entry: unknown) => Promise<
+    | { ok: true; entry: unknown }
+    | { ok: false; error: string }
+  >
+  deleteEntry: (id: number) => Promise<
+    | { ok: true; deleted: boolean }
+    | { ok: false; error: string }
+  >
+  getFavoritesMeta: () => Promise<unknown[]>
+  getFavoriteIds: () => Promise<number[]>
+  addFavorite: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
+  removeFavorite: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
+  getRecentMeta: () => Promise<unknown[]>
+  recordRecent: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 declare global {
   interface Window {
     windowApi?: WindowApi
@@ -172,6 +215,7 @@ declare global {
     vaultPasswordApi?: VaultPasswordApi
     biometricApi?: BiometricApi
     extensionBridgeApi?: ExtensionBridgeApi
+    offlineVaultApi?: OfflineVaultApi
   }
 }
 

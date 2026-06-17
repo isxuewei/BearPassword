@@ -190,3 +190,66 @@ const extensionBridgeApi = {
 }
 
 contextBridge.exposeInMainWorld('extensionBridgeApi', extensionBridgeApi)
+
+const offlineVaultApi = {
+  getDefaultDataDir: () => ipcRenderer.invoke('offline-vault:getDefaultDataDir') as Promise<string>,
+  getSettings: () =>
+    ipcRenderer.invoke('offline-vault:getSettings') as Promise<{
+      enabled: boolean
+      dataDir: string
+    }>,
+  setSettings: (partial: { enabled?: boolean; dataDir?: string }) =>
+    ipcRenderer.invoke('offline-vault:setSettings', partial) as Promise<
+      | { ok: true; settings: { enabled: boolean; dataDir: string } }
+      | { ok: false; error: string }
+    >,
+  pickDataDir: (currentDir?: string) =>
+    ipcRenderer.invoke('offline-vault:pickDataDir', currentDir ?? null) as Promise<string | null>,
+  readSnapshot: () => ipcRenderer.invoke('offline-vault:readSnapshot') as Promise<unknown>,
+  importSnapshot: (snapshot: unknown) =>
+    ipcRenderer.invoke('offline-vault:importSnapshot', snapshot) as Promise<
+      | { ok: true; snapshot: unknown }
+      | { ok: false; error: string }
+    >,
+  listEntries: () => ipcRenderer.invoke('offline-vault:listEntries') as Promise<unknown[]>,
+  createEntry: (entry: unknown) =>
+    ipcRenderer.invoke('offline-vault:createEntry', entry) as Promise<
+      | { ok: true; entry: unknown }
+      | { ok: false; error: string }
+    >,
+  updateEntry: (id: number, entry: unknown) =>
+    ipcRenderer.invoke('offline-vault:updateEntry', id, entry) as Promise<
+      | { ok: true; entry: unknown }
+      | { ok: false; error: string }
+    >,
+  updateEntryRaw: (id: number, entry: unknown) =>
+    ipcRenderer.invoke('offline-vault:updateEntryRaw', id, entry) as Promise<
+      | { ok: true; entry: unknown }
+      | { ok: false; error: string }
+    >,
+  deleteEntry: (id: number) =>
+    ipcRenderer.invoke('offline-vault:deleteEntry', id) as Promise<
+      | { ok: true; deleted: boolean }
+      | { ok: false; error: string }
+    >,
+  getFavoritesMeta: () => ipcRenderer.invoke('offline-vault:getFavoritesMeta') as Promise<unknown[]>,
+  getFavoriteIds: () => ipcRenderer.invoke('offline-vault:getFavoriteIds') as Promise<number[]>,
+  addFavorite: (passwordId: number) =>
+    ipcRenderer.invoke('offline-vault:addFavorite', passwordId) as Promise<
+      | { ok: true }
+      | { ok: false; error: string }
+    >,
+  removeFavorite: (passwordId: number) =>
+    ipcRenderer.invoke('offline-vault:removeFavorite', passwordId) as Promise<
+      | { ok: true }
+      | { ok: false; error: string }
+    >,
+  getRecentMeta: () => ipcRenderer.invoke('offline-vault:getRecentMeta') as Promise<unknown[]>,
+  recordRecent: (passwordId: number) =>
+    ipcRenderer.invoke('offline-vault:recordRecent', passwordId) as Promise<
+      | { ok: true }
+      | { ok: false; error: string }
+    >
+}
+
+contextBridge.exposeInMainWorld('offlineVaultApi', offlineVaultApi)

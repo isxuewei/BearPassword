@@ -51,6 +51,7 @@ import {
   stopExtensionBridgeServer
 } from './extensionBridgeServer'
 import type { ExtensionBridgeMethod } from '../../shared/extensionBridge'
+import { registerOfflineVaultIpc } from './offlineVaultIpc'
 
 /** dev 与生产环境统一 userData 目录（~/Library/Application Support/BearPassword） */
 app.setName('BearPassword')
@@ -713,6 +714,7 @@ function startApp(): void {
     registerTrayIpc()
     registerDockIpc()
     registerFileIpc()
+    registerOfflineVaultIpc(() => mainWindow)
     registerSecureStorageIpc()
     registerVaultPasswordIpc()
     registerBiometricIpc()

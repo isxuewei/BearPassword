@@ -297,6 +297,27 @@ const messages: MessageDict = {
   'settings.securityKeyVerifyFailed': '認証に失敗しました',
   'settings.autoLock': '無操作時に自動ロック',
   'settings.autoLockDesc': '一定時間操作がないと保管庫をロックします。解除にはマスターパスワードが必要です',
+  'settings.offlineMode': 'オフラインモード',
+  'settings.offlineModeDesc': '有効にすると、保管庫データはローカルフォルダのみから読み書きし、サーバーへはリクエストしません',
+  'settings.offlineModeEnableConfirm':
+    '有効にすると現在の保管庫のスナップショットをローカルフォルダに保存します。以降の変更はすべてローカルのみに保存されます。続行しますか？',
+  'settings.offlineModeDisableConfirm':
+    '無効にするとサーバーからの同期に戻ります。ローカルの変更は自動的にアップロードされません。続行しますか？',
+  'settings.offlineModeEnabled': 'オフラインモードを有効にしました',
+  'settings.offlineModeDisabled': 'オフラインモードを無効にしました',
+  'settings.offlineModeSaveFailed': 'オフラインモードの設定を保存できませんでした',
+  'settings.offlineModeEnabledNote':
+    'オフラインモード有効：エントリ・お気に入り・最近のアクセスは上記フォルダ内の vault-data.json に保存されます。',
+  'settings.offlineModeDisabledNote':
+    'オフラインモード無効時も、下のフォルダは有効化時のデフォルト保存先として使用されます。',
+  'settings.offlineDataDir': 'ローカルデータフォルダ',
+  'settings.offlineDataDirDesc': 'オフラインモード時の保管庫データの保存場所。いつでも変更できます',
+  'settings.offlineDataDirChoose': 'フォルダを選択',
+  'settings.offlineDataDirUnset': '未設定（デフォルトフォルダを使用）',
+  'settings.offlineDataDirChangeConfirm':
+    'フォルダを変更すると、現在のローカル保管庫を新しい場所にコピーします。旧フォルダのデータは自動的に移動されません。続行しますか？',
+  'settings.offlineDataDirSaveFailed': 'ローカルフォルダの保存に失敗しました',
+  'settings.offlineDataDirSaved': 'ローカルフォルダを更新しました',
   'settings.clipboardClear': 'クリップボードの自動消去',
   'settings.clipboardClearDesc':
     'パスワードなどをコピーしたあと、指定時間でクリップボードから消去します。アプリをロックしたときも即座に消去します',

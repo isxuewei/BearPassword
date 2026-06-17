@@ -298,6 +298,27 @@ const messages: MessageDict = {
   'settings.securityKeyVerifyFailed': 'Verification failed',
   'settings.autoLock': 'Auto-lock when idle',
   'settings.autoLockDesc': 'Lock the vault after inactivity; unlocking requires your master password',
+  'settings.offlineMode': 'Offline mode',
+  'settings.offlineModeDesc': 'When enabled, vault data is read and written only from a local folder—no server requests',
+  'settings.offlineModeEnableConfirm':
+    'Enabling will save a snapshot of your current vault to the local folder. All changes will stay local afterward. Continue?',
+  'settings.offlineModeDisableConfirm':
+    'Disabling will sync from the server again. Local changes will not be uploaded automatically. Continue?',
+  'settings.offlineModeEnabled': 'Offline mode enabled',
+  'settings.offlineModeDisabled': 'Offline mode disabled',
+  'settings.offlineModeSaveFailed': 'Failed to save offline mode settings',
+  'settings.offlineModeEnabledNote':
+    'Offline mode is on: entries, favorites, and recent visits are stored in vault-data.json under the folder above.',
+  'settings.offlineModeDisabledNote':
+    'When offline mode is off, the folder below is used as the default location when you enable it.',
+  'settings.offlineDataDir': 'Local data folder',
+  'settings.offlineDataDirDesc': 'Where vault data is stored in offline mode; you can change it anytime',
+  'settings.offlineDataDirChoose': 'Choose folder',
+  'settings.offlineDataDirUnset': 'Not set (default folder will be used)',
+  'settings.offlineDataDirChangeConfirm':
+    'Changing the folder will copy your current local vault to the new location. Data in the old folder is not moved automatically. Continue?',
+  'settings.offlineDataDirSaveFailed': 'Failed to save local folder',
+  'settings.offlineDataDirSaved': 'Local folder updated',
   'settings.clipboardClear': 'Auto-clear clipboard',
   'settings.clipboardClearDesc': 'Clear copied passwords and other sensitive data after a delay; clears immediately when the app locks',
   'settings.preferBiometricUnlock': 'Prefer biometric unlock',

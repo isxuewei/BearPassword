@@ -196,6 +196,8 @@
           @change="handlePreferBiometricUnlockChange"
         />
       </div>
+
+      <OfflineVaultSettingsPanel />
     </div>
 
     <div v-if="showSection('appearance')" class="settings-view__section">
@@ -365,6 +367,7 @@ import { ElMessage } from 'element-plus'
 import { settingsMessageBoxConfirm } from '@/utils/settingsMessageBox'
 import ShortcutInput from '@/components/settings/ShortcutInput.vue'
 import MfaSettingsPanel from '@/components/settings/MfaSettingsPanel.vue'
+import OfflineVaultSettingsPanel from '@/components/settings/OfflineVaultSettingsPanel.vue'
 import { getHealthApi } from '@/api'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME, OFFICIAL_WEBSITE_URL } from '@/constants/app'
 import { useAppStore } from '@/stores/app'

@@ -77,7 +77,7 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DATABASE:0}
-      timeout: 3s
+      timeout: 10s
       lettuce:
         pool:
           max-active: 8

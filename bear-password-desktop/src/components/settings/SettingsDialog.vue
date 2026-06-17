@@ -323,6 +323,12 @@ onUnmounted(() => {
       margin-bottom: 0;
       border-bottom: 1px solid $color-border;
     }
+
+    .offline-vault-settings {
+      padding: $spacing-md $spacing-lg;
+      margin-bottom: 0;
+      border-bottom: none;
+    }
   }
 }
 </style>

@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import { getDashboardStatsApi } from '@/api'
@@ -152,6 +152,10 @@ async function loadStats(): Promise<void> {
 }
 
 onMounted(() => {
+  void loadStats()
+})
+
+onActivated(() => {
   void loadStats()
 })
 </script>
