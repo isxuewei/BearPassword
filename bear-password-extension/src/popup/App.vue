@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from '@/popup/composables/useI18n'
 import { useLocaleStore } from '@/popup/stores/locale'
 import { useSessionStore } from '@/popup/stores/session'
 import { useThemeStore } from '@/popup/stores/theme'
 import { usePopupStore } from '@/popup/stores/popup'
-import { useVersionStore } from '@/popup/stores/version'
 import LoginView from '@/popup/views/LoginView.vue'
 import VaultView from '@/popup/views/VaultView.vue'
 import SettingsView from '@/popup/views/SettingsView.vue'
@@ -15,22 +14,22 @@ const localeStore = useLocaleStore()
 const sessionStore = useSessionStore()
 const themeStore = useThemeStore()
 const popupStore = usePopupStore()
-const versionStore = useVersionStore()
 const { t } = useI18n()
 const ready = ref(false)
+let syncTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(async () => {
-  await Promise.all([localeStore.init(), themeStore.init(), sessionStore.init()])
+  await Promise.all([themeStore.init(), localeStore.init()])
+  await sessionStore.init()
   ready.value = true
-  void versionStore.checkForUpdate()
+  syncTimer = setInterval(() => {
+    void sessionStore.refreshDesktopState(true)
+  }, 3000)
 })
 
-watch(
-  () => sessionStore.serverOrigin,
-  () => {
-    void versionStore.checkForUpdate()
-  }
-)
+onUnmounted(() => {
+  if (syncTimer) clearInterval(syncTimer)
+})
 </script>
 
 <template>
@@ -39,7 +38,7 @@ watch(
     <p class="loading-text">{{ t('app.loading') }}</p>
   </div>
   <SettingsView v-else-if="popupStore.page === 'settings'" />
-  <LoginView v-else-if="!sessionStore.isLoggedIn" />
+  <LoginView v-else-if="!sessionStore.isReady" />
   <VaultView v-else />
 </template>
 

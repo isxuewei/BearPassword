@@ -116,7 +116,7 @@ export function buildMatchingCredentialsResult(
 
   const needsSecurityKey = entries.some((entry) => isEntryBlockedForAutofill(entry, pageUrl, matchBy))
 
-  return { credentials, needsSecurityKey }
+  return { credentials, needsSecurityKey, desktopUnlocked: true }
 }
 
 export function toFillCredential(entry: PasswordEntry): FillCredential | null {

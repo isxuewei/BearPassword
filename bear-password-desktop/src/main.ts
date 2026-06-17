@@ -14,6 +14,7 @@ import { bindUnauthorizedHandler } from '@/utils/request'
 import { initFontOnBoot } from '@/utils/font'
 import { initLocaleOnBoot } from '@/utils/localePreference'
 import { initThemeOnBoot } from '@/utils/theme'
+import { registerExtensionBridgeClient } from '@/extensionBridge/register'
 import '@/styles/index.scss'
 
 // 在 Vue 挂载前应用主题、字体与语言，避免首屏闪烁
@@ -55,6 +56,8 @@ async function bootstrap(): Promise<void> {
       void router.replace({ name: 'Login' })
     }
   })
+
+  registerExtensionBridgeClient()
 
   app.mount('#app')
 }

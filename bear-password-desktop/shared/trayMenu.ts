@@ -53,6 +53,9 @@ export type TrayRendererCommand =
   | { action: 'lock' }
   | { action: 'settings' }
   | { action: 'quick-search' }
+  | { action: 'vault' }
+  | { action: 'favorites' }
+  | { action: 'recent' }
   | { action: 'set-theme'; value: TrayThemeValue }
   | { action: 'set-locale'; value: TrayLocaleValue }
   | { action: 'set-font'; value: TrayFontValue }

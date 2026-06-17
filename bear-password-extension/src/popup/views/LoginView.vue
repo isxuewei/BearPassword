@@ -1,37 +1,55 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from '@/popup/composables/useI18n'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore } from '@/popup/stores/session'
 import AppLogo from '@/popup/components/AppLogo.vue'
-import type { MfaLoginChallenge } from '@/shared/types'
 
 const { t } = useI18n()
 const popupStore = usePopupStore()
 const sessionStore = useSessionStore()
+const waking = ref(false)
 
-const username = ref('')
-const password = ref('')
-const mfaChallenge = ref<MfaLoginChallenge | null>(null)
-const totpCode = ref('')
-
-async function handleSubmit(): Promise<void> {
-  const result = await sessionStore.login(username.value, password.value)
-  if (result && 'mfaRequired' in result && result.mfaRequired) {
-    mfaChallenge.value = result
+const statusKey = computed(() => {
+  switch (sessionStore.desktopStatus) {
+    case 'offline':
+      return 'login.statusOffline'
+    case 'notLoggedIn':
+      return 'login.statusNotLoggedIn'
+    case 'locked':
+      return 'login.statusLocked'
+    default:
+      return 'login.statusReady'
   }
-}
+})
 
-async function handleTotpSubmit(): Promise<void> {
-  if (!mfaChallenge.value) return
-  await sessionStore.completeMfaTotp(mfaChallenge.value.mfaToken, totpCode.value)
-  mfaChallenge.value = null
-}
+const hintKey = computed(() => {
+  switch (sessionStore.desktopStatus) {
+    case 'offline':
+      return 'login.hintOffline'
+    case 'notLoggedIn':
+      return 'login.hintNotLoggedIn'
+    case 'locked':
+      return 'login.hintLocked'
+    default:
+      return 'login.hintReady'
+  }
+})
 
-function handleBack(): void {
-  mfaChallenge.value = null
-  totpCode.value = ''
-  sessionStore.clearFeedback()
+onMounted(() => {
+  void sessionStore.refreshDesktopState()
+})
+
+async function handleWakeDesktop(): Promise<void> {
+  if (waking.value) return
+  waking.value = true
+  try {
+    await sessionStore.wakeDesktop()
+  } catch {
+    // error 已在 store 中设置
+  } finally {
+    waking.value = false
+  }
 }
 </script>
 
@@ -48,61 +66,29 @@ function handleBack(): void {
 
       <header class="header">
         <AppLogo size="lg" />
-        <p class="subtitle">{{ mfaChallenge ? t('login.mfaTitle') : t('login.subtitle') }}</p>
+        <p class="subtitle">{{ t('login.subtitle') }}</p>
       </header>
 
-      <form v-if="!mfaChallenge" class="form" @submit.prevent="handleSubmit">
-        <div class="bear-field">
-          <label class="bear-label">{{ t('login.username') }}</label>
-          <input v-model="username" class="bear-input" type="text" autocomplete="username" required />
+      <div class="status-panel">
+        <div class="status-row">
+          <span class="status-label">{{ t('login.connectionStatus') }}</span>
+          <span class="status-badge" :class="`status-badge--${sessionStore.desktopStatus}`">
+            {{ t(statusKey) }}
+          </span>
         </div>
-
-        <div class="bear-field">
-          <label class="bear-label">{{ t('login.password') }}</label>
-          <input
-            v-model="password"
-            class="bear-input"
-            type="password"
-            autocomplete="current-password"
-            required
-          />
-        </div>
-
-        <button class="bear-btn bear-btn-primary submit-btn" type="submit" :disabled="sessionStore.loading">
-          {{ sessionStore.loading ? t('login.submitting') : t('login.submit') }}
-        </button>
-
-        <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
-      </form>
-
-      <div v-else class="form">
-        <p class="mfa-hint">{{ t('login.mfaHint') }}</p>
-
-        <div class="bear-field">
-          <label class="bear-label">{{ t('login.mfaTotpPlaceholder') }}</label>
-          <input
-            v-model="totpCode"
-            class="bear-input"
-            inputmode="numeric"
-            maxlength="6"
-            @keyup.enter="handleTotpSubmit"
-          />
-          <button
-            class="bear-btn bear-btn-primary submit-btn"
-            type="button"
-            :disabled="sessionStore.loading"
-            @click="handleTotpSubmit"
-          >
-            {{ t('login.mfaTotpSubmit') }}
-          </button>
-        </div>
-
-        <button class="bear-btn bear-btn-text back-btn" type="button" @click="handleBack">
-          {{ t('login.mfaBack') }}
-        </button>
-
-        <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
+        <p class="status-hint">{{ t(hintKey) }}</p>
       </div>
+
+      <button
+        class="bear-btn bear-btn-primary submit-btn"
+        type="button"
+        :disabled="waking || sessionStore.loading"
+        @click="handleWakeDesktop"
+      >
+        {{ waking ? t('login.openingDesktop') : t('login.openDesktop') }}
+      </button>
+
+      <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
     </div>
   </div>
 </template>
@@ -158,21 +144,62 @@ function handleBack(): void {
   color: var(--bear-text-secondary);
 }
 
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: var(--bear-radius-sm);
+  background: var(--bear-surface-hover);
+  border: 1px solid var(--bear-border);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status-label {
+  font-size: 12px;
+  color: var(--bear-text-muted);
+  flex-shrink: 0;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.status-badge--offline {
+  background: var(--bear-badge-bg);
+  color: var(--bear-danger);
+}
+
+.status-badge--notLoggedIn,
+.status-badge--locked {
+  background: var(--bear-badge-bg);
+  color: var(--bear-warning);
+}
+
+.status-badge--ready {
+  background: var(--bear-accent-subtle);
+  color: var(--bear-primary);
+}
+
+.status-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--bear-text-secondary);
+}
+
 .submit-btn {
   width: 100%;
   height: 44px;
-  margin-top: 4px;
-}
-
-.mfa-hint {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--bear-text-secondary);
-  line-height: 1.5;
-}
-
-.back-btn {
-  width: 100%;
-  margin-top: 8px;
 }
 </style>

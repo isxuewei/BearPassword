@@ -315,8 +315,10 @@ const messages: MessageDict = {
   'shortcut.lock': 'BearPassword をロック',
   'shortcut.lockDesc': 'すぐにアプリをロック',
 
-  'tray.action.open': 'BearPassword を開く',
-  'tray.action.quick-search': 'クイック検索',
+  'tray.action.vault': 'パスワード庫を開く',
+  'tray.action.favorites': 'お気に入りを開く',
+  'tray.action.recent': '最近の項目を開く',
+  'tray.action.settings': '設定を開く',
 
   'tray.menu.open': 'BearPassword を開く',
   'tray.menu.lock': 'BearPassword をロック',

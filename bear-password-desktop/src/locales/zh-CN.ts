@@ -304,8 +304,10 @@ const messages: MessageDict = {
   'shortcut.lock': '锁定 BearPassword',
   'shortcut.lockDesc': '立即锁定应用，需输入密码解锁',
 
-  'tray.action.open': '打开 BearPassword',
-  'tray.action.quick-search': '打开快捷搜索',
+  'tray.action.vault': '打开密码库',
+  'tray.action.favorites': '打开收藏夹',
+  'tray.action.recent': '打开最近访问',
+  'tray.action.settings': '打开设置',
 
   'tray.menu.open': '打开 BearPassword',
   'tray.menu.lock': '锁定 BearPassword',

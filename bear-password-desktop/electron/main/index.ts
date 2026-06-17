@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
+import { randomUUID } from 'node:crypto'
 import { writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
@@ -12,7 +13,7 @@ import {
 } from './shortcuts'
 import { loadShortcutBindings } from './shortcutConfig'
 import { getLaunchAtLoginSettings, setLaunchAtLogin } from './launchAtLogin'
-import type { TrayClickAction, TraySettings } from '../../shared/traySettings'
+import type { TraySettings } from '../../shared/traySettings'
 import type { TrayAppearanceSnapshot, TrayRendererCommand } from '../../shared/trayMenu'
 import { loadTraySettings, saveTraySettings } from './trayConfig'
 import { applyTraySettings, destroyTray, isTrayAvailable } from './tray'
@@ -43,12 +44,105 @@ import {
   persistMainWindowState,
   seedCachedWindowState
 } from './windowState'
+import {
+  setExtensionBridgeFocusHandler,
+  setExtensionBridgeInvoker,
+  startExtensionBridgeServer,
+  stopExtensionBridgeServer
+} from './extensionBridgeServer'
+import type { ExtensionBridgeMethod } from '../../shared/extensionBridge'
 
 /** dev 与生产环境统一 userData 目录（~/Library/Application Support/BearPassword） */
 app.setName('BearPassword')
 
+const DESKTOP_WAKE_PROTOCOL = 'bearpassword'
+let pendingWakeUrl: string | null = null
+
+function registerDesktopWakeProtocol(): void {
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient(DESKTOP_WAKE_PROTOCOL, process.execPath, [join(process.argv[1])])
+      return
+    }
+  }
+  app.setAsDefaultProtocolClient(DESKTOP_WAKE_PROTOCOL)
+}
+
+function isDesktopWakeUrl(url: string): boolean {
+  return url.startsWith(`${DESKTOP_WAKE_PROTOCOL}://`)
+}
+
+function handleDesktopWakeRequest(): void {
+  if (app.isReady()) {
+    focusMainWindow()
+    return
+  }
+  app.whenReady().then(() => focusMainWindow())
+}
+
+function handleDesktopWakeUrl(url: string): void {
+  if (!isDesktopWakeUrl(url)) return
+  handleDesktopWakeRequest()
+}
+
+function findDesktopWakeUrl(argv: string[]): string | undefined {
+  return argv.find((arg) => isDesktopWakeUrl(arg))
+}
+
 /** 主窗口实例引用，用于窗口控制 IPC */
 let mainWindow: BrowserWindow | null = null
+
+const pendingExtensionBridgeCalls = new Map<
+  string,
+  {
+    resolve: (value: unknown) => void
+    reject: (reason: Error) => void
+    timer: NodeJS.Timeout
+  }
+>()
+
+function invokeExtensionBridgeRenderer(
+  method: ExtensionBridgeMethod,
+  params: unknown
+): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      reject(new Error('桌面端窗口未就绪'))
+      return
+    }
+
+    const id = randomUUID()
+    const timer = setTimeout(() => {
+      pendingExtensionBridgeCalls.delete(id)
+      reject(new Error('桌面端处理超时'))
+    }, 30_000)
+
+    pendingExtensionBridgeCalls.set(id, {
+      resolve: (value) => resolve(value),
+      reject,
+      timer
+    })
+
+    mainWindow!.webContents.send('extension-bridge:request', { id, method, params })
+  })
+}
+
+function registerExtensionBridgeIpc(): void {
+  ipcMain.on(
+    'extension-bridge:response',
+    (_event, id: string, result: { ok: boolean; data?: unknown; error?: string }) => {
+      const pending = pendingExtensionBridgeCalls.get(id)
+      if (!pending) return
+      clearTimeout(pending.timer)
+      pendingExtensionBridgeCalls.delete(id)
+      if (result.ok) {
+        pending.resolve(result.data)
+        return
+      }
+      pending.reject(new Error(result.error || '桌面端处理失败'))
+    }
+  )
+}
 
 /** 正在退出应用，避免托盘模式下 close 事件拦截 quit */
 let isQuitting = false
@@ -310,24 +404,15 @@ function focusMainWindow(): void {
   createWindow(true)
 }
 
-function sendTrayAction(action: TrayClickAction, notifyOpenOnLoad = false): void {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    showExistingMainWindow(() => {
-      mainWindow?.webContents.send('tray:action', action)
-    })
-    return
-  }
-
-  createWindow(notifyOpenOnLoad)
-  mainWindow?.webContents.once('did-finish-load', () => {
-    if (!mainWindow?.isDestroyed()) {
-      mainWindow.webContents.send('tray:action', action)
-    }
-  })
-}
-
 function shouldFocusWindowForTrayCommand(command: TrayRendererCommand): boolean {
-  return command.action === 'open' || command.action === 'settings' || command.action === 'quick-search'
+  return (
+    command.action === 'open' ||
+    command.action === 'settings' ||
+    command.action === 'quick-search' ||
+    command.action === 'vault' ||
+    command.action === 'favorites' ||
+    command.action === 'recent'
+  )
 }
 
 function sendTrayCommand(command: TrayRendererCommand, notifyOpenOnLoad = false): void {
@@ -363,7 +448,9 @@ function syncTrayFromSettings(settings = loadTraySettings()): void {
     settings,
     {
       onOpen: () => focusMainWindow(),
-      onQuickSearch: () => sendTrayCommand({ action: 'quick-search' }),
+      onVault: () => sendTrayCommand({ action: 'vault' }),
+      onFavorites: () => sendTrayCommand({ action: 'favorites' }),
+      onRecent: () => sendTrayCommand({ action: 'recent' }),
       onLock: () => sendTrayCommand({ action: 'lock' }),
       onSettings: () => sendTrayCommand({ action: 'settings' }),
       onSetTheme: (value) => sendTrayCommand({ action: 'set-theme', value }),
@@ -604,6 +691,7 @@ function registerAppLifecycleHandlers(): void {
 
   app.on('will-quit', () => {
     flushPendingWindowStateSave(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+    stopExtensionBridgeServer()
   })
 
   if (isDev) {
@@ -628,6 +716,10 @@ function startApp(): void {
     registerSecureStorageIpc()
     registerVaultPasswordIpc()
     registerBiometricIpc()
+    registerExtensionBridgeIpc()
+    setExtensionBridgeInvoker(invokeExtensionBridgeRenderer)
+    setExtensionBridgeFocusHandler(focusMainWindow)
+    startExtensionBridgeServer()
     registerAppLifecycleHandlers()
 
     const initialBindings = loadShortcutBindings()
@@ -636,15 +728,43 @@ function startApp(): void {
     applyDockIconVisibility(loadDockSettings())
     createWindow()
     syncTrayFromSettings()
+
+    if (pendingWakeUrl) {
+      handleDesktopWakeUrl(pendingWakeUrl)
+      pendingWakeUrl = null
+      return
+    }
+
+    const launchWakeUrl = findDesktopWakeUrl(process.argv)
+    if (launchWakeUrl) {
+      handleDesktopWakeUrl(launchWakeUrl)
+    }
   })
 }
+
+registerDesktopWakeProtocol()
+
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  if (!isDesktopWakeUrl(url)) return
+  if (app.isReady()) {
+    handleDesktopWakeUrl(url)
+    return
+  }
+  pendingWakeUrl = url
+})
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
 
 if (!gotSingleInstanceLock) {
   app.quit()
 } else {
-  app.on('second-instance', () => {
+  app.on('second-instance', (_event, argv) => {
+    const wakeUrl = findDesktopWakeUrl(argv)
+    if (wakeUrl) {
+      handleDesktopWakeUrl(wakeUrl)
+      return
+    }
     focusMainWindow()
   })
   startApp()

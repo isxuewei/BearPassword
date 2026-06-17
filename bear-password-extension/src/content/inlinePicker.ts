@@ -43,10 +43,7 @@ function ensureStyles(): void {
 }
 
 export function refreshInlinePickerStyles(): void {
-  const style = document.getElementById(STYLE_ID) as HTMLStyleElement | null
-  if (style) {
-    style.textContent = inlinePickerStyles(PICKER_ID, getContentThemeTokens())
-  }
+  ensureStyles()
 }
 
 function positionPicker(picker: HTMLElement, anchor: HTMLInputElement): void {

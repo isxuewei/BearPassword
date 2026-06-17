@@ -318,8 +318,10 @@ const messages: MessageDict = {
   'shortcut.lock': 'Lock BearPassword',
   'shortcut.lockDesc': 'Lock the app immediately',
 
-  'tray.action.open': 'Open BearPassword',
-  'tray.action.quick-search': 'Quick search',
+  'tray.action.vault': 'Open vault',
+  'tray.action.favorites': 'Open favorites',
+  'tray.action.recent': 'Open recent',
+  'tray.action.settings': 'Open settings',
 
   'tray.menu.open': 'Open BearPassword',
   'tray.menu.lock': 'Lock BearPassword',

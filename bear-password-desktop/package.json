@@ -70,6 +70,12 @@
       }
     ],
     "asar": true,
+    "protocols": [
+      {
+        "name": "BearPassword URL",
+        "schemes": ["bearpassword"]
+      }
+    ],
     "mac": {
       "icon": "resources/icon.icns",
       "category": "public.app-category.productivity",

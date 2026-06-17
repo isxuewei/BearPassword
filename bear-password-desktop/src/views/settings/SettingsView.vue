@@ -7,6 +7,70 @@
 
     <div class="settings-view__grid">
     <div class="settings-view__section">
+      <h3>{{ t('settings.general') }}</h3>
+
+      <div class="settings-view__row settings-view__row--launch">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.launchAtLogin') }}</span>
+          <small>{{ t('settings.launchAtLoginDesc') }}</small>
+        </div>
+        <el-switch
+          :model-value="launchAtLoginStore.enabled"
+          :loading="launchAtLoginStore.loading"
+          :disabled="!launchAtLoginStore.available"
+          @change="handleLaunchAtLoginChange"
+        />
+      </div>
+
+      <div class="settings-view__row settings-view__row--launch">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.tray') }}</span>
+          <small>{{ t('settings.trayDesc') }}</small>
+        </div>
+        <el-switch
+          :model-value="trayStore.enabled"
+          :loading="trayStore.loading"
+          :disabled="!trayStore.available"
+          @change="handleTrayEnabledChange"
+        />
+      </div>
+
+      <div class="settings-view__row settings-view__row--launch">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.trayClickAction') }}</span>
+          <small>{{ t('settings.trayClickActionDesc') }}</small>
+        </div>
+        <el-select
+          :model-value="trayStore.clickAction"
+          class="settings-view__tray-select"
+          size="large"
+          :disabled="!trayStore.available || !trayStore.enabled || trayStore.loading"
+          @update:model-value="handleTrayClickActionChange"
+        >
+          <el-option
+            v-for="option in TRAY_CLICK_ACTION_OPTIONS"
+            :key="option.value"
+            :label="t(`tray.action.${option.value}`)"
+            :value="option.value"
+          />
+        </el-select>
+      </div>
+
+      <div class="settings-view__row settings-view__row--launch">
+        <div class="settings-view__row-label">
+          <span>{{ t('settings.dockHidden') }}</span>
+          <small>{{ t('settings.dockHiddenDesc') }}</small>
+        </div>
+        <el-switch
+          :model-value="dockStore.hidden"
+          :loading="dockStore.loading"
+          :disabled="!dockStore.available"
+          @change="handleDockHiddenChange"
+        />
+      </div>
+    </div>
+
+    <div class="settings-view__section">
       <h3>{{ t('settings.security') }}</h3>
       <p class="settings-view__vault-crypto-intro">
         {{ t('settings.vaultCryptoIntro') }}
@@ -129,117 +193,6 @@
     </div>
 
     <div class="settings-view__section">
-      <h3>{{ t('settings.general') }}</h3>
-
-      <div class="settings-view__row settings-view__row--launch">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.launchAtLogin') }}</span>
-          <small>{{ t('settings.launchAtLoginDesc') }}</small>
-        </div>
-        <el-switch
-          :model-value="launchAtLoginStore.enabled"
-          :loading="launchAtLoginStore.loading"
-          :disabled="!launchAtLoginStore.available"
-          @change="handleLaunchAtLoginChange"
-        />
-      </div>
-
-      <div class="settings-view__row settings-view__row--launch">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.tray') }}</span>
-          <small>{{ t('settings.trayDesc') }}</small>
-        </div>
-        <el-switch
-          :model-value="trayStore.enabled"
-          :loading="trayStore.loading"
-          :disabled="!trayStore.available"
-          @change="handleTrayEnabledChange"
-        />
-      </div>
-
-      <div class="settings-view__row settings-view__row--launch">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.trayClickAction') }}</span>
-          <small>{{ t('settings.trayClickActionDesc') }}</small>
-        </div>
-        <el-select
-          :model-value="trayStore.clickAction"
-          class="settings-view__tray-select"
-          size="large"
-          :disabled="!trayStore.available || !trayStore.enabled || trayStore.loading"
-          @update:model-value="handleTrayClickActionChange"
-        >
-          <el-option
-            v-for="option in TRAY_CLICK_ACTION_OPTIONS"
-            :key="option.value"
-            :label="t(`tray.action.${option.value}`)"
-            :value="option.value"
-          />
-        </el-select>
-      </div>
-
-      <div class="settings-view__row settings-view__row--launch">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.dockHidden') }}</span>
-          <small>{{ t('settings.dockHiddenDesc') }}</small>
-        </div>
-        <el-switch
-          :model-value="dockStore.hidden"
-          :loading="dockStore.loading"
-          :disabled="!dockStore.available"
-          @change="handleDockHiddenChange"
-        />
-      </div>
-    </div>
-
-    <div class="settings-view__section">
-      <h3>{{ t('settings.shortcuts') }}</h3>
-
-      <div
-        v-for="item in IN_APP_SHORTCUT_OPTIONS"
-        :key="item.accelerator"
-        class="settings-view__row settings-view__row--shortcut"
-      >
-        <div class="settings-view__row-label">
-          <span>{{ t(item.labelKey) }}</span>
-          <small>{{ t(item.descriptionKey) }}{{ t('settings.shortcuts.inAppSuffix') }}</small>
-        </div>
-        <span class="settings-view__badge settings-view__badge--shortcut">
-          {{ formatInAppShortcut(item.accelerator) }}
-        </span>
-      </div>
-
-      <p v-if="!isDesktopApp" class="settings-view__shortcut-note settings-view__shortcut-note--warn">
-        {{ t('settings.shortcuts.globalOnlyDesktop') }}
-      </p>
-
-      <div
-        v-for="item in SHORTCUT_ACTION_OPTIONS"
-        :key="item.id"
-        class="settings-view__row settings-view__row--shortcut"
-      >
-        <div class="settings-view__row-label">
-          <span>{{ t(`shortcut.${item.id}`) }}</span>
-          <small>{{ t(`shortcut.${item.id}Desc`) }}</small>
-        </div>
-        <ShortcutInput
-          :model-value="shortcutsStore.settings[item.id]"
-          :disabled="shortcutSaving === item.id"
-          @recorded="(value) => handleShortcutRecorded(item.id, value)"
-        />
-      </div>
-
-      <div class="settings-view__shortcut-footer">
-        <el-button size="large" :loading="resettingShortcuts" @click="handleResetShortcuts">
-          {{ t('settings.shortcuts.reset') }}
-        </el-button>
-        <p v-if="shortcutRegisterWarning" class="settings-view__shortcut-note settings-view__shortcut-note--warn">
-          {{ shortcutRegisterWarning }}
-        </p>
-      </div>
-    </div>
-
-    <div class="settings-view__section">
       <h3>{{ t('settings.appearance') }}</h3>
 
       <div class="settings-view__row settings-view__row--theme">
@@ -307,36 +260,40 @@
     </div>
 
     <div class="settings-view__section">
-      <h3>{{ t('settings.service') }}</h3>
+      <h3>{{ t('settings.shortcuts') }}</h3>
 
-      <div class="settings-view__row settings-view__row--server">
+      <p v-if="!isDesktopApp" class="settings-view__shortcut-note settings-view__shortcut-note--warn">
+        {{ t('settings.shortcuts.globalOnlyDesktop') }}
+      </p>
+
+      <div
+        v-for="item in SHORTCUT_ACTION_OPTIONS"
+        :key="item.id"
+        class="settings-view__row settings-view__row--shortcut"
+      >
         <div class="settings-view__row-label">
-          <span>{{ t('settings.server') }}</span>
-          <small>{{ t('settings.serverDesc') }}</small>
+          <span>{{ t(`shortcut.${item.id}`) }}</span>
+          <small>{{ t(`shortcut.${item.id}Desc`) }}</small>
         </div>
+        <ShortcutInput
+          :model-value="shortcutsStore.settings[item.id]"
+          :disabled="shortcutSaving === item.id"
+          @recorded="(value) => handleShortcutRecorded(item.id, value)"
+        />
       </div>
 
-      <div class="settings-view__server-panel">
-        <el-input
-          v-model="serverUrlInput"
-          size="large"
-          clearable
-          :placeholder="serverStore.defaultServerOrigin"
-          class="settings-view__server-input"
-        />
-        <div class="settings-view__server-actions">
-          <el-button size="large" @click="handleResetServerUrl">{{ t('settings.serverReset') }}</el-button>
-          <el-button type="primary" size="large" :loading="savingServerUrl" @click="handleSaveServerUrl">
-            {{ t('settings.serverSave') }}
-          </el-button>
-        </div>
-        <p class="settings-view__server-note">
-          {{ t('settings.serverCurrent') }}<code>{{ serverStore.serverOrigin }}</code>
-          <span v-if="!serverStore.isCustom">{{ t('settings.serverDefault') }}</span>
-          <span v-else>{{ t('settings.serverCustom') }}</span>
-          · {{ t('settings.serverApi') }}<code>{{ serverStore.apiBaseUrl }}</code>
+      <div class="settings-view__shortcut-footer">
+        <el-button size="large" :loading="resettingShortcuts" @click="handleResetShortcuts">
+          {{ t('settings.shortcuts.reset') }}
+        </el-button>
+        <p v-if="shortcutRegisterWarning" class="settings-view__shortcut-note settings-view__shortcut-note--warn">
+          {{ shortcutRegisterWarning }}
         </p>
       </div>
+    </div>
+
+    <div class="settings-view__section">
+      <h3>{{ t('settings.about') }}</h3>
 
       <div class="settings-view__row settings-view__row--health">
         <div class="settings-view__row-label">
@@ -350,10 +307,6 @@
           aria-hidden="true"
         />
       </div>
-    </div>
-
-    <div class="settings-view__section">
-      <h3>{{ t('settings.about') }}</h3>
 
       <div class="settings-view__row">
         <span>{{ t('settings.version') }}</span>
@@ -395,7 +348,6 @@ import ShortcutInput from '@/components/settings/ShortcutInput.vue'
 import MfaSettingsPanel from '@/components/settings/MfaSettingsPanel.vue'
 import { getHealthApi } from '@/api'
 import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/constants/app'
-import { IN_APP_SHORTCUT_OPTIONS } from '@/constants/shortcuts'
 import { useAppStore } from '@/stores/app'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useClipboardClearStore } from '@/stores/clipboardClear'
@@ -404,11 +356,8 @@ import { useDockStore } from '@/stores/dock'
 import { useLaunchAtLoginStore } from '@/stores/launchAtLogin'
 import { useTrayStore } from '@/stores/tray'
 import { useSecurityStore } from '@/stores/security'
-import { useServerStore } from '@/stores/server'
 import { useVersionStore } from '@/stores/version'
 import { useShortcutsStore } from '@/stores/shortcuts'
-import { probeServerOrigin } from '@/utils/serverUrl'
-import { formatAccelerator } from '@/utils/shortcut'
 import { AUTO_LOCK_OPTIONS, type AutoLockMinutes } from '@/types'
 import {
   CLIPBOARD_CLEAR_OPTIONS,
@@ -447,7 +396,6 @@ const securityStore = useSecurityStore()
 const autoLockStore = useAutoLockStore()
 const clipboardClearStore = useClipboardClearStore()
 const biometricUnlockStore = useBiometricUnlockStore()
-const serverStore = useServerStore()
 const versionStore = useVersionStore()
 const shortcutsStore = useShortcutsStore()
 const launchAtLoginStore = useLaunchAtLoginStore()
@@ -457,11 +405,8 @@ const healthReady = ref(false)
 const masterPasswordOld = ref('')
 const masterPasswordNew = ref('')
 const masterPasswordConfirm = ref('')
-const serverUrlInput = ref(serverStore.serverOrigin)
-const savingServerUrl = ref(false)
 const shortcutSaving = ref<ShortcutActionId | null>(null)
 const resettingShortcuts = ref(false)
-const appPlatform = ref<NodeJS.Platform>('darwin')
 const isDesktopApp = computed(() => !!window.shortcutApi)
 
 const shortcutRegisterWarning = computed(() => {
@@ -554,42 +499,8 @@ async function checkHealth(): Promise<void> {
   }
 }
 
-async function handleSaveServerUrl(): Promise<void> {
-  const input = serverUrlInput.value.trim()
-  if (!input) {
-    ElMessage.warning(t('msg.serverUrlRequired'))
-    return
-  }
-
-  savingServerUrl.value = true
-  try {
-    const origin = await probeServerOrigin(input)
-    serverStore.setServerOrigin(origin)
-    ElMessage.success(t('msg.serverUrlSaved'))
-    await checkHealth()
-  } catch (err) {
-    ElMessage.error(err instanceof Error ? err.message : t('msg.serverConnectFailed'))
-  } finally {
-    savingServerUrl.value = false
-  }
-}
-
-async function handleResetServerUrl(): Promise<void> {
-  serverStore.restoreDefault()
-  serverUrlInput.value = serverStore.serverOrigin
-  try {
-    await checkHealth()
-    ElMessage.success(t('msg.serverUrlReset'))
-  } catch {
-    ElMessage.warning(t('msg.serverUrlResetWarn'))
-  }
-}
-
 onMounted(() => {
   void refreshBiometricUnlockSupport()
-  void window.windowApi?.getPlatform().then((platform) => {
-    appPlatform.value = platform
-  })
   void versionStore.refreshSystemType()
   void versionStore.checkForUpdate()
   void checkHealth()
@@ -605,10 +516,6 @@ onMounted(() => {
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
 })
-
-function formatInAppShortcut(accelerator: string): string {
-  return formatAccelerator(accelerator, appPlatform.value)
-}
 
 const masterPasswordConfigured = computed(() => !!securityStore.vaultSalt)
 

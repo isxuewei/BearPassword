@@ -7,7 +7,9 @@ export const API_CONTEXT_PATH = '/api'
 
 /** 内置默认服务器地址 */
 export function getDefaultServerOrigin(): string {
-  return import.meta.env.VITE_SERVER_URL || 'http://127.0.0.1:8080'
+  const fromEnv = import.meta.env.VITE_SERVER_URL?.trim()
+  if (fromEnv) return fromEnv
+  return import.meta.env.PROD ? 'https://bear-password.xuewei.fun' : 'http://127.0.0.1:8080'
 }
 
 /** 规范化服务器地址（仅 origin，不含路径） */
@@ -62,8 +64,16 @@ function readStoredServerOrigin(): string | null {
   return null
 }
 
+/** 生产环境固定使用打包内置地址，不提供自定义入口 */
+export function canConfigureServerOrigin(): boolean {
+  return import.meta.env.DEV
+}
+
 /** 当前配置的服务器地址（origin） */
 export function getServerOrigin(): string {
+  if (!canConfigureServerOrigin()) {
+    return getDefaultServerOrigin()
+  }
   return readStoredServerOrigin() ?? getDefaultServerOrigin()
 }
 
@@ -110,21 +120,26 @@ export async function probeServerOrigin(input: string): Promise<string> {
   }
 }
 
-/** 保存服务器地址 */
+/** 保存服务器地址（仅开发环境可用） */
 export function saveServerOrigin(input: string): string {
+  if (!canConfigureServerOrigin()) {
+    return getDefaultServerOrigin()
+  }
   const normalized = normalizeServerOrigin(input)
   storage.set(STORAGE_KEY, normalized)
   storage.remove(LEGACY_STORAGE_KEY)
   return normalized
 }
 
-/** 恢复默认服务器地址 */
+/** 恢复默认服务器地址（仅开发环境可用） */
 export function resetServerOrigin(): void {
+  if (!canConfigureServerOrigin()) return
   storage.remove(STORAGE_KEY)
   storage.remove(LEGACY_STORAGE_KEY)
 }
 
 /** 是否使用了自定义服务器地址 */
 export function isCustomServerOrigin(): boolean {
+  if (!canConfigureServerOrigin()) return false
   return !!readStoredServerOrigin()
 }

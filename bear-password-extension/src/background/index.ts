@@ -1,36 +1,26 @@
-import { logoutApi, getCurrentUserApi } from '@/shared/api/auth'
-import { addFavoriteApi, getFavoriteIdsApi, removeFavoriteApi } from '@/shared/api/favorites'
 import {
-  createPasswordApi,
-  deletePasswordApi,
-  getPasswordDetailApi,
-  getPasswordListApi,
-  updatePasswordApi,
-  validateVaultUnlockApi
-} from '@/shared/api/vault'
+  createCredentialApi,
+  deleteCredentialApi,
+  getCredentialApi,
+  getDesktopHealthApi,
+  getMatchingCredentialsApi,
+  probeDesktopBridge,
+  toggleFavoriteApi,
+  updateCredentialApi,
+  wakeDesktopApi
+} from '@/shared/api/desktopBridge'
 import type {
   AutofillPayload,
+  DesktopConnectionState,
   ExtensionMessage,
-  ExtensionSession,
   FillCredential,
-  LoginContent,
   MatchingCredentialsPayload,
   MatchingCredentialsResult,
   SaveCredentialPayload,
   UpdateCredentialPayload,
-  UpsertCredentialPayload
+  UpsertCredentialPayload,
+  WebsiteMatchMode
 } from '@/shared/types'
-import { clearSession, loadSession, saveSession } from '@/shared/storage/session'
-import type { WebsiteMatchMode } from '@/shared/types'
-import { getUrlSearchKeyword } from '@/shared/utils/websiteMatch'
-import {
-  applyFavoriteState,
-  buildLoginEntryParams,
-  buildMatchingCredentialsResult,
-  toFillCredential
-} from '@/shared/utils/vaultTransform'
-import { deriveVaultUnlockKey, toBase64 } from '@/shared/utils/contentCrypto'
-import { getVaultUnlockFromSession } from '@/shared/utils/vaultUnlock'
 import { generatePassword } from '@/shared/utils/passwordGenerator'
 
 interface CredentialsCacheEntry {
@@ -40,16 +30,49 @@ interface CredentialsCacheEntry {
 
 const credentialsCache = new Map<string, CredentialsCacheEntry>()
 const CACHE_TTL = 60_000
-const KEYWORD_PAGE_SIZE = 100
 
-async function getActiveSession(): Promise<ExtensionSession | null> {
-  const session = await loadSession()
-  if (!session?.token) return null
-  return session
-}
+let cachedHealth: DesktopConnectionState | null = null
 
 function clearCredentialsCache(): void {
   credentialsCache.clear()
+}
+
+async function getDesktopState(force = false): Promise<DesktopConnectionState | null> {
+  if (force) {
+    cachedHealth = null
+  }
+  try {
+    cachedHealth = force ? await probeDesktopBridge() : await getDesktopHealthApi()
+    return cachedHealth
+  } catch {
+    cachedHealth = {
+      ready: false,
+      loggedIn: false,
+      locked: false,
+      unlocked: false,
+      username: null,
+      themePreference: null,
+      localePreference: null
+    }
+    return cachedHealth
+  }
+}
+
+async function assertDesktopUnlocked(): Promise<DesktopConnectionState> {
+  const state = await getDesktopState(true)
+  if (!state?.ready) {
+    throw new Error('无法连接 BearPassword 桌面端，请先启动桌面应用')
+  }
+  if (!state.loggedIn) {
+    throw new Error('请先在桌面端登录')
+  }
+  if (state.locked) {
+    throw new Error('桌面端已锁定，请先解锁保险库')
+  }
+  if (!state.unlocked) {
+    throw new Error('桌面端保险库未解锁，请先完成本机配置并解锁')
+  }
+  return state
 }
 
 async function refreshMatchingCredentials(
@@ -57,45 +80,39 @@ async function refreshMatchingCredentials(
   force = false,
   matchBy: WebsiteMatchMode = 'host'
 ): Promise<MatchingCredentialsResult> {
-  const session = await getActiveSession()
-  if (!session) {
+  const state = await getDesktopState(force)
+  const appearance = {
+    desktopReady: state?.ready ?? false,
+    themePreference: state?.themePreference ?? null,
+    localePreference: state?.localePreference ?? null
+  }
+  if (!state?.unlocked) {
     clearCredentialsCache()
-    return { credentials: [], needsSecurityKey: false }
+    return { credentials: [], needsSecurityKey: false, desktopUnlocked: false, ...appearance }
   }
 
-  const keyword = url ? getUrlSearchKeyword(url, matchBy) : ''
+  const keyword = url?.trim() ?? ''
   const cacheKey = `${matchBy}:${keyword || '__all__'}`
   const cached = credentialsCache.get(cacheKey)
   const now = Date.now()
 
   if (!force && cached && now - cached.timestamp < CACHE_TTL) {
-    return cached.result
+    return { ...cached.result, ...appearance }
   }
 
-  const unlock = getVaultUnlockFromSession(session)
-  const [page, favoriteIds] = await Promise.all([
-    getPasswordListApi(session.serverOrigin, session.token, unlock, {
-      page: 1,
-      pageSize: keyword ? KEYWORD_PAGE_SIZE : 500,
-      passwordType: '登录信息',
-      keyword: keyword || undefined
-    }),
-    getFavoriteIdsApi(session.serverOrigin, session.token).catch(() => [] as number[])
-  ])
-
-  const result = url
-    ? buildMatchingCredentialsResult(page.list, url, matchBy)
-    : {
-        credentials: page.list
-          .map(toFillCredential)
-          .filter((item): item is FillCredential => item !== null),
-        needsSecurityKey: false
-      }
-
-  result.credentials = applyFavoriteState(result.credentials, favoriteIds)
-
-  credentialsCache.set(cacheKey, { result, timestamp: now })
-  return result
+  try {
+    const result = url
+      ? await getMatchingCredentialsApi(url, matchBy)
+      : await getMatchingCredentialsApi('', matchBy)
+    const merged: MatchingCredentialsResult = { ...result, desktopUnlocked: true, ...appearance }
+    credentialsCache.set(cacheKey, { result: merged, timestamp: now })
+    return merged
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('桌面端')) {
+      cachedHealth = null
+    }
+    throw err
+  }
 }
 
 async function updateBadgeForTab(tabId: number, url?: string, force = false): Promise<void> {
@@ -104,20 +121,23 @@ async function updateBadgeForTab(tabId: number, url?: string, force = false): Pr
     return
   }
 
-  const session = await getActiveSession()
-  if (!session) {
+  const state = await getDesktopState(force)
+  if (!state?.unlocked) {
     await chrome.action.setBadgeText({ tabId, text: '' })
     return
   }
 
-  const { credentials } = await refreshMatchingCredentials(url, force)
-  const count = credentials.length
-  await chrome.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' })
-  await chrome.action.setBadgeBackgroundColor({ tabId, color: '#5a7348' })
+  try {
+    const { credentials } = await refreshMatchingCredentials(url, force)
+    const count = credentials.length
+    await chrome.action.setBadgeText({ tabId, text: count > 0 ? String(count) : '' })
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: '#5a7348' })
+  } catch {
+    await chrome.action.setBadgeText({ tabId, text: '' })
+  }
 }
 
 async function resolveFillCredential(
-  session: ExtensionSession,
   credentialId: number,
   pageUrl?: string
 ): Promise<FillCredential> {
@@ -127,23 +147,11 @@ async function resolveFillCredential(
     if (matched) return matched
   }
 
-  const unlock = getVaultUnlockFromSession(session)
-  const entry = await getPasswordDetailApi(
-    session.serverOrigin,
-    session.token,
-    unlock,
-    credentialId
-  )
-  const credential = toFillCredential(entry)
-  if (!credential) {
-    throw new Error('无法读取该登录项，请先配置正确的安全密钥')
-  }
-  return credential
+  return getCredentialApi(credentialId)
 }
 
 async function handleAutofill(payload: AutofillPayload): Promise<void> {
-  const session = await getActiveSession()
-  if (!session) throw new Error('请先登录')
+  await assertDesktopUnlocked()
 
   const tabId = payload.tabId
   if (!tabId) throw new Error('无法定位当前标签页')
@@ -160,7 +168,7 @@ async function handleAutofill(payload: AutofillPayload): Promise<void> {
     throw new Error('当前页面不支持自动填充，请在网站登录页使用')
   }
 
-  const credential = await resolveFillCredential(session, payload.credentialId, pageUrl)
+  const credential = await resolveFillCredential(payload.credentialId, pageUrl)
 
   let filled = false
   try {
@@ -179,17 +187,8 @@ async function handleAutofill(payload: AutofillPayload): Promise<void> {
 }
 
 async function handleCreateCredential(payload: UpsertCredentialPayload): Promise<void> {
-  const session = await getActiveSession()
-  if (!session) throw new Error('请先登录')
-
-  const unlock = getVaultUnlockFromSession(session)
-  const params = buildLoginEntryParams(
-    payload.title,
-    payload.username,
-    payload.password,
-    payload.websites
-  )
-  await createPasswordApi(session.serverOrigin, session.token, unlock, params)
+  await assertDesktopUnlocked()
+  await createCredentialApi(payload)
   clearCredentialsCache()
   await updateBadgeForActiveTab()
 }
@@ -204,34 +203,8 @@ async function handleSaveCredential(payload: SaveCredentialPayload): Promise<voi
 }
 
 async function handleUpdateCredential(payload: UpdateCredentialPayload): Promise<void> {
-  const session = await getActiveSession()
-  if (!session) throw new Error('请先登录')
-
-  const unlock = getVaultUnlockFromSession(session)
-  const existing = await getPasswordDetailApi(
-    session.serverOrigin,
-    session.token,
-    unlock,
-    payload.credentialId
-  )
-  const content = existing.content as LoginContent
-  const params = buildLoginEntryParams(
-    payload.title,
-    payload.username,
-    payload.password,
-    payload.websites,
-    {
-      extraFields: content.extraFields ?? [],
-      remark: existing.remark ?? ''
-    }
-  )
-  await updatePasswordApi(
-    session.serverOrigin,
-    session.token,
-    unlock,
-    payload.credentialId,
-    params
-  )
+  await assertDesktopUnlocked()
+  await updateCredentialApi(payload)
   clearCredentialsCache()
   await updateBadgeForActiveTab()
 }
@@ -269,10 +242,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   if (info.menuItemId === 'bear-autofill' && tab.url) {
-    const { credentials } = await refreshMatchingCredentials(tab.url)
-    if (credentials.length === 1) {
-      await handleAutofill({ tabId: tab.id, credentialId: credentials[0].id })
-    } else if (credentials.length > 1) {
+    try {
+      const { credentials } = await refreshMatchingCredentials(tab.url)
+      if (credentials.length === 1) {
+        await handleAutofill({ tabId: tab.id, credentialId: credentials[0].id })
+      } else if (credentials.length > 1) {
+        await chrome.action.openPopup()
+      }
+    } catch {
       await chrome.action.openPopup()
     }
   }
@@ -302,82 +279,15 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
 
 async function handleMessage(message: ExtensionMessage): Promise<unknown> {
   switch (message.type) {
-    case 'GET_SESSION':
-      return loadSession()
+    case 'GET_DESKTOP_STATE':
+      return getDesktopState(true)
 
-    case 'SET_SESSION': {
-      const session = message.payload as ExtensionSession
-      await saveSession(session)
+    case 'REFRESH_DESKTOP_STATE': {
+      cachedHealth = null
       clearCredentialsCache()
+      const state = await getDesktopState(true)
       await updateBadgeForActiveTab()
-      return session
-    }
-
-    case 'SET_SECURITY_KEY': {
-      const session = await loadSession()
-      if (!session?.token) throw new Error('请先登录')
-      const payload = message.payload as { securityKey: string; masterPassword: string }
-      const securityKey = payload.securityKey.trim()
-      const masterPassword = payload.masterPassword.trim()
-      if (!securityKey) throw new Error('请输入安全密钥')
-      if (!masterPassword) throw new Error('请输入主密码')
-
-      const profile = await getCurrentUserApi(session.serverOrigin, session.token)
-      if (!profile.vaultSalt) {
-        throw new Error('服务端缺少保险库加密配置')
-      }
-
-      const vuk = await deriveVaultUnlockKey(masterPassword, securityKey, profile.vaultSalt)
-      const unlock = { vuk }
-      const validation = await validateVaultUnlockApi(
-        session.serverOrigin,
-        session.token,
-        unlock
-      )
-      if (!validation.verified) {
-        throw new Error(
-          `密钥或主密码错误，无法解密已加密条目（共 ${validation.encryptedTotal} 条）。请确认与桌面端设置一致`
-        )
-      }
-
-      const updated = { ...session, securityKey, vukBase64: toBase64(vuk) }
-      await saveSession(updated)
-      clearCredentialsCache()
-      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
-      const { credentials } = activeTab?.url
-        ? await refreshMatchingCredentials(activeTab.url, true)
-        : await refreshMatchingCredentials(undefined, true)
-      await updateBadgeForActiveTab()
-      return {
-        session: updated,
-        usableCount: credentials.length,
-        encryptedTotal: validation.encryptedTotal
-      }
-    }
-
-    case 'CLEAR_SECURITY_KEY': {
-      const session = await loadSession()
-      if (!session?.token) return null
-      const updated = { ...session, securityKey: null, vukBase64: null }
-      await saveSession(updated)
-      clearCredentialsCache()
-      await updateBadgeForActiveTab()
-      return updated
-    }
-
-    case 'LOGOUT': {
-      const session = await loadSession()
-      if (session?.token) {
-        try {
-          await logoutApi(session.serverOrigin, session.token)
-        } catch {
-          // 忽略登出失败
-        }
-      }
-      await clearSession()
-      clearCredentialsCache()
-      await updateBadgeForActiveTab()
-      return null
+      return state
     }
 
     case 'GET_MATCHING_CREDENTIALS': {
@@ -410,23 +320,17 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
       return true
 
     case 'TOGGLE_FAVORITE': {
-      const session = await getActiveSession()
-      if (!session?.token) throw new Error('请先登录')
+      await assertDesktopUnlocked()
       const { credentialId, favorite } = message.payload as { credentialId: number; favorite: boolean }
-      if (favorite) {
-        await removeFavoriteApi(session.serverOrigin, session.token, credentialId)
-      } else {
-        await addFavoriteApi(session.serverOrigin, session.token, credentialId)
-      }
+      await toggleFavoriteApi(credentialId, favorite)
       clearCredentialsCache()
       return true
     }
 
     case 'DELETE_CREDENTIAL': {
-      const session = await getActiveSession()
-      if (!session?.token) throw new Error('请先登录')
+      await assertDesktopUnlocked()
       const { credentialId } = message.payload as { credentialId: number }
-      await deletePasswordApi(session.serverOrigin, session.token, credentialId)
+      await deleteCredentialApi(credentialId)
       clearCredentialsCache()
       await updateBadgeForActiveTab()
       return true
@@ -434,6 +338,10 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
 
     case 'UPDATE_BADGE':
       await updateBadgeForActiveTab()
+      return true
+
+    case 'WAKE_DESKTOP':
+      await wakeDesktopApi()
       return true
 
     case 'GENERATE_PASSWORD':

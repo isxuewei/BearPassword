@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { resolveAppearanceFromDesktop } from '@/shared/appearance/desktopAppearance'
+import type { DesktopConnectionState } from '@/shared/types'
 import {
-  initThemeOnBoot,
   DEFAULT_THEME_PREFERENCE,
   resolveTheme,
-  setThemePreference,
+  applyResolvedTheme,
   subscribeSystemThemeChange,
   type ThemePreference,
   type ResolvedTheme
@@ -16,25 +17,34 @@ export const useThemeStore = defineStore('theme', () => {
 
   const resolvedTheme = computed<ResolvedTheme>(() => resolveTheme(preference.value))
 
+  function applyPreference(value: ThemePreference): void {
+    preference.value = value
+    applyResolvedTheme(resolveTheme(value))
+  }
+
   async function init(): Promise<void> {
-    preference.value = await initThemeOnBoot()
+    applyPreference(DEFAULT_THEME_PREFERENCE)
     unsubscribeSystem?.()
     unsubscribeSystem = subscribeSystemThemeChange(() => {
       if (preference.value === 'system') {
-        void setThemePreference('system')
+        applyResolvedTheme(resolveTheme('system'))
       }
     })
   }
 
-  async function updatePreference(value: ThemePreference): Promise<void> {
-    preference.value = value
-    await setThemePreference(value)
+  function syncFromDesktop(state: DesktopConnectionState | null): void {
+    const { theme } = resolveAppearanceFromDesktop(state)
+    if (theme !== preference.value) {
+      applyPreference(theme)
+    } else if (theme === 'system') {
+      applyResolvedTheme(resolveTheme('system'))
+    }
   }
 
   return {
     preference,
     resolvedTheme,
     init,
-    updatePreference
+    syncFromDesktop
   }
 })

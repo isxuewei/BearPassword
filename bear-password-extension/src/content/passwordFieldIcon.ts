@@ -146,10 +146,7 @@ export function positionAllIcons(): void {
 }
 
 export function refreshPasswordFieldIconStyles(): void {
-  const style = document.getElementById(STYLE_ID) as HTMLStyleElement | null
-  if (style) {
-    style.textContent = passwordFieldIconStyles(getContentThemeTokens())
-  }
+  ensureStyles()
   positionAllIcons()
 }
 

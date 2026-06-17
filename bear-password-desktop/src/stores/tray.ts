@@ -8,7 +8,7 @@ import type { TrayClickAction, TraySettings } from '@/types/tray'
 export const useTrayStore = defineStore('tray', () => {
   const available = ref(false)
   const enabled = ref(true)
-  const clickAction = ref<TrayClickAction>('open')
+  const clickAction = ref<TrayClickAction>('vault')
   const loading = ref(false)
   /** 递增后通知密码库页聚焦搜索框 */
   const quickSearchFocusToken = ref(0)

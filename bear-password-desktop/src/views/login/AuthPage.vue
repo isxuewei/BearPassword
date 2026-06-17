@@ -11,6 +11,7 @@
         :class="{ 'auth-layout__card--kit': registerKitStep && !isLogin }"
       >
         <button
+          v-if="canConfigureServer"
           type="button"
           class="auth-layout__settings-btn"
           :aria-label="t('settings.serverDialogTitle')"
@@ -27,7 +28,7 @@
       </div>
     </div>
 
-    <ServerSettingsDialog v-model="showServerSettings" />
+    <ServerSettingsDialog v-if="canConfigureServer" v-model="showServerSettings" />
   </div>
 </template>
 
@@ -40,11 +41,13 @@ import TitleBar from '@/components/window/TitleBar.vue'
 import ServerSettingsDialog from '@/components/common/ServerSettingsDialog.vue'
 import LoginForm from '@/views/login/LoginForm.vue'
 import RegisterForm from '@/views/login/RegisterForm.vue'
+import { canConfigureServerOrigin } from '@/utils/serverUrl'
 
 const { t } = useI18n()
 const route = useRoute()
 const showServerSettings = ref(false)
 const registerKitStep = ref(false)
+const canConfigureServer = canConfigureServerOrigin()
 
 const isLogin = computed(() => route.name === 'Login')
 </script>

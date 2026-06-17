@@ -1,198 +1,93 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { loginApi, completeTotpLoginApi } from '@/shared/api/srpAuth'
 import {
-  type ExtensionSession,
+  type DesktopConnectionState,
   type FillCredential,
-  type LoginFlowResult,
-  type LoginResult,
-  type MatchingCredentialsResult,
-  type SecurityKeyApplyResult
+  type MatchingCredentialsResult
 } from '@/shared/types'
-import { loadServerOrigin, saveServerOrigin } from '@/shared/storage/session'
 import { sendMessage } from '@/shared/utils/messaging'
-import { probeServerOrigin } from '@/shared/utils/serverUrl'
 import { t } from '@/popup/i18n'
+import { useLocaleStore } from '@/popup/stores/locale'
+import { useThemeStore } from '@/popup/stores/theme'
 
 export const useSessionStore = defineStore('session', () => {
-  const session = ref<ExtensionSession | null>(null)
-  const serverOrigin = ref('')
+  const desktopState = ref<DesktopConnectionState | null>(null)
   const loading = ref(false)
   const error = ref('')
 
-  const isLoggedIn = computed(() => !!session.value?.token)
-  const username = computed(() => session.value?.username ?? '')
-  const hasSecurityKey = computed(() => !!session.value?.vukBase64)
-  const securityKey = computed(() => session.value?.securityKey ?? '')
-  const success = ref('')
+  const isReady = computed(() => desktopState.value?.unlocked === true)
+  const isLoggedIn = isReady
+  const username = computed(() => desktopState.value?.username ?? '')
+  const desktopStatus = computed(() => {
+    const state = desktopState.value
+    if (!state?.ready) return 'offline' as const
+    if (!state.loggedIn) return 'notLoggedIn' as const
+    if (state.locked || !state.unlocked) return 'locked' as const
+    return 'ready' as const
+  })
 
   function clearFeedback(): void {
     error.value = ''
-    success.value = ''
+  }
+
+  function syncAppearance(state: DesktopConnectionState | null): void {
+    useThemeStore().syncFromDesktop(state)
+    useLocaleStore().syncFromDesktop(state)
+  }
+
+  async function refreshDesktopState(silent = false): Promise<void> {
+    if (!silent) loading.value = true
+    error.value = ''
+    try {
+      desktopState.value = await sendMessage<DesktopConnectionState>({
+        type: 'GET_DESKTOP_STATE'
+      })
+    } catch (err) {
+      desktopState.value = {
+        ready: false,
+        loggedIn: false,
+        locked: false,
+        unlocked: false,
+        username: null,
+        themePreference: null,
+        localePreference: null
+      }
+      if (!silent) {
+        error.value = err instanceof Error ? err.message : t('session.desktopFailed')
+      }
+    } finally {
+      syncAppearance(desktopState.value)
+      if (!silent) loading.value = false
+    }
   }
 
   async function init(): Promise<void> {
-    serverOrigin.value = await loadServerOrigin()
-    await refreshSession()
+    await refreshDesktopState()
   }
 
-  async function refreshSession(): Promise<void> {
-    session.value = await sendMessage<ExtensionSession | null>({ type: 'GET_SESSION' })
-  }
-
-  async function login(usernameInput: string, password: string): Promise<LoginFlowResult | void> {
-    loading.value = true
+  async function wakeDesktop(): Promise<void> {
     error.value = ''
     try {
-      const origin = serverOrigin.value || (await loadServerOrigin())
-      await probeServerOrigin(origin)
-      serverOrigin.value = origin
-
-      const result = await loginApi(origin, { username: usernameInput, password })
-      if ('mfaRequired' in result && result.mfaRequired) {
-        return result
-      }
-
-      const { token, username, avatar } = result as LoginResult
-      const newSession: ExtensionSession = {
-        token,
-        username,
-        avatar,
-        serverOrigin: origin,
-        securityKey: null,
-        vukBase64: null
-      }
-      session.value = await sendMessage<ExtensionSession>({
-        type: 'SET_SESSION',
-        payload: newSession
-      })
+      await sendMessage({ type: 'WAKE_DESKTOP' })
+      await new Promise((resolve) => setTimeout(resolve, 1200))
+      await refreshDesktopState(true)
     } catch (err) {
-      error.value = err instanceof Error ? err.message : t('session.loginFailed')
+      error.value = err instanceof Error ? err.message : t('session.wakeDesktopFailed')
       throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function completeMfaTotp(mfaToken: string, code: string): Promise<void> {
-    loading.value = true
-    error.value = ''
-    try {
-      const origin = serverOrigin.value || (await loadServerOrigin())
-      const result = await completeTotpLoginApi(origin, mfaToken, code.trim())
-      const newSession: ExtensionSession = {
-        token: result.token,
-        username: result.username,
-        avatar: result.avatar,
-        serverOrigin: origin,
-        securityKey: null,
-        vukBase64: null
-      }
-      session.value = await sendMessage<ExtensionSession>({
-        type: 'SET_SESSION',
-        payload: newSession
-      })
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : t('session.loginFailed')
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  function formatSecurityKeySuccess(usableCount: number, encryptedTotal: number): string {
-    if (encryptedTotal > 0) {
-      return t('session.securityKeySuccessEncrypted', {
-        usable: usableCount,
-        encrypted: encryptedTotal
-      })
-    }
-    return t('session.securityKeySuccess', { count: usableCount })
-  }
-
-  async function logout(): Promise<void> {
-    await sendMessage({ type: 'LOGOUT' })
-    session.value = null
-    error.value = ''
-    success.value = ''
-  }
-
-  async function updateServer(input: string): Promise<void> {
-    loading.value = true
-    error.value = ''
-    success.value = ''
-    try {
-      const origin = await probeServerOrigin(input)
-      await saveServerOrigin(origin)
-      serverOrigin.value = origin
-      if (session.value?.token) {
-        session.value = await sendMessage<ExtensionSession>({
-          type: 'SET_SESSION',
-          payload: { ...session.value, serverOrigin: origin }
-        })
-      }
-      success.value = t('session.serverUpdated')
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : t('session.serverFailed')
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function applySecurityKey(securityKey: string, masterPassword: string): Promise<void> {
-    loading.value = true
-    error.value = ''
-    success.value = ''
-    try {
-      const result = await sendMessage<SecurityKeyApplyResult>({
-        type: 'SET_SECURITY_KEY',
-        payload: { securityKey, masterPassword }
-      })
-      session.value = result.session
-      success.value = formatSecurityKeySuccess(result.usableCount, result.encryptedTotal)
-      await sendMessage({ type: 'UPDATE_BADGE' })
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : t('session.securityKeyInvalid')
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function clearSecurityKey(): Promise<void> {
-    loading.value = true
-    error.value = ''
-    success.value = ''
-    try {
-      session.value = await sendMessage<ExtensionSession | null>({ type: 'CLEAR_SECURITY_KEY' })
-      success.value = t('session.securityKeyCleared')
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : t('session.operationFailed')
-      throw err
-    } finally {
-      loading.value = false
     }
   }
 
   return {
-    session,
-    serverOrigin,
+    desktopState,
     loading,
     error,
-    success,
+    isReady,
     isLoggedIn,
-    hasSecurityKey,
-    securityKey,
     username,
+    desktopStatus,
     init,
-    refreshSession,
-    login,
-    completeMfaTotp,
-    logout,
-    updateServer,
-    applySecurityKey,
-    clearSecurityKey,
+    refreshDesktopState,
+    wakeDesktop,
     clearFeedback
   }
 })

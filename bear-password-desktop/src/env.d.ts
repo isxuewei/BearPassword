@@ -1,5 +1,13 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  readonly VITE_SERVER_URL?: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
 /** Vue 单文件组件类型声明 */
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'
@@ -72,6 +80,9 @@ type TrayRendererCommand =
   | { action: 'lock' }
   | { action: 'settings' }
   | { action: 'quick-search' }
+  | { action: 'vault' }
+  | { action: 'favorites' }
+  | { action: 'recent' }
   | { action: 'set-theme'; value: string }
   | { action: 'set-locale'; value: string }
   | { action: 'set-font'; value: string }
@@ -88,7 +99,7 @@ interface TrayApi {
   onCommand: (callback: (command: TrayRendererCommand) => void) => () => void
 }
 
-type TrayClickAction = 'open' | 'quick-search'
+type TrayClickAction = 'vault' | 'favorites' | 'recent' | 'settings'
 
 interface DockSettingsState {
   available: boolean
@@ -141,6 +152,13 @@ interface BiometricApi {
   >
 }
 
+interface ExtensionBridgeApi {
+  onRequest: (
+    callback: (payload: { id: string; method: string; params: unknown }) => void
+  ) => () => void
+  sendResponse: (id: string, result: { ok: boolean; data?: unknown; error?: string }) => void
+}
+
 declare global {
   interface Window {
     windowApi?: WindowApi
@@ -153,6 +171,7 @@ declare global {
     secureStorageApi?: SecureStorageApi
     vaultPasswordApi?: VaultPasswordApi
     biometricApi?: BiometricApi
+    extensionBridgeApi?: ExtensionBridgeApi
   }
 }
 

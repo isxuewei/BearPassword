@@ -19,7 +19,9 @@ const TRAY_ICON_SIZE = process.platform === 'win32' ? 16 : 22
 
 export interface TrayActionHandlers {
   onOpen: () => void
-  onQuickSearch: () => void
+  onVault: () => void
+  onFavorites: () => void
+  onRecent: () => void
   onLock: () => void
   onSettings: () => void
   onSetTheme: (value: TrayThemeValue) => void
@@ -67,11 +69,20 @@ function buildTrayImage(getIconBaseDir: () => string): Electron.NativeImage | nu
 }
 
 function handleTrayClick(action: TrayClickAction, handlers: TrayActionHandlers): void {
-  if (action === 'quick-search') {
-    handlers.onQuickSearch()
-    return
+  switch (action) {
+    case 'favorites':
+      handlers.onFavorites()
+      return
+    case 'recent':
+      handlers.onRecent()
+      return
+    case 'settings':
+      handlers.onSettings()
+      return
+    case 'vault':
+    default:
+      handlers.onVault()
   }
-  handlers.onOpen()
 }
 
 function buildTrayContextMenu(

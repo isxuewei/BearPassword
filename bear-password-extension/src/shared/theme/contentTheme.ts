@@ -1,5 +1,6 @@
+import { resolveAppearanceFromDesktop } from '@/shared/appearance/desktopAppearance'
+import { getDesktopHealthApi } from '@/shared/api/desktopBridge'
 import { getThemeTokens, type ThemeTokens } from '@/shared/theme/presets'
-import { loadThemePreference } from '@/shared/storage/theme'
 import {
   DEFAULT_THEME_PREFERENCE,
   normalizeThemePreference,
@@ -18,6 +19,12 @@ export function applyContentThemePreference(preference: ThemePreference): void {
 }
 
 export async function initContentTheme(): Promise<void> {
-  const preference = await loadThemePreference()
-  applyContentThemePreference(preference)
+  try {
+    const health = await getDesktopHealthApi()
+    const { theme } = resolveAppearanceFromDesktop(health)
+    applyContentThemePreference(theme)
+    return
+  } catch {
+    applyContentThemePreference(DEFAULT_THEME_PREFERENCE)
+  }
 }

@@ -1,13 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { applyResolvedLocale } from '@/shared/locale/locale'
-import {
-  initLocaleOnBoot,
-  DEFAULT_LOCALE_PREFERENCE,
-  resolveLocale,
-  setLocalePreference,
-  subscribeSystemLocaleChange
-} from '@/shared/locale/localePreference'
+import { resolveAppearanceFromDesktop } from '@/shared/appearance/desktopAppearance'
+import type { DesktopConnectionState } from '@/shared/types'
+import { applyResolvedLocale, resolveLocale, subscribeSystemLocaleChange } from '@/shared/locale/locale'
+import { DEFAULT_LOCALE_PREFERENCE } from '@/shared/locale/localePreference'
 import type { LocalePreference, ResolvedLocale } from '@/locales/types'
 
 export const useLocaleStore = defineStore('locale', () => {
@@ -16,9 +12,13 @@ export const useLocaleStore = defineStore('locale', () => {
 
   const resolvedLocale = computed<ResolvedLocale>(() => resolveLocale(preference.value))
 
+  function applyPreference(value: LocalePreference): void {
+    preference.value = value
+    applyResolvedLocale(resolveLocale(value))
+  }
 
   async function init(): Promise<void> {
-    preference.value = await initLocaleOnBoot()
+    applyPreference(DEFAULT_LOCALE_PREFERENCE)
     unsubscribeSystem?.()
     unsubscribeSystem = subscribeSystemLocaleChange(() => {
       if (preference.value === 'system') {
@@ -27,15 +27,19 @@ export const useLocaleStore = defineStore('locale', () => {
     })
   }
 
-  async function updatePreference(value: LocalePreference): Promise<void> {
-    preference.value = value
-    await setLocalePreference(value)
+  function syncFromDesktop(state: DesktopConnectionState | null): void {
+    const { locale } = resolveAppearanceFromDesktop(state)
+    if (locale !== preference.value) {
+      applyPreference(locale)
+    } else if (locale === 'system') {
+      applyResolvedLocale(resolveLocale('system'))
+    }
   }
 
   return {
     preference,
     resolvedLocale,
     init,
-    updatePreference
+    syncFromDesktop
   }
 })

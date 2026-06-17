@@ -22,14 +22,15 @@
         </div>
       </template>
       <template v-else>
-        <el-input
-          v-model="disableTotpCode"
-          :placeholder="t('settings.mfaTotpDisablePlaceholder')"
-          size="large"
-          class="mfa-settings__input"
-          maxlength="6"
-        />
-        <div class="mfa-settings__actions">
+        <div class="mfa-settings__disable-row">
+          <el-input
+            v-model="disableTotpCode"
+            :placeholder="t('settings.mfaTotpDisablePlaceholder')"
+            size="large"
+            class="mfa-settings__input"
+            maxlength="6"
+            @keyup.enter="handleDisableTotp"
+          />
           <el-button size="large" :loading="disableTotpLoading" @click="handleDisableTotp">
             {{ t('settings.mfaTotpDisable') }}
           </el-button>
@@ -155,6 +156,10 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .mfa-settings {
+  padding-bottom: $spacing-md;
+  margin-bottom: $spacing-sm;
+  border-bottom: 1px solid $color-border;
+
   &__row {
     @include flex-between;
     align-items: flex-start;
@@ -201,8 +206,20 @@ onMounted(() => {
     gap: $spacing-md;
   }
 
-  &__input {
+  &__disable-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
     width: 100%;
+
+    .el-button {
+      flex-shrink: 0;
+    }
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
   }
 
   &__actions {

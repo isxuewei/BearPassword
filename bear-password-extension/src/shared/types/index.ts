@@ -112,29 +112,24 @@ export interface FillCredential {
   favorite?: boolean
 }
 
-/** 扩展会话状态 */
-export interface ExtensionSession {
-  token: string
-  username: string
-  avatar?: string
-  serverOrigin: string
-  securityKey: string | null
-  vukBase64: string | null
+/** 桌面端连接状态（扩展通过本地桥接 127.0.0.1:6892 获取） */
+export interface DesktopConnectionState {
+  ready: boolean
+  loggedIn: boolean
+  unlocked: boolean
+  locked: boolean
+  username: string | null
+  themePreference: string | null
+  localePreference: string | null
 }
 
-export interface SecurityKeyApplyResult {
-  session: ExtensionSession
-  usableCount: number
-  encryptedTotal: number
-}
+/** @deprecated 扩展不再独立登录，保留类型别名便于迁移 */
+export type ExtensionSession = DesktopConnectionState
 
 /** 消息协议 */
 export type MessageType =
-  | 'GET_SESSION'
-  | 'SET_SESSION'
-  | 'SET_SECURITY_KEY'
-  | 'CLEAR_SECURITY_KEY'
-  | 'LOGOUT'
+  | 'GET_DESKTOP_STATE'
+  | 'REFRESH_DESKTOP_STATE'
   | 'GET_MATCHING_CREDENTIALS'
   | 'GET_ALL_LOGIN_CREDENTIALS'
   | 'AUTOFILL'
@@ -145,6 +140,7 @@ export type MessageType =
   | 'DELETE_CREDENTIAL'
   | 'UPDATE_BADGE'
   | 'GENERATE_PASSWORD'
+  | 'WAKE_DESKTOP'
 
 export interface ExtensionMessage<T = unknown> {
   type: MessageType
@@ -187,4 +183,10 @@ export interface MatchingCredentialsPayload {
 export interface MatchingCredentialsResult {
   credentials: FillCredential[]
   needsSecurityKey: boolean
+  /** 桌面端是否已连接且保险库已解锁 */
+  desktopUnlocked: boolean
+  /** 桌面端桥接是否可用（用于 content 同步主题/语言） */
+  desktopReady?: boolean
+  themePreference?: string | null
+  localePreference?: string | null
 }

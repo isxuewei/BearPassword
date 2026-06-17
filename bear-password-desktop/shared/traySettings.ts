@@ -1,5 +1,5 @@
 /** 状态栏图标点击行为 */
-export type TrayClickAction = 'open' | 'quick-search'
+export type TrayClickAction = 'vault' | 'favorites' | 'recent' | 'settings'
 
 /** 状态栏图标配置 */
 export interface TraySettings {
@@ -9,17 +9,29 @@ export interface TraySettings {
 
 export const DEFAULT_TRAY_SETTINGS: TraySettings = {
   enabled: true,
-  clickAction: 'open'
+  clickAction: 'vault'
 }
 
-export const TRAY_CLICK_ACTIONS: TrayClickAction[] = ['open', 'quick-search']
+export const TRAY_CLICK_ACTIONS: TrayClickAction[] = ['vault', 'favorites', 'recent', 'settings']
+
+const LEGACY_TRAY_CLICK_ACTIONS: Record<string, TrayClickAction> = {
+  open: 'vault',
+  'quick-search': 'vault'
+}
+
+export function normalizeTrayClickAction(raw: unknown): TrayClickAction {
+  if (typeof raw === 'string' && LEGACY_TRAY_CLICK_ACTIONS[raw]) {
+    return LEGACY_TRAY_CLICK_ACTIONS[raw]
+  }
+  if (TRAY_CLICK_ACTIONS.includes(raw as TrayClickAction)) {
+    return raw as TrayClickAction
+  }
+  return DEFAULT_TRAY_SETTINGS.clickAction
+}
 
 export function normalizeTraySettings(raw: Partial<TraySettings> | null | undefined): TraySettings {
-  const clickAction = raw?.clickAction
   return {
     enabled: raw?.enabled !== false,
-    clickAction: TRAY_CLICK_ACTIONS.includes(clickAction as TrayClickAction)
-      ? (clickAction as TrayClickAction)
-      : DEFAULT_TRAY_SETTINGS.clickAction
+    clickAction: normalizeTrayClickAction(raw?.clickAction)
   }
 }

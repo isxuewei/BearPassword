@@ -24,19 +24,106 @@ import {
 } from '@/content/inlinePicker'
 import { showSaveBanner } from '@/content/inpageBanner'
 import { sendMessage } from '@/shared/utils/messaging'
+import { tContent } from '@/shared/locale/contentLocale'
 import {
-  applyContentLocalePreference,
-  initContentLocale,
-  tContent
-} from '@/shared/locale/contentLocale'
-import { applyContentThemePreference, initContentTheme } from '@/shared/theme/contentTheme'
+  initContentAppearance,
+  onContentAppearanceChange,
+  syncContentAppearanceFromDesktop,
+  syncContentAppearanceFromHealth
+} from '@/shared/appearance/syncContentAppearance'
 import { getBrowserTabTitle } from '@/shared/utils/tabTitle'
 import { getPageWebsiteUrl } from '@/shared/utils/websiteMatch'
 
 let matchingCredentials: FillCredential[] = []
 let needsSecurityKey = false
+let desktopUnlocked = false
 let savePromptShown = false
 const contextByInput = new WeakMap<HTMLInputElement, LoginFieldContext>()
+
+const DESKTOP_POLL_MS = 3000
+const APPEARANCE_SYNC_MS = 3000
+let desktopPollTimer: ReturnType<typeof setInterval> | null = null
+let appearanceSyncTimer: ReturnType<typeof setInterval> | null = null
+
+function refreshContentAppearanceUI(): void {
+  refreshInlinePickerStyles()
+  refreshPasswordFieldIconStyles()
+  void syncOpenPickerAfterRefresh()
+}
+
+function startAppearanceSync(): void {
+  if (appearanceSyncTimer) return
+  appearanceSyncTimer = setInterval(() => {
+    void syncContentAppearanceFromDesktop()
+  }, APPEARANCE_SYNC_MS)
+}
+
+function stopDesktopPoll(): void {
+  if (!desktopPollTimer) return
+  clearInterval(desktopPollTimer)
+  desktopPollTimer = null
+}
+
+async function syncOpenPickerAfterRefresh(): Promise<void> {
+  if (!isInlinePickerVisible()) return
+
+  const anchor = getInlinePickerAnchor()
+  if (!anchor) return
+
+  const context = contextByInput.get(anchor) ?? resolveLoginContext(anchor)
+  if (!context) return
+
+  if (!desktopUnlocked) {
+    updateInlinePicker([], {
+      emptyText: getDesktopNotReadyText(),
+      onSelect: () => {},
+      quickSave: null
+    })
+    return
+  }
+
+  const { list } = getPickerCredentials()
+  const pickerOptions = buildPickerOptions(context)
+  if (!hasPickerContent(context, list)) {
+    closeInlinePicker()
+    return
+  }
+  updateInlinePicker(list, pickerOptions)
+}
+
+async function pollDesktopConnection(): Promise<void> {
+  await syncContentAppearanceFromDesktop()
+  await refreshCredentials(true)
+  await syncOpenPickerAfterRefresh()
+
+  if (desktopUnlocked && !isInlinePickerVisible()) {
+    stopDesktopPoll()
+  }
+}
+
+function startDesktopPoll(): void {
+  if (desktopPollTimer) return
+  desktopPollTimer = setInterval(() => {
+    void pollDesktopConnection()
+  }, DESKTOP_POLL_MS)
+}
+
+function closeInlinePicker(): void {
+  hideInlinePicker()
+  stopDesktopPoll()
+}
+
+function syncAppearanceFromMatchResult(result: MatchingCredentialsResult): void {
+  syncContentAppearanceFromHealth({
+    ready: result.desktopReady ?? result.desktopUnlocked,
+    loggedIn: result.desktopUnlocked,
+    locked: !result.desktopUnlocked,
+    unlocked: result.desktopUnlocked,
+    username: null,
+    themePreference: result.themePreference ?? null,
+    localePreference: result.localePreference ?? null
+  })
+}
 
 async function refreshCredentials(force = false): Promise<void> {
   try {
@@ -46,10 +133,25 @@ async function refreshCredentials(force = false): Promise<void> {
     })
     matchingCredentials = result.credentials
     needsSecurityKey = result.needsSecurityKey
+    desktopUnlocked = result.desktopUnlocked
+    syncAppearanceFromMatchResult(result)
   } catch {
     matchingCredentials = []
     needsSecurityKey = false
+    desktopUnlocked = false
   }
+}
+
+async function wakeDesktopFromPage(): Promise<void> {
+  try {
+    await sendMessage({ type: 'WAKE_DESKTOP' })
+  } catch {
+    // 忽略唤起失败，picker 仍会提示用户
+  }
+}
+
+function getDesktopNotReadyText(): string {
+  return tContent('content.picker.desktopNotReady')
 }
 
 let currentPageUrl = window.location.href
@@ -60,7 +162,7 @@ function onPageNavigation(): void {
 
   currentPageUrl = nextUrl
   savePromptShown = false
-  hideInlinePicker()
+  closeInlinePicker()
   void refreshCredentials(true)
 }
 
@@ -162,15 +264,30 @@ function buildPickerOptions(context: LoginFieldContext) {
 }
 
 function hasPickerContent(context: LoginFieldContext, list: FillCredential[]): boolean {
+  if (!desktopUnlocked) return true
   if (list.length > 0) return true
   if (getQuickSaveOffer(context)) return true
   if (needsSecurityKey) return true
   return false
 }
 
+function showDesktopWakePicker(input: HTMLInputElement): void {
+  const { title } = getPickerCredentials()
+  showInlinePicker(input, [], {
+    title,
+    emptyText: getDesktopNotReadyText(),
+    onSelect: () => {},
+    quickSave: null
+  })
+  startDesktopPoll()
+}
+
 async function openPickerForInput(input: HTMLInputElement): Promise<void> {
   const context = resolveLoginContext(input)
   if (!context) return
+
+  await syncContentAppearanceFromDesktop(true)
+  refreshContentAppearanceUI()
 
   contextByInput.set(input, context)
 
@@ -178,10 +295,16 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
   if (isInlinePickerVisible() && anchor) {
     const anchorContext = contextByInput.get(anchor) ?? resolveLoginContext(anchor)
     if (anchorContext && isSameLoginContext(anchorContext, context)) {
+      await refreshCredentials()
+      if (!desktopUnlocked) {
+        void wakeDesktopFromPage()
+        showDesktopWakePicker(input)
+        return
+      }
       const { list } = getPickerCredentials()
       const pickerOptions = buildPickerOptions(context)
       if (!hasPickerContent(context, list)) {
-        hideInlinePicker()
+        closeInlinePicker()
         return
       }
       reanchorInlinePicker(input, list, pickerOptions)
@@ -191,14 +314,21 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
 
   await refreshCredentials()
 
+  if (!desktopUnlocked) {
+    void wakeDesktopFromPage()
+    showDesktopWakePicker(input)
+    return
+  }
+
   const { list, title } = getPickerCredentials()
   const pickerOptions = buildPickerOptions(context)
 
   if (!hasPickerContent(context, list)) {
-    hideInlinePicker()
+    closeInlinePicker()
     return
   }
 
+  stopDesktopPoll()
   showInlinePicker(input, list, {
     title,
     ...pickerOptions
@@ -209,7 +339,7 @@ function refreshOpenPicker(context: LoginFieldContext): void {
   const { list } = getPickerCredentials()
   const pickerOptions = buildPickerOptions(context)
   if (!hasPickerContent(context, list)) {
-    hideInlinePicker()
+    closeInlinePicker()
     return
   }
   updateInlinePicker(list, pickerOptions)
@@ -217,7 +347,7 @@ function refreshOpenPicker(context: LoginFieldContext): void {
 
 async function handlePasswordIconClick(passwordInput: HTMLInputElement): Promise<void> {
   if (isInlinePickerVisible() && getInlinePickerAnchor() === passwordInput) {
-    hideInlinePicker()
+    closeInlinePicker()
     return
   }
   await openPickerForInput(passwordInput)
@@ -248,7 +378,7 @@ function setupInputWatcher(input: HTMLInputElement): void {
       const picker = document.getElementById('bear-password-inline-picker')
       if (picker?.contains(active)) return
       if (shouldKeepPickerOnBlur(input)) return
-      hideInlinePicker()
+      closeInlinePicker()
     }, 150)
   })
 
@@ -339,24 +469,12 @@ chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, se
 })
 
 async function init(): Promise<void> {
-  await Promise.all([initContentTheme(), initContentLocale()])
+  await initContentAppearance()
+  onContentAppearanceChange(refreshContentAppearanceUI)
+  startAppearanceSync()
   setupPageNavigationWatcher()
   await refreshCredentials(true)
   setupFormWatchers()
-
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') return
-    if (changes.bear_extension_theme) {
-      applyContentThemePreference(changes.bear_extension_theme.newValue)
-      refreshInlinePickerStyles()
-      refreshPasswordFieldIconStyles()
-    }
-    if (changes.bear_extension_locale) {
-      applyContentLocalePreference(changes.bear_extension_locale.newValue)
-      refreshInlinePickerStyles()
-      refreshPasswordFieldIconStyles()
-    }
-  })
 
   const observer = new MutationObserver(() => {
     setupFormWatchers()

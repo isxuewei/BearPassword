@@ -76,11 +76,11 @@ const trayApi = {
     ipcRenderer.invoke('tray:get') as Promise<{
       available: boolean
       enabled: boolean
-      clickAction: 'open' | 'quick-search'
+      clickAction: 'vault' | 'favorites' | 'recent' | 'settings'
     }>,
   setSettings: (partial: {
     enabled?: boolean
-    clickAction?: 'open' | 'quick-search'
+    clickAction?: 'vault' | 'favorites' | 'recent' | 'settings'
   }) =>
     ipcRenderer.invoke('tray:set', partial) as Promise<
       | {
@@ -88,15 +88,15 @@ const trayApi = {
           settings: {
             available: boolean
             enabled: boolean
-            clickAction: 'open' | 'quick-search'
+            clickAction: 'vault' | 'favorites' | 'recent' | 'settings'
           }
         }
       | { ok: false; error: string }
     >,
   syncAppearance: (snapshot: unknown) =>
     ipcRenderer.invoke('tray:syncAppearance', snapshot) as Promise<{ ok: boolean }>,
-  onAction: (callback: (action: 'open' | 'quick-search') => void): (() => void) => {
-    const handler = (_event: unknown, action: 'open' | 'quick-search'): void => {
+  onAction: (callback: (action: 'vault' | 'favorites' | 'recent' | 'settings') => void): (() => void) => {
+    const handler = (_event: unknown, action: 'vault' | 'favorites' | 'recent' | 'settings'): void => {
       callback(action)
     }
     ipcRenderer.on('tray:action', handler)
@@ -170,3 +170,23 @@ const biometricApi = {
 }
 
 contextBridge.exposeInMainWorld('biometricApi', biometricApi)
+
+const extensionBridgeApi = {
+  onRequest: (
+    callback: (payload: { id: string; method: string; params: unknown }) => void
+  ): (() => void) => {
+    const handler = (
+      _event: unknown,
+      payload: { id: string; method: string; params: unknown }
+    ): void => {
+      callback(payload)
+    }
+    ipcRenderer.on('extension-bridge:request', handler)
+    return () => ipcRenderer.removeListener('extension-bridge:request', handler)
+  },
+  sendResponse: (id: string, result: { ok: boolean; data?: unknown; error?: string }): void => {
+    ipcRenderer.send('extension-bridge:response', id, result)
+  }
+}
+
+contextBridge.exposeInMainWorld('extensionBridgeApi', extensionBridgeApi)

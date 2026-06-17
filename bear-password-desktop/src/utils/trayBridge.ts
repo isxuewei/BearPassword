@@ -1,9 +1,27 @@
 import router from '@/router'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import { openVaultQuickSearch } from '@/utils/vaultQuickSearch'
 import type { TrayRendererCommand } from '../../shared/trayMenu'
+
+type TrayRouteName = 'Vault' | 'Favorites' | 'Recent' | 'Settings'
+
+async function navigateWhenReady(routeName: TrayRouteName): Promise<void> {
+  const authStore = useAuthStore()
+  if (!authStore.isLoggedIn) return
+
+  const autoLockStore = useAutoLockStore()
+  if (autoLockStore.isLocked) {
+    autoLockStore.requestLockPresentation()
+    return
+  }
+
+  if (router.currentRoute.value.name !== routeName) {
+    await router.push({ name: routeName })
+  }
+}
 
 async function handleTrayCommand(command: TrayRendererCommand): Promise<void> {
   const appStore = useAppStore()
@@ -14,14 +32,21 @@ async function handleTrayCommand(command: TrayRendererCommand): Promise<void> {
     case 'quick-search':
       await openVaultQuickSearch()
       break
+    case 'vault':
+      await navigateWhenReady('Vault')
+      break
+    case 'favorites':
+      await navigateWhenReady('Favorites')
+      break
+    case 'recent':
+      await navigateWhenReady('Recent')
+      break
     case 'lock':
       if (securityStore.isMigrating || autoLockStore.isLocked) return
       autoLockStore.lock()
       break
     case 'settings':
-      if (router.currentRoute.value.name !== 'Settings') {
-        await router.push({ name: 'Settings' })
-      }
+      await navigateWhenReady('Settings')
       break
     case 'set-theme':
       appStore.setThemePreference(command.value)
