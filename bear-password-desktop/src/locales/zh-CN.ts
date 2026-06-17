@@ -312,16 +312,16 @@ const messages: MessageDict = {
   'settings.clipboardClear': '剪贴板自动清除',
   'settings.clipboardClearDesc': '复制密码等敏感内容后按时长自动清除；应用锁定时立即清除',
   'settings.preferBiometricUnlock': '优先使用生物识别解锁',
-  'settings.preferBiometricUnlockDesc': '应用已锁定时，从常驻图标或快捷键唤起可先尝试生物识别，免输主密码',
-  'settings.preferBiometricUnlockDescTouchId': '应用已锁定时，从常驻图标或快捷键唤起可先尝试 Touch ID，免输主密码',
-  'settings.preferBiometricUnlockDescWindowsHello': '应用已锁定时，从常驻图标或快捷键唤起可先尝试 Windows Hello，免输主密码',
+  'settings.preferBiometricUnlockDesc': '锁定时从托盘或快捷键唤起，优先尝试生物识别',
+  'settings.preferBiometricUnlockDescTouchId': '锁定时从托盘或快捷键唤起，优先尝试 Touch ID',
+  'settings.preferBiometricUnlockDescWindowsHello': '锁定时从托盘或快捷键唤起，优先尝试 Windows Hello',
   'settings.biometricUnavailableNotSupported': '当前系统不支持生物识别解锁（仅 macOS Touch ID 与 Windows Hello）。',
   'settings.biometricUnavailableModuleFailed':
     '无法加载 Windows Hello 组件，请尝试重新安装应用；若仍失败，请使用主密码解锁。',
   'settings.biometricUnavailableNotConfigured':
     '请先在 Windows「设置 → 账户 → 登录选项」中配置 PIN 或 Windows Hello 指纹/人脸。',
   'settings.biometricUnavailableDeviceNotPresent':
-    '系统未检测到可用的 Windows Hello 认证设备；若本机有指纹模块，请确认驱动与登录选项中已启用。',
+    '未检测到 Windows Hello 设备，请检查驱动与系统登录选项',
   'settings.biometricUnavailableDisabledByPolicy': '生物识别验证已被系统或组织策略禁用，请联系管理员或改用主密码解锁。',
   'settings.biometricUnavailableDeviceBusy': '认证设备正忙，请稍后重试。',
   'settings.biometricUnavailableTouchId': '此 Mac 不支持或未启用 Touch ID，请在「系统设置 → 触控 ID 与密码」中检查。',

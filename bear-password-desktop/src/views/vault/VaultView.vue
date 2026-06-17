@@ -519,7 +519,8 @@ import {
   EditPen,
   Delete
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { appMessageBoxConfirm } from '@/utils/appMessageBox'
 import type { DropdownInstance, InputInstance } from 'element-plus'
 import PasswordEntryDialog from '@/components/vault/PasswordEntryDialog.vue'
 import PasswordImportDialog from '@/components/vault/PasswordImportDialog.vue'
@@ -950,7 +951,7 @@ async function handleBatchDelete(): Promise<void> {
   if (!ids.length) return
 
   try {
-    await ElMessageBox.confirm(
+    await appMessageBoxConfirm(
       t('vault.batch.deleteConfirm', { count: ids.length }),
       t('vault.batch.deleteConfirmTitle'),
       {
@@ -1335,7 +1336,7 @@ async function handleSubmit(data: PasswordEntryParams): Promise<void> {
 
 async function handleDelete(entry: PasswordEntry): Promise<void> {
   try {
-    await ElMessageBox.confirm(
+    await appMessageBoxConfirm(
       t('vault.msg.deleteConfirm', { title: getEntryTitle(entry) }),
       t('vault.msg.deleteConfirmTitle'),
       {

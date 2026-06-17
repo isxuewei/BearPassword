@@ -230,9 +230,10 @@ function initHeroEntrance() {
     { selector: '.hero__eyebrow', delay: 80 },
     { selector: '.hero__title', delay: 160 },
     { selector: '.hero__desc', delay: 260 },
-    { selector: '.hero__actions', delay: 360 },
-    { selector: '.hero__meta', delay: 460 },
-    { selector: '.hero__preview', delay: 320, float: true },
+    { selector: '.hero__badges', delay: 320 },
+    { selector: '.hero__actions', delay: 400 },
+    { selector: '.hero__meta', delay: 500 },
+    { selector: '.hero__preview', delay: 360, float: true },
   ]
 
   for (const item of sequence) {
@@ -249,9 +250,9 @@ function initReveal() {
     ...registerReveal('.section__header'),
     ...registerReveal('.feature-card', { variant: 'reveal--scale', stagger: 90 }),
     ...registerReveal('.product-card', { variant: 'reveal--scale', stagger: 120 }),
-    ...registerReveal('.security__content', { variant: 'reveal--left' }),
-    ...registerReveal('.security__visual', { variant: 'reveal--right', baseDelay: 120 }),
-    ...registerReveal('.security__steps li', { stagger: 100, baseDelay: 180 }),
+    ...registerReveal('.security-card', { variant: 'reveal--scale', stagger: 70 }),
+    ...registerReveal('.security-flow', { variant: 'reveal--left' }),
+    ...registerReveal('.security__steps li', { stagger: 100, baseDelay: 120 }),
     ...registerReveal('.download-cta__content'),
     ...registerReveal('.download-card', { variant: 'reveal--scale', stagger: 100 }),
     ...registerReveal('.extension-install', { baseDelay: 80 }),

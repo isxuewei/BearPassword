@@ -66,6 +66,11 @@ button {
   background: none;
 }
 
+/* Toast 始终显示在 Dialog / 设置浮层之上（ElMessage 命令式调用默认 z-index 偏低） */
+.el-message {
+  z-index: 6000 !important;
+}
+
 /* 设置弹窗打开时，确保 Element Plus 浮层显示在其上方 */
 body.settings-dialog-open {
   .el-overlay {
@@ -74,6 +79,13 @@ body.settings-dialog-open {
 
   .el-popper {
     z-index: 5200 !important;
+  }
+}
+
+/* MessageBox 确认框置于 Dialog / 设置浮层之上 */
+.is-message-box {
+  .el-overlay {
+    z-index: 6000 !important;
   }
 }
 

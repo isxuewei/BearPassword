@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="BearPassword — 简洁、安全、专业的密码管理工具。桌面端与浏览器扩展协同，客户端加密，自动填充，多端同步。" />
-  <meta name="keywords" content="BearPassword,密码管理,密码管理器,自动填充,桌面端,浏览器扩展" />
-  <title>BearPassword — 简洁、安全、专业的密码管理工具</title>
+  <meta name="description" content="BearPassword — 零知识密码管理器。SRP 登录密码不出设备，主密码与账户密钥双重加密保险库，支持 TOTP 二次验证、生物识别解锁与剪贴板自动清除。桌面端 + 浏览器扩展协同。" />
+  <meta name="keywords" content="BearPassword,密码管理,零知识,SRP,TOTP,客户端加密,自动填充,桌面端,浏览器扩展" />
+  <title>BearPassword — 零知识 · 专业密码管理工具</title>
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="https://gw.alipayobjects.com/os/k/jinkai/style.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -40,18 +40,26 @@
       </div>
       <div class="container hero__inner">
         <div class="hero__content">
-          <p class="hero__eyebrow">桌面端 + 浏览器扩展</p>
-          <h1 class="hero__title">你的密码，<br /><em>安心托付</em></h1>
+          <p class="hero__eyebrow">零知识架构 · 桌面端 + 浏览器扩展</p>
+          <h1 class="hero__title">你的密码，<br /><em>层层守护</em></h1>
           <p class="hero__desc">
-            BearPassword 是一款简洁、安全、专业的密码管理工具。
-            客户端加密保护你的保险库，桌面端与浏览器扩展无缝协同，登录网页只需一键。
+            BearPassword 采用 SRP 零知识登录与双密钥保险库加密——登录密码与主密码均不出设备，
+            服务端仅存密文。桌面端与扩展深度联动，填充前需桌面解锁，让自动填充既顺手又安心。
           </p>
+          <ul class="hero__badges" aria-label="产品亮点">
+            <li>SRP 零知识登录</li>
+            <li>双密钥加密</li>
+            <li>TOTP 二次验证</li>
+            <li>生物识别解锁</li>
+            <li>多种密码类型</li>
+            <li>浏览器自动填充</li>
+          </ul>
           <div class="hero__actions">
             <a class="btn btn--primary" id="hero-download" href="#download">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span id="hero-download-label">免费下载</span>
             </a>
-            <a class="btn btn--ghost" href="#features">了解功能</a>
+            <a class="btn btn--ghost" href="#security">安全架构</a>
           </div>
           <ul class="hero__meta">
             <li>
@@ -135,8 +143,8 @@
       <div class="container">
         <div class="section__header">
           <p class="section__eyebrow">核心功能</p>
-          <h2 class="section__title">为日常登录而设计</h2>
-          <p class="section__desc">从保存密码到网页填充，BearPassword 覆盖完整工作流，界面简洁、操作顺手。</p>
+          <h2 class="section__title">安全与效率，兼得</h2>
+          <p class="section__desc">从注册备份到网页填充，BearPassword 在每一环都考虑安全边界，同时保持界面简洁、操作顺手。</p>
         </div>
         <div class="features-grid">
           <article class="feature-card">
@@ -144,28 +152,35 @@
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
             <h3>密码库管理</h3>
-            <p>集中管理登录凭据、自定义条目，支持搜索、收藏与最近访问，快速找到所需账号。</p>
+            <p>集中管理登录凭据与多种条目类型，支持搜索、收藏与最近访问，快速找到所需账号。</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2v4m0 12v4M4.9 4.9l2.8 2.8m8.6 8.6l2.8 2.8M2 12h4m12 0h4M4.9 19.1l2.8-2.8m8.6-8.6l2.8-2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
             <h3>浏览器自动填充</h3>
-            <p>扩展在登录页检测表单，显示填充图标，一键填入用户名与密码，工具栏徽章提示可用条目。</p>
+            <p>扩展在登录页检测表单，一键填入用户名与密码；填充前需桌面端已解锁，避免扩展单独暴露明文。</p>
           </article>
-          <article class="feature-card">
+          <article class="feature-card feature-card--accent">
             <div class="feature-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
-            <h3>客户端加密</h3>
-            <p>保险库内容在本地用安全密钥加解密，服务端仅存密文，解锁后方可查看明文密码。</p>
+            <h3>SRP 零知识登录</h3>
+            <p>基于 SRP-6a 协议完成身份认证，登录密码在本地计算证明，从不上传至服务器，服务端仅存验证器。</p>
+          </article>
+          <article class="feature-card feature-card--accent">
+            <div class="feature-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>
+            </div>
+            <h3>双密钥保险库</h3>
+            <p>主密码与 128 位账户密钥共同派生解密密钥，缺一不可；账户密钥保存在本机钥匙串，注册时生成 Emergency Kit 备份。</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 11V8a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.5"/></svg>
             </div>
-            <h3>自动锁定</h3>
-            <p>闲置一段时间后自动锁定保险库，离开电脑时也能保护敏感数据，解锁需重新验证。</p>
+            <h3>自动锁定与内存清零</h3>
+            <p>闲置超时自动锁定，同时清除内存中的密钥与解密缓存；支持全局快捷键立即上锁，离开电脑也安心。</p>
           </article>
           <article class="feature-card">
             <div class="feature-card__icon">
@@ -173,13 +188,6 @@
             </div>
             <h3>保存新凭据</h3>
             <p>提交登录表单后，扩展会提示将新账号保存到保险库，减少重复录入与遗忘风险。</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-card__icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="19" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
-            </div>
-            <h3>丰富主题</h3>
-            <p>内置十余款浅色与深色主题，从清新海洋到典雅紫韵，随心切换界面风格。</p>
           </article>
         </div>
       </div>
@@ -189,8 +197,8 @@
       <div class="container">
         <div class="section__header">
           <p class="section__eyebrow">产品矩阵</p>
-          <h2 class="section__title">桌面与浏览器，数据同源</h2>
-          <p class="section__desc">桌面端管理保险库，浏览器扩展负责网页场景，共享同一账号与安全密钥。</p>
+          <h2 class="section__title">桌面与浏览器，安全联动</h2>
+          <p class="section__desc">桌面端是保险库的安全中枢，浏览器扩展负责网页场景；扩展通过本地桥接与桌面通信，仅在桌面已解锁时才提供填充与保存。</p>
         </div>
         <div class="products-grid">
           <article class="product-card product-card--desktop">
@@ -199,9 +207,9 @@
             <p>基于 Electron 的跨平台桌面应用，提供完整的保险库管理、仪表盘、设置与系统托盘体验。</p>
             <ul class="product-card__list">
               <li>macOS（Apple Silicon）与 Windows x64</li>
-              <li>自定义标题栏与全局快捷键</li>
-              <li>系统托盘快速访问</li>
-              <li>版本更新自动检测</li>
+              <li>Touch ID / Windows Hello 生物识别解锁</li>
+              <li>自动锁定、剪贴板定时清除与全局快捷键</li>
+              <li>Emergency Kit 账户密钥备份与恢复</li>
             </ul>
             <div class="product-card__actions">
               <a class="btn btn--primary btn--sm" id="download-mac" href="#download">下载 macOS</a>
@@ -211,12 +219,12 @@
           <article class="product-card product-card--extension">
             <div class="product-card__badge">浏览器扩展</div>
             <h3>BearPassword Extension</h3>
-            <p>Chrome 浏览器扩展，对接同一后端，在浏览网页时完成自动填充与凭据保存。</p>
+            <p>Chrome 浏览器扩展，对接同一后端；填充与保存依赖桌面端已解锁，未解锁时自动唤起桌面应用。</p>
             <ul class="product-card__list">
-              <li>Manifest V3，Vue 3 + TypeScript</li>
-              <li>网站匹配与工具栏徽章</li>
-              <li>右键菜单生成强密码</li>
-              <li>保险库弹窗搜索与复制</li>
+              <li>Manifest V3，桌面桥接安全通信</li>
+              <li>登录页表单检测与一键填充</li>
+              <li>自定义协议唤起桌面端解锁</li>
+              <li>右键菜单生成强密码、保险库搜索</li>
             </ul>
             <div class="product-card__actions">
               <a class="btn btn--primary btn--sm" id="download-extension" href="#extension-install">下载扩展</a>
@@ -228,53 +236,126 @@
     </section>
 
     <section class="section" id="security">
-      <div class="container security">
-        <div class="security__content">
+      <div class="container">
+        <div class="section__header">
           <p class="section__eyebrow">安全架构</p>
-          <h2 class="section__title">密码不出明文，<br />密钥握在你手中</h2>
-          <p class="section__desc">
-            BearPassword 采用「服务端存储密文 + 客户端安全密钥解密」模型。
-            即使数据经过网络传输，明文密码也只在本地解锁后出现。
-          </p>
-          <ol class="security__steps">
-            <li>
-              <span class="security__step-num">01</span>
-              <div>
-                <strong>注册与登录</strong>
-                <p>邮箱验证码注册，安全会话认证，账号体系可靠。</p>
-              </div>
-            </li>
-            <li>
-              <span class="security__step-num">02</span>
-              <div>
-                <strong>设置安全密钥</strong>
-                <p>本地生成或自定义安全密钥，作为保险库加解密的根凭据。</p>
-              </div>
-            </li>
-            <li>
-              <span class="security__step-num">03</span>
-              <div>
-                <strong>加密存储与同步</strong>
-                <p>条目内容加密后上传，桌面端与扩展共享同一保险库数据。</p>
-              </div>
-            </li>
-          </ol>
+          <h2 class="section__title">多层防护，密钥不出设备</h2>
+          <p class="section__desc">从账号登录到保险库解密，每一层都有独立的安全边界。即使服务端被攻破，攻击者也只能拿到无法解密的密文。</p>
         </div>
-        <div class="security__visual" aria-hidden="true">
-          <div class="security-diagram">
-            <div class="security-diagram__node security-diagram__node--client">
-              <span>你的设备</span>
-              <small>安全密钥 · 本地解密</small>
+
+        <div class="security-grid">
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/></svg>
             </div>
-            <div class="security-diagram__arrow">
-              <span>加密数据</span>
+            <h3>SRP 零知识登录</h3>
+            <p>采用 RFC 5054 SRP-6a（2048-bit + SHA-512），登录密码在本地完成挑战-响应，服务端仅存 Salt 与 Verifier。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M17.5 14v7M14 17.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
-            <div class="security-diagram__node security-diagram__node--server">
-              <span>云端服务</span>
-              <small>仅存储密文</small>
+            <h3>TOTP 二次验证</h3>
+            <p>支持绑定 Google Authenticator 等验证器，登录时在 SRP 认证之外还需输入 6 位动态码，防止密码泄露后的撞库风险。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.5"/></svg>
             </div>
-            <div class="security-diagram__shield">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" fill="currentColor" opacity=".15"/><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <h3>双密钥保险库加密</h3>
+            <p>主密码（仅本机）与账户密钥（钥匙串 + Emergency Kit）共同派生 Vault Unlock Key，二者缺一无法解密条目。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6M12 18v-6M9 15h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Emergency Kit 备份</h3>
+            <p>注册时生成含账户密钥的 Emergency Kit 文件，可下载并邮件备份；新设备登录时凭 Kit 完成本机保险库配置。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 11c1.66 0 3-1.34 3-3V5a3 3 0 00-6 0v3c0 1.66 1.34 3 3 3z" stroke="currentColor" stroke-width="1.5"/><path d="M6 11v1a6 6 0 0012 0v-1M12 18v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>生物识别快捷解锁</h3>
+            <p>macOS Touch ID 与 Windows Hello 可在应用锁定后快速解锁，生物信息不替代主密码，仅用于唤起已保存的解锁凭据。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 11V8a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.5"/><path d="M12 15v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>自动锁定与内存清零</h3>
+            <p>闲置超时或手动快捷键立即锁定，清除内存中的 VUK、解密缓存与剪贴板敏感内容，窗口自动隐藏。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3>剪贴板自动清除</h3>
+            <p>复制密码后按设定时长（30 秒至 2 分钟）自动清空剪贴板；应用锁定时立即清除，降低密码残留风险。</p>
+          </article>
+          <article class="security-card">
+            <div class="security-card__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 21h8M12 17v4M7 10h4M7 13h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>扩展依赖桌面解锁</h3>
+            <p>浏览器扩展通过本地桥接与桌面通信，仅在桌面已解锁时才提供填充；未解锁时通过自定义协议安全唤起桌面应用。</p>
+          </article>
+        </div>
+
+        <div class="security-flow">
+          <div class="security-flow__content">
+            <h3 class="security-flow__title">数据如何被保护？</h3>
+            <ol class="security__steps">
+              <li>
+                <span class="security__step-num">01</span>
+                <div>
+                  <strong>注册：建立零知识凭证</strong>
+                  <p>邮箱验证码注册，本地生成 SRP Verifier 与账户密钥；Emergency Kit 备份密钥，服务端仅存密文元数据。</p>
+                </div>
+              </li>
+              <li>
+                <span class="security__step-num">02</span>
+                <div>
+                  <strong>登录：密码不出设备</strong>
+                  <p>SRP 挑战-响应完成身份认证，可选 TOTP 二次验证；会话 Token 不含任何保险库解密密钥。</p>
+                </div>
+              </li>
+              <li>
+                <span class="security__step-num">03</span>
+                <div>
+                  <strong>解锁：双密钥本地解密</strong>
+                  <p>主密码 + 账户密钥在本机派生 VUK，解密保险库条目；明文仅在解锁后的内存中存在。</p>
+                </div>
+              </li>
+              <li>
+                <span class="security__step-num">04</span>
+                <div>
+                  <strong>使用：扩展联动与自动防护</strong>
+                  <p>扩展向已解锁的桌面请求凭据完成填充；闲置自动锁定、剪贴板清除，持续缩小明文暴露窗口。</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="security-flow__visual" aria-hidden="true">
+            <div class="security-diagram">
+              <div class="security-diagram__node security-diagram__node--client">
+                <span>你的设备</span>
+                <small>SRP 证明 · 主密码 · 账户密钥 · 本地解密</small>
+              </div>
+              <div class="security-diagram__arrow">
+                <span>仅传输密文</span>
+              </div>
+              <div class="security-diagram__node security-diagram__node--server">
+                <span>云端服务</span>
+                <small>SRP Verifier · 加密条目 · 零明文</small>
+              </div>
+              <div class="security-diagram__bridge">
+                <span>桌面 ↔ 扩展</span>
+                <small>本地桥接 · 需桌面解锁</small>
+              </div>
+              <div class="security-diagram__shield">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" fill="currentColor" opacity=".15"/><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4z" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
             </div>
           </div>
         </div>
@@ -285,7 +366,7 @@
       <div class="container download-cta">
         <div class="download-cta__content">
           <h2 class="section__title">立即开始使用</h2>
-          <p class="section__desc">选择你的平台，下载最新版本。安装后使用同一账号登录，即可在桌面端管理密码、在浏览器中自动填充。</p>
+          <p class="section__desc">选择你的平台，下载最新版本。注册时请妥善备份 Emergency Kit，安装扩展后需先在桌面端登录并解锁保险库。</p>
         </div>
         <div class="download-cta__cards">
           <a class="download-card" id="cta-download-mac" href="#" data-platform="mac">
@@ -323,11 +404,11 @@
             <li>在 Chrome 地址栏输入 <code>chrome://extensions</code> 并回车</li>
             <li>打开页面右上角的<strong>开发者模式</strong></li>
             <li>点击上方「浏览器插件」卡片下载，将文件<strong>直接拖入</strong>扩展管理页面</li>
-            <li>安装完成后，使用与桌面端相同的账号与安全密钥登录</li>
+            <li>安装完成后，使用与桌面端相同的账号登录；扩展填充需桌面端已解锁</li>
           </ol>
         </div>
 
-        <p class="download-cta__hint">服务器地址：<code>bear-password.xuewei.fun</code> · 桌面端与扩展共享账号数据</p>
+        <p class="download-cta__hint">服务器地址：<code>bear-password.xuewei.fun</code> · SRP 零知识登录 · 客户端加密 · 扩展需桌面解锁</p>
       </div>
     </section>
   </main>
@@ -338,7 +419,7 @@
         <img src="assets/icon.svg" alt="" width="40" height="40" />
         <div>
           <strong>BearPassword</strong>
-          <span>简洁、安全、专业的密码管理工具</span>
+          <span>零知识 · 简洁 · 专业的密码管理工具</span>
         </div>
       </div>
       <div class="site-footer__links">

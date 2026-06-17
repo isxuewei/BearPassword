@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import ElementPlus from 'element-plus'
+import ElementPlus, { ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
@@ -60,6 +60,7 @@ async function bootstrap(): Promise<void> {
   registerExtensionBridgeClient()
 
   app.mount('#app')
+  ElMessage._context = app._context
 }
 
 void bootstrap()

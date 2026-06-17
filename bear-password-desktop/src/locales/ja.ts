@@ -322,10 +322,10 @@ const messages: MessageDict = {
   'settings.clipboardClearDesc':
     'パスワードなどをコピーしたあと、指定時間でクリップボードから消去します。アプリをロックしたときも即座に消去します',
   'settings.preferBiometricUnlock': '生体認証を優先',
-  'settings.preferBiometricUnlockDesc': 'ロック中に常駐アイコンやショートカットから開くとき、まず生体認証を試みます',
-  'settings.preferBiometricUnlockDescTouchId': 'ロック中に常駐アイコンやショートカットから開くとき、まず Touch ID を試みます',
+  'settings.preferBiometricUnlockDesc': 'ロック中はトレイまたはショートカットから起動時に生体認証を優先',
+  'settings.preferBiometricUnlockDescTouchId': 'ロック中はトレイまたはショートカットから起動時に Touch ID を優先',
   'settings.preferBiometricUnlockDescWindowsHello':
-    'ロック中に常駐アイコンやショートカットから開くとき、まず Windows Hello を試みます',
+    'ロック中はトレイまたはショートカットから起動時に Windows Hello を優先',
   'settings.biometricUnavailableNotSupported':
     'このシステムでは生体認証解除に対応していません（macOS Touch ID と Windows Hello のみ）。',
   'settings.biometricUnavailableModuleFailed':
@@ -333,7 +333,7 @@ const messages: MessageDict = {
   'settings.biometricUnavailableNotConfigured':
     '先に Windows「設定 → アカウント → サインイン オプション」で PIN または Windows Hello を設定してください。',
   'settings.biometricUnavailableDeviceNotPresent':
-    '利用可能な Windows Hello デバイスが検出されません。指紋リーダーがある場合はドライバとサインイン設定を確認してください。',
+    'Windows Hello デバイスが見つかりません。ドライバとサインイン設定を確認してください。',
   'settings.biometricUnavailableDisabledByPolicy':
     '生体認証はシステムまたは組織のポリシーで無効になっています。マスターパスワードをご利用ください。',
   'settings.biometricUnavailableDeviceBusy': '認証デバイスが使用中です。しばらくしてから再試行してください。',

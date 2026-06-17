@@ -322,10 +322,10 @@ const messages: MessageDict = {
   'settings.clipboardClear': 'Auto-clear clipboard',
   'settings.clipboardClearDesc': 'Clear copied passwords and other sensitive data after a delay; clears immediately when the app locks',
   'settings.preferBiometricUnlock': 'Prefer biometric unlock',
-  'settings.preferBiometricUnlockDesc': 'When the app is locked, try biometrics first when opening from the menu bar/tray icon or shortcuts',
-  'settings.preferBiometricUnlockDescTouchId': 'When the app is locked, try Touch ID first when opening from the menu bar icon or shortcuts',
+  'settings.preferBiometricUnlockDesc': 'When locked, try biometrics first from tray or shortcut',
+  'settings.preferBiometricUnlockDescTouchId': 'When locked, try Touch ID first from tray or shortcut',
   'settings.preferBiometricUnlockDescWindowsHello':
-    'When the app is locked, try Windows Hello first when opening from the tray icon or shortcuts',
+    'When locked, try Windows Hello first from tray or shortcut',
   'settings.biometricUnavailableNotSupported':
     'Biometric unlock is not supported on this system (macOS Touch ID and Windows Hello only).',
   'settings.biometricUnavailableModuleFailed':
@@ -333,7 +333,7 @@ const messages: MessageDict = {
   'settings.biometricUnavailableNotConfigured':
     'Set up a PIN or Windows Hello fingerprint/face in Windows Settings → Accounts → Sign-in options first.',
   'settings.biometricUnavailableDeviceNotPresent':
-    'No Windows Hello device was detected. If your PC has a fingerprint reader, check drivers and sign-in options.',
+    'No Windows Hello device found. Check drivers and sign-in options.',
   'settings.biometricUnavailableDisabledByPolicy':
     'Biometric verification is disabled by system or organization policy. Use your master password instead.',
   'settings.biometricUnavailableDeviceBusy': 'The authentication device is busy. Try again in a moment.',
