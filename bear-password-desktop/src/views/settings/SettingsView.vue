@@ -1,13 +1,19 @@
 <template>
-  <div class="settings-view">
-    <header class="settings-view__header">
+  <div
+    class="settings-view"
+    :class="{
+      'settings-view--embedded': embedded,
+      'settings-view--dialog': dialog
+    }"
+  >
+    <header v-if="!embedded" class="settings-view__header">
       <h1>{{ t('settings.title') }}</h1>
       <p>{{ t('settings.subtitle') }}</p>
     </header>
 
     <div class="settings-view__grid">
-    <div class="settings-view__section">
-      <h3>{{ t('settings.general') }}</h3>
+    <div v-if="showSection('general')" class="settings-view__section">
+      <h3 v-if="!section">{{ t('settings.general') }}</h3>
 
       <div class="settings-view__row settings-view__row--launch">
         <div class="settings-view__row-label">
@@ -37,6 +43,19 @@
 
       <div class="settings-view__row settings-view__row--launch">
         <div class="settings-view__row-label">
+          <span>{{ t('settings.dockHidden') }}</span>
+          <small>{{ t('settings.dockHiddenDesc') }}</small>
+        </div>
+        <el-switch
+          :model-value="dockStore.hidden"
+          :loading="dockStore.loading"
+          :disabled="!dockStore.available"
+          @change="handleDockHiddenChange"
+        />
+      </div>
+
+      <div class="settings-view__row settings-view__row--launch">
+        <div class="settings-view__row-label">
           <span>{{ t('settings.trayClickAction') }}</span>
           <small>{{ t('settings.trayClickActionDesc') }}</small>
         </div>
@@ -55,23 +74,10 @@
           />
         </el-select>
       </div>
-
-      <div class="settings-view__row settings-view__row--launch">
-        <div class="settings-view__row-label">
-          <span>{{ t('settings.dockHidden') }}</span>
-          <small>{{ t('settings.dockHiddenDesc') }}</small>
-        </div>
-        <el-switch
-          :model-value="dockStore.hidden"
-          :loading="dockStore.loading"
-          :disabled="!dockStore.available"
-          @change="handleDockHiddenChange"
-        />
-      </div>
     </div>
 
-    <div class="settings-view__section">
-      <h3>{{ t('settings.security') }}</h3>
+    <div v-if="showSection('security')" class="settings-view__section">
+      <h3 v-if="!section">{{ t('settings.security') }}</h3>
       <p class="settings-view__vault-crypto-intro">
         {{ t('settings.vaultCryptoIntro') }}
       </p>
@@ -192,8 +198,8 @@
       </div>
     </div>
 
-    <div class="settings-view__section">
-      <h3>{{ t('settings.appearance') }}</h3>
+    <div v-if="showSection('appearance')" class="settings-view__section">
+      <h3 v-if="!section">{{ t('settings.appearance') }}</h3>
 
       <div class="settings-view__row settings-view__row--theme">
         <div class="settings-view__row-label">
@@ -259,8 +265,8 @@
       </div>
     </div>
 
-    <div class="settings-view__section">
-      <h3>{{ t('settings.shortcuts') }}</h3>
+    <div v-if="showSection('shortcuts')" class="settings-view__section">
+      <h3 v-if="!section">{{ t('settings.shortcuts') }}</h3>
 
       <p v-if="!isDesktopApp" class="settings-view__shortcut-note settings-view__shortcut-note--warn">
         {{ t('settings.shortcuts.globalOnlyDesktop') }}
@@ -292,8 +298,8 @@
       </div>
     </div>
 
-    <div class="settings-view__section">
-      <h3>{{ t('settings.about') }}</h3>
+    <div v-if="showSection('about')" class="settings-view__section">
+      <h3 v-if="!section">{{ t('settings.about') }}</h3>
 
       <div class="settings-view__row settings-view__row--health">
         <div class="settings-view__row-label">
@@ -336,6 +342,18 @@
           {{ AUTHOR_NAME }}
         </a>
       </div>
+
+      <div class="settings-view__row">
+        <span>{{ t('settings.officialWebsite') }}</span>
+        <a
+          :href="OFFICIAL_WEBSITE_URL"
+          class="settings-view__about-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ t('settings.officialWebsiteLink') }}
+        </a>
+      </div>
     </div>
     </div>
   </div>
@@ -343,11 +361,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { settingsMessageBoxConfirm } from '@/utils/settingsMessageBox'
 import ShortcutInput from '@/components/settings/ShortcutInput.vue'
 import MfaSettingsPanel from '@/components/settings/MfaSettingsPanel.vue'
 import { getHealthApi } from '@/api'
-import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/constants/app'
+import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME, OFFICIAL_WEBSITE_URL } from '@/constants/app'
 import { useAppStore } from '@/stores/app'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useClipboardClearStore } from '@/stores/clipboardClear'
@@ -387,6 +406,23 @@ import {
   MasterPasswordChangeError
 } from '@/utils/masterPasswordChange'
 import { loadPersistedVaultPassword, persistVaultPassword } from '@/utils/vaultPasswordStorage'
+import type { SettingsContentSection } from '@/types/settingsDialog'
+
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean
+    dialog?: boolean
+    section?: SettingsContentSection
+  }>(),
+  {
+    embedded: false,
+    dialog: false
+  }
+)
+
+function showSection(id: SettingsContentSection): boolean {
+  return !props.section || props.section === id
+}
 
 const HEALTH_CHECK_INTERVAL = 15000
 
@@ -650,7 +686,7 @@ async function handleChangeMasterPassword(): Promise<void> {
   }
 
   try {
-    await ElMessageBox.confirm(
+    await settingsMessageBoxConfirm(
       t('settings.masterPasswordChangeBody'),
       t('settings.masterPasswordChangeTitle'),
       { type: 'warning', confirmButtonText: t('msg.confirm'), cancelButtonText: t('msg.cancel') }
@@ -687,7 +723,31 @@ async function handleChangeMasterPassword(): Promise<void> {
 <style scoped lang="scss">
 .settings-view {
   width: 100%;
+  max-width: 720px;
   box-sizing: border-box;
+
+  &--embedded {
+    max-width: none;
+  }
+
+  &--dialog {
+    .settings-view__grid {
+      gap: $spacing-md;
+    }
+
+    .settings-view__section {
+      border-radius: $radius-md;
+      box-shadow: none;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .settings-view__row--security,
+    .settings-view__row--launch,
+    .settings-view__row--auto-lock {
+      align-items: center;
+    }
+  }
 
   &__header {
     margin-bottom: $spacing-xl;
@@ -705,18 +765,21 @@ async function handleChangeMasterPassword(): Promise<void> {
   }
 
   &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    display: flex;
+    flex-direction: column;
     gap: $spacing-lg;
-    align-items: stretch;
   }
 
   &__section {
-    @include card;
+    width: 100%;
+    background: $color-bg-elevated;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
     padding: $spacing-lg;
     min-width: 0;
-    height: 100%;
     box-sizing: border-box;
+    isolation: isolate;
 
     h3 {
       font-size: $font-size-sm;

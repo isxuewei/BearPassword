@@ -1,15 +1,9 @@
 <template>
-  <div class="profile-view">
-    <header class="profile-view__header">
-      <h1>{{ t('profile.title') }}</h1>
-      <p>{{ t('profile.subtitle') }}</p>
-    </header>
-
-    <div class="profile-view__section">
-      <h3>{{ t('profile.account') }}</h3>
-      <div class="profile-view__account">
+  <div class="profile-settings" :class="{ 'profile-settings--embedded': embedded }">
+    <div class="profile-settings__section">
+      <div class="profile-settings__profile-row">
         <el-upload
-          class="profile-view__avatar-upload"
+          class="profile-settings__avatar-upload"
           :show-file-list="false"
           accept="image/jpeg,image/png,image/webp,image/gif"
           :disabled="uploadingAvatar"
@@ -17,71 +11,75 @@
           :http-request="handleAvatarUpload"
         >
           <div
-            class="profile-view__avatar"
-            :class="{ 'profile-view__avatar--uploading': uploadingAvatar }"
+            class="profile-settings__avatar"
+            :class="{ 'profile-settings__avatar--uploading': uploadingAvatar }"
           >
             <img
               v-if="showAvatarImage"
               :src="profile?.avatar || authStore.avatar"
               :alt="displayName"
-              class="profile-view__avatar-img"
+              class="profile-settings__avatar-img"
               @error="onAvatarError"
             />
             <span v-else>{{ avatarLetter }}</span>
-            <div class="profile-view__avatar-overlay">
+            <div class="profile-settings__avatar-overlay">
               <span>{{ uploadingAvatar ? t('profile.uploading') : t('profile.changeAvatar') }}</span>
             </div>
           </div>
         </el-upload>
-        <div class="profile-view__account-info">
-          <span v-if="profile?.userId" class="profile-view__user-id">
+        <div class="profile-settings__account-info">
+          <span class="profile-settings__display-name">{{ displayName }}</span>
+          <span v-if="profile?.userId" class="profile-settings__user-id">
             {{ t('profile.userId', { id: profile.userId }) }}
           </span>
-          <span class="profile-view__avatar-tip">{{ t('profile.avatarTip') }}</span>
+          <span class="profile-settings__avatar-tip">{{ t('profile.avatarTip') }}</span>
         </div>
       </div>
+
+      <div class="profile-settings__divider" />
 
       <el-form
         ref="usernameFormRef"
         :model="usernameForm"
         :rules="usernameRules"
         label-position="top"
-        class="profile-view__username-form"
+        class="profile-settings__username-form"
         @submit.prevent="handleSaveUsername"
       >
         <el-form-item :label="t('profile.username')" prop="username">
-          <div class="profile-view__username-row">
-            <el-input
-              v-model="usernameForm.username"
-              size="large"
-              :placeholder="t('profile.usernamePlaceholder')"
-              :disabled="savingUsername"
-              maxlength="32"
-            />
-            <el-button
-              type="primary"
-              size="large"
-              :loading="savingUsername"
-              :disabled="!usernameChanged"
-              @click="handleSaveUsername"
-            >
-              {{ t('profile.saveUsername') }}
-            </el-button>
-          </div>
+          <el-input
+            v-model="usernameForm.username"
+            size="large"
+            :placeholder="t('profile.usernamePlaceholder')"
+            :disabled="savingUsername"
+            maxlength="16"
+          />
+          <el-button
+            class="profile-settings__action-btn"
+            type="primary"
+            size="large"
+            :loading="savingUsername"
+            :disabled="!usernameChanged"
+            @click="handleSaveUsername"
+          >
+            {{ t('profile.saveUsername') }}
+          </el-button>
         </el-form-item>
       </el-form>
     </div>
 
-    <div class="profile-view__section">
-      <h3>{{ t('profile.changePassword') }}</h3>
-      <p class="profile-view__hint">{{ t('profile.passwordHint') }}</p>
+    <div class="profile-settings__section">
+      <div class="profile-settings__section-head">
+        <h3 class="profile-settings__section-title">{{ t('profile.changePassword') }}</h3>
+        <p class="profile-settings__hint">{{ t('profile.passwordHint') }}</p>
+      </div>
 
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
         label-position="top"
-        class="profile-view__form"
+        class="profile-settings__form"
         @submit.prevent="handleSubmit"
       >
         <el-form-item :label="t('profile.currentPassword')" prop="oldPassword">
@@ -118,16 +116,24 @@
           />
         </el-form-item>
 
-        <el-button type="primary" size="large" :loading="saving" @click="handleSubmit">
+        <el-button
+          class="profile-settings__action-btn"
+          type="primary"
+          size="large"
+          :loading="saving"
+          @click="handleSubmit"
+        >
           {{ t('profile.savePassword') }}
         </el-button>
       </el-form>
     </div>
 
-    <div class="profile-view__section">
-      <h3>{{ t('profile.session') }}</h3>
-      <p class="profile-view__hint">{{ t('profile.logoutHint') }}</p>
-      <div class="profile-view__session-actions">
+    <div class="profile-settings__section">
+      <div class="profile-settings__section-head">
+        <h3 class="profile-settings__section-title">{{ t('profile.session') }}</h3>
+        <p class="profile-settings__hint">{{ t('profile.logoutHint') }}</p>
+      </div>
+      <div class="profile-settings__session-actions">
         <el-button size="large" :loading="loggingOut" @click="handleLogout">
           {{ t('profile.logout') }}
         </el-button>
@@ -142,7 +148,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
+import { settingsMessageBoxConfirm } from '@/utils/settingsMessageBox'
 import {
   changePasswordApi,
   checkUsernameApi,
@@ -152,18 +159,29 @@ import {
 } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
+import { useSettingsDialogStore } from '@/stores/settingsDialog'
 import { useI18n } from '@/composables/useI18n'
 import type { UserProfile } from '@/types'
+
+withDefaults(
+  defineProps<{
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false
+  }
+)
 
 const router = useRouter()
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
+const settingsDialog = useSettingsDialogStore()
 const { t } = useI18n()
 
 const USERNAME_PATTERN = /^[\u4e00-\u9fff\w]+$/
+const USERNAME_MAX_LENGTH = 16
 
 const profile = ref<UserProfile | null>(null)
-const loadingProfile = ref(false)
 const saving = ref(false)
 const savingUsername = ref(false)
 const loggingOut = ref(false)
@@ -200,7 +218,7 @@ const showAvatarImage = computed(() => {
 const usernameRules = computed<FormRules>(() => ({
   username: [
     { required: true, message: t('profile.usernameRequired'), trigger: 'blur' },
-    { min: 2, max: 32, message: t('profile.usernameLength'), trigger: 'blur' },
+    { min: 2, max: USERNAME_MAX_LENGTH, message: t('profile.usernameLength'), trigger: 'blur' },
     {
       pattern: USERNAME_PATTERN,
       message: t('profile.usernamePattern'),
@@ -213,7 +231,7 @@ const usernameRules = computed<FormRules>(() => ({
           callback()
           return
         }
-        if (!USERNAME_PATTERN.test(trimmed) || trimmed.length < 2 || trimmed.length > 32) {
+        if (!USERNAME_PATTERN.test(trimmed) || trimmed.length < 2 || trimmed.length > USERNAME_MAX_LENGTH) {
           callback()
           return
         }
@@ -309,7 +327,6 @@ function syncUsernameForm(username: string): void {
 }
 
 async function loadProfile(): Promise<void> {
-  loadingProfile.value = true
   avatarLoadFailed.value = false
   try {
     profile.value = await getCurrentUserApi()
@@ -317,8 +334,6 @@ async function loadProfile(): Promise<void> {
     authStore.syncProfile(profile.value)
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : t('profile.loadFailed'))
-  } finally {
-    loadingProfile.value = false
   }
 }
 
@@ -373,7 +388,7 @@ async function handleLogout(): Promise<void> {
   if (loggingOut.value || loggingOutCompletely.value) return
 
   try {
-    await ElMessageBox.confirm(t('profile.logoutConfirmBody'), t('profile.logoutConfirmTitle'), {
+    await settingsMessageBoxConfirm(t('profile.logoutConfirmBody'), t('profile.logoutConfirmTitle'), {
       confirmButtonText: t('profile.logoutConfirmBtn'),
       cancelButtonText: t('msg.cancel'),
       type: 'warning'
@@ -384,6 +399,7 @@ async function handleLogout(): Promise<void> {
 
   loggingOut.value = true
   try {
+    settingsDialog.close()
     autoLockStore.stop()
     await authStore.logout()
     router.push({ name: 'Login' })
@@ -398,7 +414,7 @@ async function handleLogoutCompletely(): Promise<void> {
   if (loggingOut.value || loggingOutCompletely.value) return
 
   try {
-    await ElMessageBox.confirm(
+    await settingsMessageBoxConfirm(
       t('profile.logoutCompletelyConfirmBody'),
       t('profile.logoutCompletelyConfirmTitle'),
       {
@@ -413,6 +429,7 @@ async function handleLogoutCompletely(): Promise<void> {
 
   loggingOutCompletely.value = true
   try {
+    settingsDialog.close()
     autoLockStore.stop()
     await authStore.logoutCompletely()
     router.push({ name: 'Login' })
@@ -429,44 +446,50 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.profile-view {
-  max-width: 720px;
-
-  &__header {
-    margin-bottom: $spacing-xl;
-
-    h1 {
-      font-size: $font-size-2xl;
-      font-weight: 700;
-      color: $color-text-primary;
-      margin-bottom: $spacing-xs;
-    }
-
-    p {
-      color: $color-text-secondary;
-    }
-  }
+.profile-settings {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
 
   &__section {
-    @include card;
+    width: 100%;
+    background: $color-bg-elevated;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
     padding: $spacing-lg;
-    margin-bottom: $spacing-lg;
-
-    h3 {
-      font-size: $font-size-sm;
-      font-weight: 600;
-      color: $color-text-muted;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: $spacing-md;
-    }
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  &__account {
+  &--embedded &__section {
+    border-radius: $radius-md;
+    box-shadow: none;
+  }
+
+  &__section-title {
+    margin: 0 0 $spacing-xs;
+    font-size: $font-size-md;
+    font-weight: 600;
+    color: $color-text-primary;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  &__section-head {
+    margin-bottom: $spacing-md;
+  }
+
+  &__profile-row {
     display: flex;
     align-items: center;
     gap: $spacing-lg;
-    padding: $spacing-sm 0;
+  }
+
+  &__divider {
+    height: 1px;
+    margin: $spacing-md 0;
+    background: $color-border;
   }
 
   &__avatar-upload {
@@ -496,7 +519,7 @@ onMounted(() => {
       transform: scale(1.02);
       box-shadow: 0 8px 24px rgba(108, 92, 231, 0.25);
 
-      .profile-view__avatar-overlay {
+      .profile-settings__avatar-overlay {
         opacity: 1;
       }
     }
@@ -504,7 +527,7 @@ onMounted(() => {
     &--uploading {
       pointer-events: none;
 
-      .profile-view__avatar-overlay {
+      .profile-settings__avatar-overlay {
         opacity: 1;
         background: rgba(0, 0, 0, 0.55);
       }
@@ -542,23 +565,20 @@ onMounted(() => {
     min-width: 0;
   }
 
-  &__username-form {
-    margin-top: $spacing-lg;
-    max-width: 420px;
+  &__display-name {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $color-text-primary;
+    line-height: 1.3;
   }
 
-  &__username-row {
-    display: flex;
-    gap: $spacing-sm;
-    width: 100%;
+  &__username-form {
+    margin-top: 0;
+  }
 
-    .el-input {
-      flex: 1;
-    }
-
-    .el-button {
-      flex-shrink: 0;
-    }
+  &__action-btn {
+    margin-top: $spacing-sm;
+    min-width: 120px;
   }
 
   &__user-id {
@@ -573,7 +593,7 @@ onMounted(() => {
   }
 
   &__hint {
-    margin: 0 0 $spacing-lg;
+    margin: 0;
     font-size: $font-size-sm;
     color: $color-text-muted;
     line-height: 1.5;
@@ -586,11 +606,12 @@ onMounted(() => {
   }
 
   &__form {
-    max-width: 420px;
+    :deep(.el-form-item) {
+      margin-bottom: $spacing-md;
+    }
 
-    .el-button {
-      width: 100%;
-      margin-top: $spacing-sm;
+    :deep(.el-form-item:last-child) {
+      margin-bottom: 0;
     }
   }
 }

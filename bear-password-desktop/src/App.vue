@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider :locale="elementLocale">
+  <el-config-provider :locale="elementLocale" :z-index="Z_INDEX_ELEMENT_PLUS">
     <router-view />
     <VaultLocalSetupDialog />
     <LockScreen />
@@ -15,6 +15,7 @@ import { useAppStore } from '@/stores/app'
 import { useShortcutsStore } from '@/stores/shortcuts'
 import { useI18n } from '@/composables/useI18n'
 import { getElementPlusLocale } from '@/locales'
+import { Z_INDEX_ELEMENT_PLUS } from '@/constants/zIndex'
 import { initGlobalShortcutBridge } from '@/utils/globalShortcutBridge'
 import { initTrayBridge } from '@/utils/trayBridge'
 

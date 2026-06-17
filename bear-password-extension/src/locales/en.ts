@@ -166,6 +166,8 @@ const messages: MessageDict = {
   'settings.securityKeyRequired': 'Enter the security key',
   'settings.about': 'About',
   'settings.version': 'Version',
+  'settings.officialWebsite': 'Website',
+  'settings.officialWebsiteLink': 'BearPassword Website',
   'settings.updateAvailable': 'New version {version} available',
   'settings.updateDownload': 'Download now',
   'settings.author': 'Author',

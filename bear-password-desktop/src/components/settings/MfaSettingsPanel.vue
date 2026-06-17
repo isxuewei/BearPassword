@@ -41,6 +41,7 @@
     <el-dialog
       v-model="totpDialogVisible"
       :title="t('settings.mfaTotpSetupTitle')"
+      :z-index="Z_INDEX_SETTINGS_OVERLAY"
       width="420px"
       class="mfa-settings__dialog"
       :close-on-click-modal="false"
@@ -84,6 +85,7 @@ import {
   type TotpSetupResult
 } from '@/api/mfa'
 import { useI18n } from '@/composables/useI18n'
+import { Z_INDEX_SETTINGS_OVERLAY } from '@/constants/zIndex'
 
 const { t } = useI18n()
 

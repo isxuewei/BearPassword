@@ -4,9 +4,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import { openVaultQuickSearch } from '@/utils/vaultQuickSearch'
+import { useSettingsDialogStore } from '@/stores/settingsDialog'
 import type { TrayRendererCommand } from '../../shared/trayMenu'
 
-type TrayRouteName = 'Vault' | 'Favorites' | 'Recent' | 'Settings'
+type TrayRouteName = 'Vault' | 'Favorites' | 'Recent'
 
 async function navigateWhenReady(routeName: TrayRouteName): Promise<void> {
   const authStore = useAuthStore()
@@ -25,6 +26,7 @@ async function navigateWhenReady(routeName: TrayRouteName): Promise<void> {
 
 async function handleTrayCommand(command: TrayRendererCommand): Promise<void> {
   const appStore = useAppStore()
+  const authStore = useAuthStore()
   const autoLockStore = useAutoLockStore()
   const securityStore = useSecurityStore()
 
@@ -46,7 +48,12 @@ async function handleTrayCommand(command: TrayRendererCommand): Promise<void> {
       autoLockStore.lock()
       break
     case 'settings':
-      await navigateWhenReady('Settings')
+      if (!authStore.isLoggedIn) return
+      if (autoLockStore.isLocked) {
+        autoLockStore.requestLockPresentation()
+        return
+      }
+      useSettingsDialogStore().open()
       break
     case 'set-theme':
       appStore.setThemePreference(command.value)

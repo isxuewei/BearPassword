@@ -2,7 +2,7 @@
 import { useI18n } from '@/popup/composables/useI18n'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore, useVaultStore } from '@/popup/stores/session'
-import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME } from '@/shared/constants/app'
+import { APP_VERSION, AUTHOR_GITHUB_URL, AUTHOR_NAME, OFFICIAL_WEBSITE_URL } from '@/shared/constants/app'
 
 const { t } = useI18n()
 const popupStore = usePopupStore()
@@ -44,6 +44,17 @@ async function handleBack(): Promise<void> {
             rel="noopener noreferrer"
           >
             {{ AUTHOR_NAME }}
+          </a>
+        </div>
+        <div class="setting-row">
+          <span class="setting-item-label">{{ t('settings.officialWebsite') }}</span>
+          <a
+            :href="OFFICIAL_WEBSITE_URL"
+            class="about-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ t('settings.officialWebsiteLink') }}
           </a>
         </div>
       </section>

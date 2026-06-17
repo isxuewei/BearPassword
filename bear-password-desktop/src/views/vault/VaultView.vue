@@ -1505,9 +1505,9 @@ onUnmounted(() => {
 .vault-view {
   $vault-edge: 20px;
 
-  margin: (-$spacing-xl);
-  width: calc(100% + #{$spacing-xl * 2});
-  height: calc(100vh - #{$titlebar-height});
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - #{$titlebar-height});
   display: flex;
   flex-direction: column;
   overflow: hidden;

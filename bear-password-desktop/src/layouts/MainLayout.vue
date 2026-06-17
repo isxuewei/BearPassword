@@ -12,13 +12,13 @@
 
         <SideNav />
 
-        <div class="main-layout__user">
+        <div class="main-layout__sidebar-footer">
           <button
             type="button"
-            class="main-layout__user-trigger"
-            :class="{ 'main-layout__user-trigger--active': isProfileActive }"
-            :aria-label="t('profile.ariaLabel')"
-            @click="goProfile"
+            class="main-layout__user-bar"
+            :class="{ 'main-layout__user-bar--active': settingsDialog.visible }"
+            :aria-label="t('nav.settings')"
+            @click="openSettings"
           >
             <div class="main-layout__avatar">
               <img
@@ -36,7 +36,7 @@
       </aside>
 
       <!-- 右侧内容区 -->
-      <main class="main-layout__content">
+      <main class="main-layout__content" :class="{ 'main-layout__content--flush': isVaultPage }">
         <div class="main-layout__view">
           <router-view v-slot="{ Component, route: activeRoute }">
             <transition name="page-fade">
@@ -79,36 +79,44 @@
     </Teleport>
 
     <AnnouncementDialog />
+    <SettingsDialog />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import TitleBar from '@/components/window/TitleBar.vue'
 import AppLogo from '@/components/common/AppLogo.vue'
 import AnnouncementDialog from '@/components/common/AnnouncementDialog.vue'
+import SettingsDialog from '@/components/settings/SettingsDialog.vue'
 import SideNav from '@/components/common/SideNav.vue'
 import { getCurrentUserApi } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import { useServerStore } from '@/stores/server'
+import { useSettingsDialogStore } from '@/stores/settingsDialog'
 import { useVersionStore } from '@/stores/version'
 import { useAutoLockActivity } from '@/composables/useAutoLockActivity'
 import { useI18n } from '@/composables/useI18n'
 
-const router = useRouter()
 const { t } = useI18n()
-const route = useRoute()
 const authStore = useAuthStore()
 const autoLockStore = useAutoLockStore()
 const securityStore = useSecurityStore()
 const serverStore = useServerStore()
+const settingsDialog = useSettingsDialogStore()
 const versionStore = useVersionStore()
+const route = useRoute()
 
 const VAULT_PAGE_NAMES = new Set(['Vault', 'Favorites', 'Recent'])
+
+const isVaultPage = computed(() => {
+  const name = route.name
+  return typeof name === 'string' && VAULT_PAGE_NAMES.has(name)
+})
 
 /** 密码库 / 收藏 / 最近访问共用同一组件实例，避免切换时销毁重建 */
 function resolvePageKey(activeRoute: RouteLocationNormalizedLoaded): string {
@@ -134,16 +142,12 @@ const avatarLoadFailed = ref(false)
 
 const showAvatarImage = computed(() => !!authStore.avatar && !avatarLoadFailed.value)
 
-const isProfileActive = computed(() => route.name === 'Profile')
-
 watch(() => authStore.avatar, () => {
   avatarLoadFailed.value = false
 })
 
-function goProfile(): void {
-  if (route.name !== 'Profile') {
-    router.push({ name: 'Profile' })
-  }
+function openSettings(): void {
+  settingsDialog.open()
 }
 
 function onAvatarError(): void {
@@ -160,9 +164,7 @@ function onSettingsHotkey(event: KeyboardEvent): void {
   if (securityStore.isMigrating || autoLockStore.isLocked) return
 
   event.preventDefault()
-  if (route.name !== 'Settings') {
-    router.push({ name: 'Settings' })
-  }
+  openSettings()
 }
 
 watch(
@@ -220,13 +222,13 @@ useAutoLockActivity()
     @include no-drag;
   }
 
-  &__user {
+  &__sidebar-footer {
     margin-top: auto;
     padding: $spacing-sm 0;
     @include no-drag;
   }
 
-  &__user-trigger {
+  &__user-bar {
     display: flex;
     align-items: center;
     gap: $spacing-md;
@@ -241,6 +243,10 @@ useAutoLockActivity()
 
     &:hover {
       background: $color-surface-hover;
+
+      .main-layout__username {
+        color: $color-text-primary;
+      }
     }
 
     &--active {
@@ -291,6 +297,16 @@ useAutoLockActivity()
     overflow-y: auto;
     padding: $spacing-xl;
     min-width: 0;
+
+    &--flush {
+      padding: 0;
+      overflow: hidden;
+
+      .main-layout__view,
+      .main-layout__page {
+        height: 100%;
+      }
+    }
   }
 
   /* 相对定位容器：切换时新旧页面叠放，避免在文档流中上下堆叠闪现 */

@@ -166,6 +166,8 @@ const messages: MessageDict = {
   'settings.securityKeyRequired': 'セキュリティキーを入力してください',
   'settings.about': '情報',
   'settings.version': 'バージョン',
+  'settings.officialWebsite': '公式サイト',
+  'settings.officialWebsiteLink': 'BearPassword 公式サイト',
   'settings.updateAvailable': '新しいバージョン {version} があります',
   'settings.updateDownload': '今すぐダウンロード',
   'settings.author': '作者',

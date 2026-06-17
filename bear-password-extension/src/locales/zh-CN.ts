@@ -163,6 +163,8 @@ const messages: MessageDict = {
   'settings.securityKeyRequired': '请输入安全密钥',
   'settings.about': '关于',
   'settings.version': '当前版本',
+  'settings.officialWebsite': '官网',
+  'settings.officialWebsiteLink': 'BearPassword 官网',
   'settings.updateAvailable': '发现新版本 {version}',
   'settings.updateDownload': '立即下载',
   'settings.author': '作者',

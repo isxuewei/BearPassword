@@ -43,11 +43,6 @@ const navItems = computed(() => [
     name: 'Recent',
     label: t('nav.recent'),
     icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M9 5V9L12 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
-  },
-  {
-    name: 'Settings',
-    label: t('nav.settings'),
-    icon: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.5V3.5M9 14.5V16.5M1.5 9H3.5M14.5 9H16.5M3.6 3.6L5 5M13 13L14.4 14.4M3.6 14.4L5 13M13 5L14.4 3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
   }
 ])
 
@@ -60,6 +55,8 @@ function isActive(name: string): boolean {
 .side-nav {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: $spacing-xs;
   padding: $spacing-sm 0;
 
