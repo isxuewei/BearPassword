@@ -33,6 +33,7 @@ import {
 } from '@/shared/appearance/syncContentAppearance'
 import { getBrowserTabTitle } from '@/shared/utils/tabTitle'
 import { getPageWebsiteUrl } from '@/shared/utils/websiteMatch'
+import { triggerDesktopProtocolUrl } from '@/shared/utils/desktopProtocol'
 
 let matchingCredentials: FillCredential[] = []
 let needsSecurityKey = false
@@ -151,7 +152,7 @@ async function wakeDesktopFromPage(): Promise<void> {
 }
 
 function getDesktopNotReadyText(): string {
-  return tContent('content.picker.desktopNotReady')
+  return `${tContent('content.picker.desktopNotReady')}\n${tContent('content.picker.desktopProtocolConfirm')}`
 }
 
 let currentPageUrl = window.location.href
@@ -446,12 +447,17 @@ async function handlePossibleSave(): Promise<void> {
 }
 
 interface ContentScriptMessage {
-  type: 'PERFORM_AUTOFILL' | 'INSERT_TEXT'
+  type: 'PERFORM_AUTOFILL' | 'INSERT_TEXT' | 'TRIGGER_DESKTOP_PROTOCOL'
   payload?: FillCredential | string
 }
 
 chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, sendResponse) => {
   switch (message.type) {
+    case 'TRIGGER_DESKTOP_PROTOCOL': {
+      triggerDesktopProtocolUrl()
+      sendResponse({ data: true })
+      break
+    }
     case 'PERFORM_AUTOFILL': {
       const ok = autofillCredential(message.payload as FillCredential)
       sendResponse({ data: ok })

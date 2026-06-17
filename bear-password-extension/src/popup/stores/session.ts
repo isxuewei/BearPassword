@@ -5,6 +5,7 @@ import {
   type FillCredential,
   type MatchingCredentialsResult
 } from '@/shared/types'
+import type { WakeDesktopResult } from '@/shared/api/desktopBridge'
 import { sendMessage } from '@/shared/utils/messaging'
 import { t } from '@/popup/i18n'
 import { useLocaleStore } from '@/popup/stores/locale'
@@ -14,6 +15,7 @@ export const useSessionStore = defineStore('session', () => {
   const desktopState = ref<DesktopConnectionState | null>(null)
   const loading = ref(false)
   const error = ref('')
+  const wakeHint = ref('')
 
   const isReady = computed(() => desktopState.value?.unlocked === true)
   const isLoggedIn = isReady
@@ -28,6 +30,7 @@ export const useSessionStore = defineStore('session', () => {
 
   function clearFeedback(): void {
     error.value = ''
+    wakeHint.value = ''
   }
 
   function syncAppearance(state: DesktopConnectionState | null): void {
@@ -67,8 +70,12 @@ export const useSessionStore = defineStore('session', () => {
 
   async function wakeDesktop(): Promise<void> {
     error.value = ''
+    wakeHint.value = ''
     try {
-      await sendMessage({ type: 'WAKE_DESKTOP' })
+      const result = await sendMessage<WakeDesktopResult>({ type: 'WAKE_DESKTOP' })
+      if (result === 'protocol-on-tab' || result === 'fallback-page') {
+        wakeHint.value = t('login.protocolConfirm')
+      }
       await new Promise((resolve) => setTimeout(resolve, 1200))
       await refreshDesktopState(true)
     } catch (err) {
@@ -81,6 +88,7 @@ export const useSessionStore = defineStore('session', () => {
     desktopState,
     loading,
     error,
+    wakeHint,
     isReady,
     isLoggedIn,
     username,

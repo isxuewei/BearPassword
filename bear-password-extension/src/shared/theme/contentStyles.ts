@@ -89,6 +89,7 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
       color: ${tokens.textMuted};
       text-align: center;
       line-height: 1.5;
+      white-space: pre-line;
     }
     #${pickerId} .bear-picker-footer {
       flex-shrink: 0;

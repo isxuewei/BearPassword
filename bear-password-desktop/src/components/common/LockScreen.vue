@@ -238,7 +238,12 @@ function isPasswordInputFocused(): boolean {
 }
 
 function handleWindowFocusedWhileLocked(): void {
-  if (!visible.value || unlocking.value || isPasswordInputFocused()) return
+  if (!autoLockStore.isLocked || unlocking.value) return
+  if (!visible.value) {
+    autoLockStore.requestLockPresentation()
+    return
+  }
+  if (isPasswordInputFocused()) return
   schedulePresentLockScreenInteraction(true)
 }
 
@@ -344,7 +349,9 @@ watch(
       }
       return
     }
-    presentLockScreen()
+    if (document.hidden) {
+      hideLockScreen()
+    }
   },
   { immediate: true, flush: 'sync' }
 )
@@ -367,6 +374,15 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleWindowVisibilityChange)
   window.addEventListener('focus', handleWindowVisibilityChange)
   unsubscribeWindowFocused = window.windowApi?.onFocused?.(handleWindowFocusedWhileLocked)
+
+  if (
+    autoLockStore.isLocked &&
+    authStore.isLoggedIn &&
+    securityStore.needsVaultUnlock &&
+    !document.hidden
+  ) {
+    autoLockStore.requestLockPresentation()
+  }
 })
 
 onUnmounted(() => {
@@ -389,22 +405,23 @@ async function completeUnlock(): Promise<boolean> {
 }
 
 async function unlockWithMasterPassword(masterPassword: string): Promise<boolean> {
+  let derivedVuk: Uint8Array
   try {
-    await securityStore.unlockWithMasterPassword(masterPassword)
+    derivedVuk = await securityStore.deriveVukForMasterPassword(masterPassword)
   } catch (err) {
     throw err instanceof Error ? err : new Error(t('lock.wrongPassword'))
   }
 
-  const unlock = securityStore.getUnlockContext()
-  if (!unlock) {
+  const verified = await verifyVaultUnlockContext(
+    { vuk: derivedVuk },
+    { masterPassword }
+  )
+  if (!verified) {
     throw new Error(t('lock.wrongPassword'))
   }
 
-  const verified = await verifyVaultUnlockContext(unlock)
-  if (!verified) {
-    securityStore.unloadFromMemory()
-    throw new Error(t('lock.wrongPassword'))
-  }
+  await securityStore.reloadFromStorage()
+  securityStore.applyVaultUnlock(derivedVuk)
 
   const persisted = await persistVaultPassword(masterPassword)
   if (!persisted.ok && biometricUnlockStore.preferBiometricUnlock) {

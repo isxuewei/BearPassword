@@ -1,8 +1,13 @@
 import {
-  DESKTOP_WAKE_PROTOCOL_URL,
   EXTENSION_BRIDGE_ORIGIN,
   type ExtensionBridgeHealth
 } from '@/shared/constants/extensionBridge'
+import {
+  getWakeFallbackPageUrl,
+  isWakeableWebTabUrl,
+  triggerProtocolOnTab,
+  type WakeDesktopResult
+} from '@/shared/utils/desktopProtocol'
 import type {
   FillCredential,
   MatchingCredentialsResult,
@@ -132,12 +137,30 @@ export async function focusDesktopApi(): Promise<boolean> {
   }
 }
 
-/** 唤起桌面端：已运行时聚焦窗口，未运行时通过系统协议启动 */
-export async function wakeDesktopApi(): Promise<void> {
-  const focused = await focusDesktopApi()
-  if (focused) return
+/** 唤起桌面端：已运行时聚焦；否则在当前网页触发协议，无法触达时打开带说明的扩展页 */
+export async function wakeDesktopApi(preferredTabId?: number): Promise<WakeDesktopResult> {
+  if (await focusDesktopApi()) return 'focused'
 
-  await chrome.tabs.create({ url: DESKTOP_WAKE_PROTOCOL_URL, active: false })
+  let tabId = preferredTabId
+  if (tabId == null) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    tabId = tab?.id
+  }
+
+  if (tabId != null) {
+    try {
+      const tab = await chrome.tabs.get(tabId)
+      if (isWakeableWebTabUrl(tab.url) && (await triggerProtocolOnTab(tabId))) {
+        return 'protocol-on-tab'
+      }
+    } catch {
+      // 继续走备用页
+    }
+  }
+
+  await chrome.tabs.create({ url: getWakeFallbackPageUrl(), active: true })
+  return 'fallback-page'
 }
 
+export type { WakeDesktopResult }
 export { DesktopBridgeError }

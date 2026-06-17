@@ -59,6 +59,8 @@ const messages: MessageDict = {
   'login.refreshing': '確認中…',
   'login.openDesktop': 'デスクトップ版を開く',
   'login.openingDesktop': '起動中…',
+  'login.protocolConfirm':
+    'ブラウザで BearPassword を開くか確認されたら「開く」をクリックし、デスクトップ版でログインして保管庫のロックを解除してください。',
   'login.settings': '拡張機能の設定',
 
   'vault.searchPlaceholder': 'このサイトのログインを検索…',
@@ -177,8 +179,9 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword 自動入力',
   'content.picker.needsSecurityKey': 'デスクトップ版で保管庫のロックを解除してから再試行してください',
-  'content.picker.desktopNotReady':
-    'BearPassword デスクトップ版を開いています。ログインして保管庫のロックを解除してから再試行してください。',
+  'content.picker.desktopNotReady': 'BearPassword デスクトップ版を起動しています…',
+  'content.picker.desktopProtocolConfirm':
+    'ブラウザに確認ダイアログが表示されたら「BearPassword を開く」をクリックし、起動後にロックを解除して再試行してください。',
   'content.picker.noEntries': 'このサイトに保存されたログインはありません',
   'content.picker.noMatch': '一致するログインがありません',
   'content.picker.emptyDefault': '利用可能なログインがありません',
@@ -195,7 +198,16 @@ const messages: MessageDict = {
   'content.banner.desc': '新しいログインを検出しました：{username}',
   'content.banner.unknownUser': '不明なユーザー',
   'content.banner.save': '保存',
-  'content.banner.dismiss': '後で'
+  'content.banner.dismiss': '後で',
+
+  'wake.pageTitle': 'BearPassword を起動',
+  'wake.title': 'BearPassword を起動しています',
+  'wake.lead': 'ブラウザがデスクトップアプリを開くか確認する場合があります。以下の手順に従ってください。',
+  'wake.step1': 'ブラウザ上部またはページ内の確認ダイアログを確認してください',
+  'wake.step2': '「BearPassword を開く」をクリックして起動を許可してください',
+  'wake.step3': 'デスクトップ版でログインし保管庫のロックを解除してから、ウェブページに戻って再試行してください',
+  'wake.retry': 'もう一度起動する',
+  'wake.note': '確認ダイアログが表示されない場合は、上のボタンを押すか、手動で BearPassword を開いてください。'
 }
 
 export default messages

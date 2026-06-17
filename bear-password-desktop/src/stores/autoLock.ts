@@ -117,9 +117,10 @@ export const useAutoLockStore = defineStore('autoLock', () => {
     persistLockState(true)
     applySecureLockSideEffects()
     if (!wasLocked) {
-      requestLockPresentation()
       if (options?.hideWindow !== false) {
         hideWindowAfterLock()
+      } else {
+        requestLockPresentation()
       }
     }
   }

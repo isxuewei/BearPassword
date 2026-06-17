@@ -59,6 +59,8 @@ const messages: MessageDict = {
   'login.refreshing': 'Checking…',
   'login.openDesktop': 'Open desktop app',
   'login.openingDesktop': 'Opening…',
+  'login.protocolConfirm':
+    'If your browser asks to open BearPassword, click Open. Then sign in and unlock the vault in the desktop app.',
   'login.settings': 'Extension settings',
 
   'vault.searchPlaceholder': 'Search logins for this site…',
@@ -177,8 +179,9 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword autofill',
   'content.picker.needsSecurityKey': 'Unlock the vault in the desktop app and try again',
-  'content.picker.desktopNotReady':
-    'Opening BearPassword on your computer. Sign in and unlock the vault, then try again.',
+  'content.picker.desktopNotReady': 'Opening BearPassword on your computer…',
+  'content.picker.desktopProtocolConfirm':
+    'If your browser shows a confirmation, click Open BearPassword, then sign in and unlock the vault.',
   'content.picker.noEntries': 'No saved logins for this site',
   'content.picker.noMatch': 'No matching logins',
   'content.picker.emptyDefault': 'No logins available',
@@ -195,7 +198,16 @@ const messages: MessageDict = {
   'content.banner.desc': 'New login detected: {username}',
   'content.banner.unknownUser': 'Unknown user',
   'content.banner.save': 'Save',
-  'content.banner.dismiss': 'Not now'
+  'content.banner.dismiss': 'Not now',
+
+  'wake.pageTitle': 'Open BearPassword',
+  'wake.title': 'Opening BearPassword',
+  'wake.lead': 'Your browser may ask whether to open the desktop app. Follow the steps below.',
+  'wake.step1': 'Look for a confirmation prompt at the top of the browser or on this page',
+  'wake.step2': 'Click Open BearPassword to allow the app to launch',
+  'wake.step3': 'Sign in and unlock the vault in the desktop app, then return to the website',
+  'wake.retry': 'Try again',
+  'wake.note': 'If you do not see a prompt, click the button above or open BearPassword manually.'
 }
 
 export default messages

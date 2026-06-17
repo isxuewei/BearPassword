@@ -14,7 +14,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, 'src/popup/index.html')
+        popup: resolve(__dirname, 'src/popup/index.html'),
+        wake: resolve(__dirname, 'src/wake/index.html')
       }
     }
   }

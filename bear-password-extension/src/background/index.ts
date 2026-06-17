@@ -270,14 +270,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 })
 
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
-  handleMessage(message)
+chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+  handleMessage(message, sender)
     .then((data) => sendResponse({ data }))
     .catch((err: Error) => sendResponse({ error: err.message }))
   return true
 })
 
-async function handleMessage(message: ExtensionMessage): Promise<unknown> {
+async function handleMessage(message: ExtensionMessage, sender?: chrome.runtime.MessageSender): Promise<unknown> {
   switch (message.type) {
     case 'GET_DESKTOP_STATE':
       return getDesktopState(true)
@@ -341,8 +341,7 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
       return true
 
     case 'WAKE_DESKTOP':
-      await wakeDesktopApi()
-      return true
+      return wakeDesktopApi(sender?.tab?.id)
 
     case 'GENERATE_PASSWORD':
       return generatePassword(message.payload as Parameters<typeof generatePassword>[0])

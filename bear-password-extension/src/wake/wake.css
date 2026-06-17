@@ -1,0 +1,91 @@
+:root {
+  color-scheme: light dark;
+  --bear-bg: #f6f4ef;
+  --bear-card: #fffdf8;
+  --bear-text: #2f2a24;
+  --bear-muted: #6f675c;
+  --bear-primary: #5a7348;
+  --bear-border: #e4ddd1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bear-bg: #1f1d1a;
+    --bear-card: #2a2723;
+    --bear-text: #f3efe8;
+    --bear-muted: #b8afa3;
+    --bear-primary: #8faa78;
+    --bear-border: #3d3831;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bear-bg);
+  color: var(--bear-text);
+}
+
+.wake-page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 48px 24px 32px;
+  text-align: center;
+}
+
+.wake-page__logo {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 20px;
+}
+
+.wake-page__title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.wake-page__lead {
+  margin: 0 0 24px;
+  color: var(--bear-muted);
+  line-height: 1.6;
+}
+
+.wake-page__steps {
+  margin: 0 0 28px;
+  padding-left: 1.2rem;
+  text-align: left;
+  line-height: 1.7;
+}
+
+.wake-page__steps li + li {
+  margin-top: 8px;
+}
+
+.wake-page__btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--bear-primary);
+  cursor: pointer;
+}
+
+.wake-page__btn:hover {
+  filter: brightness(1.05);
+}
+
+.wake-page__note {
+  margin: 20px 0 0;
+  font-size: 13px;
+  color: var(--bear-muted);
+  line-height: 1.6;
+}

@@ -49,7 +49,10 @@ export async function completeLocalVaultSetup(
 
   const vuk = await deriveVaultUnlockKey(mp, key, vaultSalt)
   const unlock = { vuk }
-  const verified = await verifyVaultUnlockContext(unlock)
+  const verified = await verifyVaultUnlockContext(unlock, {
+    masterPassword: mp,
+    allowWithoutEncryptedSamples: true
+  })
   if (!verified) {
     throw new LocalVaultSetupError('主密码或账户密钥错误，无法解密保险库')
   }

@@ -88,6 +88,8 @@ async function handleWakeDesktop(): Promise<void> {
         {{ waking ? t('login.openingDesktop') : t('login.openDesktop') }}
       </button>
 
+      <p v-if="sessionStore.wakeHint" class="status-hint status-hint--info">{{ sessionStore.wakeHint }}</p>
+
       <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
     </div>
   </div>
@@ -196,6 +198,10 @@ async function handleWakeDesktop(): Promise<void> {
   font-size: 12px;
   line-height: 1.5;
   color: var(--bear-text-secondary);
+}
+
+.status-hint--info {
+  color: var(--bear-primary);
 }
 
 .submit-btn {

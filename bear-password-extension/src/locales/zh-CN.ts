@@ -59,6 +59,7 @@ const messages: MessageDict = {
   'login.refreshing': '检测中…',
   'login.openDesktop': '打开桌面端',
   'login.openingDesktop': '正在唤起…',
+  'login.protocolConfirm': '若浏览器弹出确认框，请点击「打开 BearPassword」，然后在桌面端登录并解锁保险库。',
   'login.settings': '扩展设置',
 
   'vault.searchPlaceholder': '搜索此网站的登录项…',
@@ -174,7 +175,8 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword 填充',
   'content.picker.needsSecurityKey': '请在桌面端解锁保险库后重试',
-  'content.picker.desktopNotReady': '正在打开 BearPassword 桌面端，请登录并解锁保险库后重试',
+  'content.picker.desktopNotReady': '正在唤起 BearPassword 桌面端…',
+  'content.picker.desktopProtocolConfirm': '若浏览器弹出确认框，请点击「打开 BearPassword」，启动并解锁后重试。',
   'content.picker.noEntries': '此网站暂无保存的登录项',
   'content.picker.noMatch': '没有匹配的登录项',
   'content.picker.emptyDefault': '暂无可用登录项',
@@ -191,7 +193,16 @@ const messages: MessageDict = {
   'content.banner.desc': '检测到新的登录信息：{username}',
   'content.banner.unknownUser': '未知用户',
   'content.banner.save': '保存',
-  'content.banner.dismiss': '暂不'
+  'content.banner.dismiss': '暂不',
+
+  'wake.pageTitle': '唤起 BearPassword',
+  'wake.title': '正在唤起 BearPassword',
+  'wake.lead': '浏览器可能会询问是否打开桌面应用，请按下面步骤操作。',
+  'wake.step1': '留意浏览器顶部或页面中的确认提示',
+  'wake.step2': '点击「打开 BearPassword」允许启动应用',
+  'wake.step3': '在桌面端登录并解锁保险库后，返回网页重试',
+  'wake.retry': '再次尝试唤起',
+  'wake.note': '若未看到确认提示，可点击上方按钮重试，或手动打开 BearPassword 桌面应用。'
 }
 
 export default messages
