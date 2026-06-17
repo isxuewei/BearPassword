@@ -80,16 +80,18 @@ spring:
       timeout: 10s
       lettuce:
         pool:
+          enabled: true
           max-active: 8
           max-idle: 8
           min-idle: 0
+          max-wait: 5s
 
 server:
   port: 8080
   servlet:
     context-path: /api
 
-# Sa-Token 配置
+# Sa-Token 配置（会话数据由 sa-token-redis-jackson 写入 Redis，服务重启后仍有效）
 sa-token:
   # token 名称，对应请求头 Authorization
   token-name: Authorization
