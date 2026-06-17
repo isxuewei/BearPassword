@@ -1,11 +1,11 @@
 import { systemPreferences } from 'electron'
+import type {
+  BiometricAvailability,
+  BiometricKind,
+  BiometricUnavailableReason
+} from '../../shared/biometric'
 
-export type BiometricKind = 'touchId' | 'windowsHello'
-
-export interface BiometricAvailability {
-  available: boolean
-  kind: BiometricKind | null
-}
+export type { BiometricAvailability, BiometricKind, BiometricUnavailableReason }
 
 export type BiometricPromptResult =
   | { ok: true }
@@ -14,6 +14,13 @@ export type BiometricPromptResult =
 type WindowsSecurityModule = typeof import('electron-windows-security')
 
 let windowsSecurityModulePromise: Promise<WindowsSecurityModule | null> | null = null
+
+function unavailable(
+  reason: BiometricUnavailableReason,
+  kind: BiometricKind | null = null
+): BiometricAvailability {
+  return { available: false, kind, unavailableReason: reason }
+}
 
 async function loadWindowsSecurityModule(): Promise<WindowsSecurityModule | null> {
   if (process.platform !== 'win32') {
@@ -61,35 +68,50 @@ function promisifyWindowsVerification(
   })
 }
 
+function mapWindowsUnavailableReason(
+  mod: WindowsSecurityModule,
+  availability: WindowsSecurityModule['UserConsentVerifierAvailability']
+): BiometricUnavailableReason {
+  const states = mod.UserConsentVerifierAvailability
+  if (availability === states.notConfiguredForUser) return 'notConfigured'
+  if (availability === states.deviceNotPresent) return 'deviceNotPresent'
+  if (availability === states.disabledByPolicy) return 'disabledByPolicy'
+  if (availability === states.deviceBusy) return 'deviceBusy'
+  return 'unavailable'
+}
+
 export async function getBiometricAvailability(): Promise<BiometricAvailability> {
   if (process.platform === 'darwin') {
     const available = systemPreferences.canPromptTouchID()
-    return {
-      available,
-      kind: available ? 'touchId' : null
+    if (available) {
+      return { available: true, kind: 'touchId', unavailableReason: null }
     }
+    return unavailable('touchIdUnavailable')
   }
 
   if (process.platform === 'win32') {
     const mod = await loadWindowsSecurityModule()
     if (!mod) {
-      return { available: false, kind: null }
+      return unavailable('moduleLoadFailed', 'windowsHello')
     }
 
     try {
       const availability = await promisifyWindowsAvailability(mod)
-      const available = availability === mod.UserConsentVerifierAvailability.available
+      if (availability === mod.UserConsentVerifierAvailability.available) {
+        return { available: true, kind: 'windowsHello', unavailableReason: null }
+      }
       return {
-        available,
-        kind: available ? 'windowsHello' : null
+        available: false,
+        kind: 'windowsHello',
+        unavailableReason: mapWindowsUnavailableReason(mod, availability)
       }
     } catch (error) {
       console.warn('[biometric] windows availability check failed', error)
-      return { available: false, kind: null }
+      return unavailable('checkFailed', 'windowsHello')
     }
   }
 
-  return { available: false, kind: null }
+  return unavailable('notSupported')
 }
 
 function isBiometricPromptCanceled(message: string): boolean {

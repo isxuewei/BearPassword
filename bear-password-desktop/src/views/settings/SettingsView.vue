@@ -183,16 +183,19 @@
       </div>
 
       <div
-        v-if="biometricUnlockSupported"
-        class="settings-view__row settings-view__row--launch"
+        v-if="biometricUnlockSectionVisible"
+        class="settings-view__row settings-view__row--launch settings-view__row--biometric"
       >
         <div class="settings-view__row-label">
           <span>{{ t('settings.preferBiometricUnlock') }}</span>
           <small>{{ preferBiometricUnlockDesc }}</small>
+          <small v-if="biometricUnavailableHint" class="settings-view__biometric-unavailable">
+            {{ biometricUnavailableHint }}
+          </small>
         </div>
         <el-switch
           :model-value="biometricUnlockStore.preferBiometricUnlock"
-          :disabled="securityStore.isMigrating"
+          :disabled="!biometricUnlockSupported || securityStore.isMigrating"
           @change="handlePreferBiometricUnlockChange"
         />
       </div>
@@ -374,6 +377,10 @@ import { useAppStore } from '@/stores/app'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useClipboardClearStore } from '@/stores/clipboardClear'
 import { useBiometricUnlockStore } from '@/stores/biometricUnlock'
+import {
+  BIOMETRIC_UNAVAILABLE_I18N_KEY,
+  type BiometricUnavailableReason
+} from '../../../shared/biometric'
 import { useDockStore } from '@/stores/dock'
 import { useLaunchAtLoginStore } from '@/stores/launchAtLogin'
 import { useTrayStore } from '@/stores/tray'
@@ -478,8 +485,10 @@ const localeDescription = computed(() =>
   appStore.localePreference === 'system' ? t('locale.systemDesc') : ''
 )
 
+const biometricUnlockSectionVisible = ref(false)
 const biometricUnlockSupported = ref(false)
 const biometricUnlockKind = ref<'touchId' | 'windowsHello' | null>(null)
+const biometricUnavailableReason = ref<BiometricUnavailableReason | null>(null)
 
 const preferBiometricUnlockDesc = computed(() => {
   if (biometricUnlockKind.value === 'touchId') {
@@ -491,26 +500,38 @@ const preferBiometricUnlockDesc = computed(() => {
   return t('settings.preferBiometricUnlockDesc')
 })
 
+const biometricUnavailableHint = computed(() => {
+  if (biometricUnlockSupported.value || !biometricUnavailableReason.value) return ''
+  const key = BIOMETRIC_UNAVAILABLE_I18N_KEY[biometricUnavailableReason.value]
+  return t(key)
+})
+
 function handlePreferBiometricUnlockChange(enabled: boolean | string | number): void {
   biometricUnlockStore.setPreferBiometricUnlock(enabled === true)
 }
 
 async function refreshBiometricUnlockSupport(): Promise<void> {
+  biometricUnlockSectionVisible.value = false
   biometricUnlockSupported.value = false
   biometricUnlockKind.value = null
+  biometricUnavailableReason.value = null
 
   if (!window.biometricApi) return
+
+  biometricUnlockSectionVisible.value = true
 
   try {
     const availability = await window.biometricApi.getAvailability()
     biometricUnlockSupported.value = availability.available
     biometricUnlockKind.value = availability.kind
+    biometricUnavailableReason.value = availability.unavailableReason
     if (!availability.available) {
       biometricUnlockStore.setPreferBiometricUnlock(false)
     }
   } catch {
     biometricUnlockSupported.value = false
     biometricUnlockKind.value = null
+    biometricUnavailableReason.value = 'checkFailed'
     biometricUnlockStore.setPreferBiometricUnlock(false)
   }
 }
@@ -1029,6 +1050,19 @@ async function handleChangeMasterPassword(): Promise<void> {
 
   &__row--launch {
     align-items: center;
+  }
+
+  &__row--biometric {
+    align-items: flex-start;
+
+    :deep(.el-switch) {
+      margin-top: 2px;
+    }
+  }
+
+  &__biometric-unavailable {
+    color: $color-text-secondary;
+    line-height: 1.55;
   }
 
   &__auto-lock-select {

@@ -326,6 +326,22 @@ const messages: MessageDict = {
   'settings.preferBiometricUnlockDescTouchId': 'ロック中に常駐アイコンやショートカットから開くとき、まず Touch ID を試みます',
   'settings.preferBiometricUnlockDescWindowsHello':
     'ロック中に常駐アイコンやショートカットから開くとき、まず Windows Hello を試みます',
+  'settings.biometricUnavailableNotSupported':
+    'このシステムでは生体認証解除に対応していません（macOS Touch ID と Windows Hello のみ）。',
+  'settings.biometricUnavailableModuleFailed':
+    'Windows Hello コンポーネントを読み込めません。再インストールするか、マスターパスワードで解除してください。',
+  'settings.biometricUnavailableNotConfigured':
+    '先に Windows「設定 → アカウント → サインイン オプション」で PIN または Windows Hello を設定してください。',
+  'settings.biometricUnavailableDeviceNotPresent':
+    '利用可能な Windows Hello デバイスが検出されません。指紋リーダーがある場合はドライバとサインイン設定を確認してください。',
+  'settings.biometricUnavailableDisabledByPolicy':
+    '生体認証はシステムまたは組織のポリシーで無効になっています。マスターパスワードをご利用ください。',
+  'settings.biometricUnavailableDeviceBusy': '認証デバイスが使用中です。しばらくしてから再試行してください。',
+  'settings.biometricUnavailableTouchId':
+    'この Mac では Touch ID を利用できません。「システム設定 → Touch ID とパスワード」を確認してください。',
+  'settings.biometricUnavailableCheckFailed':
+    '生体認証の利用可否を確認できませんでした。アプリを再起動してお試しください。',
+  'settings.biometricUnavailableGeneric': '現在生体認証は利用できません。マスターパスワードで解除してください。',
   'settings.version': 'クライアントバージョン',
   'settings.officialWebsite': '公式サイト',
   'settings.officialWebsiteLink': 'BearPassword 公式サイト',

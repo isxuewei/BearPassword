@@ -9,8 +9,14 @@ const windowApi = {
   maximize: (): void => ipcRenderer.send('window:maximize'),
   close: (): void => ipcRenderer.send('window:close'),
   hide: (): void => ipcRenderer.send('window:hide'),
+  focus: (): Promise<boolean> => ipcRenderer.invoke('window:focus'),
   isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized'),
-  getPlatform: (): Promise<NodeJS.Platform> => ipcRenderer.invoke('window:getPlatform')
+  getPlatform: (): Promise<NodeJS.Platform> => ipcRenderer.invoke('window:getPlatform'),
+  onFocused: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('window:focused', handler)
+    return () => ipcRenderer.removeListener('window:focused', handler)
+  }
 }
 
 const themeApi = {

@@ -90,8 +90,8 @@ import {
 
 const { t } = useI18n()
 
-const BIOMETRIC_AUTO_PROMPT_DELAY_MS = 350
-const BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS = 2500
+const BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS = 1500
+const LOCK_PRESENT_INTERACTION_DELAY_MS = 80
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -133,20 +133,21 @@ const biometricButtonLabel = computed(() => {
   return t('lock.biometricUnlock')
 })
 
-let biometricAutoPromptTimer: ReturnType<typeof setTimeout> | null = null
+let presentInteractionTimer: ReturnType<typeof setTimeout> | null = null
 let passwordShakeTimer: ReturnType<typeof setTimeout> | null = null
+let unsubscribeWindowFocused: (() => void) | undefined
 
 const PASSWORD_SHAKE_MS = 480
 
-function clearBiometricAutoPromptTimer(): void {
-  if (biometricAutoPromptTimer) {
-    clearTimeout(biometricAutoPromptTimer)
-    biometricAutoPromptTimer = null
+function clearPresentInteractionTimer(): void {
+  if (presentInteractionTimer) {
+    clearTimeout(presentInteractionTimer)
+    presentInteractionTimer = null
   }
 }
 
 function clearTimers(): void {
-  clearBiometricAutoPromptTimer()
+  clearPresentInteractionTimer()
   if (passwordShakeTimer) {
     clearTimeout(passwordShakeTimer)
     passwordShakeTimer = null
@@ -198,14 +199,47 @@ async function waitForWindowFocus(timeoutMs = BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS)
   })
 }
 
-function scheduleBiometricAutoPrompt(): void {
-  clearBiometricAutoPromptTimer()
-  if (!showBiometricUnlock.value) return
+async function ensureWindowFocused(): Promise<void> {
+  try {
+    await window.windowApi?.focus?.()
+  } catch {
+    // 非 Electron 环境忽略
+  }
+  await waitForWindowFocus()
+}
 
-  biometricAutoPromptTimer = setTimeout(() => {
-    biometricAutoPromptTimer = null
-    void handleBiometricUnlock({ silent: true })
-  }, BIOMETRIC_AUTO_PROMPT_DELAY_MS)
+function schedulePresentLockScreenInteraction(autoPromptBiometric: boolean): void {
+  clearPresentInteractionTimer()
+  presentInteractionTimer = setTimeout(() => {
+    presentInteractionTimer = null
+    void presentLockScreenInteraction(autoPromptBiometric)
+  }, LOCK_PRESENT_INTERACTION_DELAY_MS)
+}
+
+async function presentLockScreenInteraction(autoPromptBiometric: boolean): Promise<void> {
+  if (!visible.value) return
+
+  await refreshBiometricAvailability()
+  await ensureWindowFocused()
+  await nextTick()
+
+  if (shouldAutoPromptBiometric(autoPromptBiometric)) {
+    await handleBiometricUnlock({ silent: true })
+  }
+
+  if (visible.value && !unlocking.value) {
+    await focusPasswordInput()
+  }
+}
+
+function isPasswordInputFocused(): boolean {
+  const inputEl = passwordInputRef.value?.input
+  return inputEl instanceof HTMLInputElement && document.activeElement === inputEl
+}
+
+function handleWindowFocusedWhileLocked(): void {
+  if (!visible.value || unlocking.value || isPasswordInputFocused()) return
+  schedulePresentLockScreenInteraction(true)
 }
 
 async function refreshBiometricAvailability(): Promise<void> {
@@ -254,16 +288,7 @@ function isBiometricCanceled(result: { canceled: boolean; error?: string }): boo
 }
 
 async function onLockScreenReady(autoPromptBiometric: boolean): Promise<void> {
-  await refreshBiometricAvailability()
-
-  if (shouldAutoPromptBiometric(autoPromptBiometric)) {
-    await waitForWindowFocus()
-    await nextTick()
-    scheduleBiometricAutoPrompt()
-    return
-  }
-
-  await focusPasswordInput()
+  schedulePresentLockScreenInteraction(autoPromptBiometric)
 }
 
 function presentLockScreen(): void {
@@ -282,7 +307,7 @@ function hideLockScreen(): void {
 }
 
 function handlePasswordInteraction(): void {
-  clearBiometricAutoPromptTimer()
+  clearPresentInteractionTimer()
 }
 
 function redirectToLoginIfNeeded(): void {
@@ -341,11 +366,14 @@ function handleWindowVisibilityChange(): void {
 onMounted(() => {
   document.addEventListener('visibilitychange', handleWindowVisibilityChange)
   window.addEventListener('focus', handleWindowVisibilityChange)
+  unsubscribeWindowFocused = window.windowApi?.onFocused?.(handleWindowFocusedWhileLocked)
 })
 
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleWindowVisibilityChange)
   window.removeEventListener('focus', handleWindowVisibilityChange)
+  unsubscribeWindowFocused?.()
+  unsubscribeWindowFocused = undefined
 })
 
 async function completeUnlock(): Promise<boolean> {
@@ -390,11 +418,12 @@ async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promis
   if (!visible.value || unlocking.value || !showBiometricUnlock.value) return
   if (!window.biometricApi) return
 
-  clearBiometricAutoPromptTimer()
+  clearPresentInteractionTimer()
   biometricLoading.value = true
   errorMsg.value = ''
   let focusPasswordAfterCancel = false
   try {
+    await ensureWindowFocused()
     const result = await window.biometricApi.prompt(t('lock.biometricReason'))
     if (!result.ok) {
       if (isBiometricCanceled(result)) {
@@ -451,7 +480,7 @@ async function handleUnlock(): Promise<void> {
     return
   }
 
-  clearBiometricAutoPromptTimer()
+  clearPresentInteractionTimer()
   loading.value = true
   errorMsg.value = ''
   try {

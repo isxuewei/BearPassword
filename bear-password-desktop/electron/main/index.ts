@@ -228,6 +228,12 @@ function createWindow(notifyOpenOnLoad = false): void {
 
   attachMainWindowStateListeners(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
+  mainWindow.on('focus', () => {
+    if (!mainWindow?.isDestroyed()) {
+      mainWindow.webContents.send('window:focused')
+    }
+  })
+
   // 启用托盘时，关闭窗口改为隐藏到托盘（生产环境）；开发环境直接退出，避免残留多个托盘图标
   mainWindow.on('close', (event) => {
     if (isQuitting) return
@@ -298,6 +304,14 @@ function registerWindowIpc(): void {
 
   ipcMain.handle('window:getPlatform', () => {
     return process.platform
+  })
+
+  ipcMain.handle('window:focus', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      bringMainWindowToFront(mainWindow)
+      return true
+    }
+    return false
   })
 }
 

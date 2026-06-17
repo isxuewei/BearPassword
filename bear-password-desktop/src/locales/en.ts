@@ -324,7 +324,24 @@ const messages: MessageDict = {
   'settings.preferBiometricUnlock': 'Prefer biometric unlock',
   'settings.preferBiometricUnlockDesc': 'When the app is locked, try biometrics first when opening from the menu bar/tray icon or shortcuts',
   'settings.preferBiometricUnlockDescTouchId': 'When the app is locked, try Touch ID first when opening from the menu bar icon or shortcuts',
-  'settings.preferBiometricUnlockDescWindowsHello': 'When the app is locked, try Windows Hello first when opening from the tray icon or shortcuts',
+  'settings.preferBiometricUnlockDescWindowsHello':
+    'When the app is locked, try Windows Hello first when opening from the tray icon or shortcuts',
+  'settings.biometricUnavailableNotSupported':
+    'Biometric unlock is not supported on this system (macOS Touch ID and Windows Hello only).',
+  'settings.biometricUnavailableModuleFailed':
+    'Could not load the Windows Hello module. Try reinstalling the app, or use your master password.',
+  'settings.biometricUnavailableNotConfigured':
+    'Set up a PIN or Windows Hello fingerprint/face in Windows Settings → Accounts → Sign-in options first.',
+  'settings.biometricUnavailableDeviceNotPresent':
+    'No Windows Hello device was detected. If your PC has a fingerprint reader, check drivers and sign-in options.',
+  'settings.biometricUnavailableDisabledByPolicy':
+    'Biometric verification is disabled by system or organization policy. Use your master password instead.',
+  'settings.biometricUnavailableDeviceBusy': 'The authentication device is busy. Try again in a moment.',
+  'settings.biometricUnavailableTouchId':
+    'Touch ID is not available on this Mac. Check System Settings → Touch ID & Password.',
+  'settings.biometricUnavailableCheckFailed':
+    'Could not check biometric availability. Restart the app and try again.',
+  'settings.biometricUnavailableGeneric': 'Biometrics are unavailable right now. Use your master password.',
   'settings.version': 'App version',
   'settings.officialWebsite': 'Website',
   'settings.officialWebsiteLink': 'BearPassword Website',

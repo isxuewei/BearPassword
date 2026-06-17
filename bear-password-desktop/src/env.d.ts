@@ -21,8 +21,10 @@ interface WindowApi {
   maximize: () => void
   close: () => void
   hide: () => void
+  focus: () => Promise<boolean>
   isMaximized: () => Promise<boolean>
   getPlatform: () => Promise<NodeJS.Platform>
+  onFocused: (callback: () => void) => () => void
 }
 
 /** Electron preload 暴露的系统主题 API */
@@ -145,6 +147,17 @@ interface BiometricApi {
   getAvailability: () => Promise<{
     available: boolean
     kind: 'touchId' | 'windowsHello' | null
+    unavailableReason:
+      | 'notSupported'
+      | 'moduleLoadFailed'
+      | 'notConfigured'
+      | 'deviceNotPresent'
+      | 'disabledByPolicy'
+      | 'deviceBusy'
+      | 'touchIdUnavailable'
+      | 'checkFailed'
+      | 'unavailable'
+      | null
   }>
   prompt: (reason: string) => Promise<
     | { ok: true }
