@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import type { ApiResponse } from '@/types'
+import { getErrorMessage, resolveAxiosErrorMessage } from '@/utils/apiErrorMessage'
 import { getServerBaseUrl } from './serverUrl'
 import { storage } from './storage'
 
@@ -91,17 +92,15 @@ service.interceptors.response.use(
     return Promise.reject(new Error(res.message || '请求失败'))
   },
   (error) => {
-    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      return Promise.reject(new Error(`无法连接服务器 ${getServerBaseUrl()}`))
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data as ApiResponse | undefined
+      if (isUnauthorizedPayload(status, data?.code)) {
+        triggerUnauthorized(error.config)
+      }
+      return Promise.reject(new Error(resolveAxiosErrorMessage(error)))
     }
-    const status = error.response?.status as number | undefined
-    const data = error.response?.data as ApiResponse | undefined
-    if (isUnauthorizedPayload(status, data?.code)) {
-      triggerUnauthorized(error.config)
-      return Promise.reject(new Error(data?.message || '未登录或登录已过期'))
-    }
-    const message = data?.message || error.message || '网络异常'
-    return Promise.reject(new Error(message))
+    return Promise.reject(new Error(getErrorMessage(error)))
   }
 )
 

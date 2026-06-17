@@ -70,6 +70,7 @@ import AppLogo from '@/components/common/AppLogo.vue'
 import LoginMfaStep from '@/views/login/LoginMfaStep.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
+import { getErrorMessage } from '@/utils/apiErrorMessage'
 import { isMfaLoginChallenge, type MfaLoginChallenge } from '@/types/auth'
 
 const router = useRouter()
@@ -103,7 +104,7 @@ async function handleLogin(): Promise<void> {
     }
     navigateAfterLogin()
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : String(err)
+    errorMsg.value = getErrorMessage(err, '登录失败，请稍后重试')
   }
 }
 

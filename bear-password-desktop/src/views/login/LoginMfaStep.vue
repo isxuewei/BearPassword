@@ -41,6 +41,7 @@ import AppLogo from '@/components/common/AppLogo.vue'
 import { completeTotpLoginApi } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
+import { getErrorMessage } from '@/utils/apiErrorMessage'
 import type { MfaLoginChallenge } from '@/types/auth'
 
 const props = defineProps<{
@@ -74,7 +75,7 @@ async function handleTotpSubmit(): Promise<void> {
     await authStore.applyLoginResult(result)
     emit('success')
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : String(err)
+    errorMsg.value = getErrorMessage(err, '验证失败，请稍后重试')
   } finally {
     loading.value = false
   }

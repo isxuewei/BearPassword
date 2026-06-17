@@ -10,44 +10,24 @@
         class="auth-layout__card"
         :class="{ 'auth-layout__card--kit': registerKitStep && !isLogin }"
       >
-        <button
-          v-if="canConfigureServer"
-          type="button"
-          class="auth-layout__settings-btn"
-          :aria-label="t('settings.serverDialogTitle')"
-          :title="t('settings.serverDialogTitle')"
-          @click="showServerSettings = true"
-        >
-          <el-icon :size="18"><Setting /></el-icon>
-        </button>
-
         <transition name="auth-form" mode="out-in">
           <LoginForm v-if="isLogin" key="login" />
           <RegisterForm v-else key="register" @kit-step-change="registerKitStep = $event" />
         </transition>
       </div>
     </div>
-
-    <ServerSettingsDialog v-if="canConfigureServer" v-model="showServerSettings" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Setting } from '@element-plus/icons-vue'
-import { useI18n } from '@/composables/useI18n'
 import TitleBar from '@/components/window/TitleBar.vue'
-import ServerSettingsDialog from '@/components/common/ServerSettingsDialog.vue'
 import LoginForm from '@/views/login/LoginForm.vue'
 import RegisterForm from '@/views/login/RegisterForm.vue'
-import { canConfigureServerOrigin } from '@/utils/serverUrl'
 
-const { t } = useI18n()
 const route = useRoute()
-const showServerSettings = ref(false)
 const registerKitStep = ref(false)
-const canConfigureServer = canConfigureServerOrigin()
 
 const isLogin = computed(() => route.name === 'Login')
 </script>
@@ -103,33 +83,6 @@ const isLogin = computed(() => route.name === 'Login')
 
     &--kit {
       width: 460px;
-    }
-  }
-
-  &__settings-btn {
-    position: absolute;
-    top: $spacing-md;
-    right: $spacing-md;
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: $radius-md;
-    background: transparent;
-    color: $color-text-muted;
-    cursor: pointer;
-    @include flex-center;
-    @include no-drag;
-    transition: background $transition-fast, color $transition-fast;
-    z-index: 2;
-
-    &:hover {
-      background: $color-surface-hover;
-      color: $color-accent;
-    }
-
-    &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px $color-accent-subtle;
     }
   }
 }
