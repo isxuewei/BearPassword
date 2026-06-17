@@ -14,6 +14,8 @@ const zipPath = path.join(releaseDir, zipName)
 const deployFiles = ['index.html', 'styles.css', 'main.js']
 const deployDirs = ['assets']
 
+execSync('node scripts/generate-screenshots-manifest.mjs', { cwd: rootDir, stdio: 'inherit' })
+
 await rm(distDir, { recursive: true, force: true })
 await mkdir(distDir, { recursive: true })
 

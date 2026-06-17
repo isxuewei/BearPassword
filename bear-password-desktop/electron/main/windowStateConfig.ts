@@ -7,18 +7,23 @@ import {
   type WindowState
 } from '../../shared/windowState'
 
-export function loadWindowState(minWidth: number, minHeight: number): WindowState {
+export function loadWindowState(
+  minWidth: number,
+  minHeight: number,
+  defaultWidth: number = minWidth,
+  defaultHeight: number = minHeight
+): WindowState {
   const filePath = join(app.getPath('userData'), 'window-state.json')
 
   if (!existsSync(filePath)) {
-    return getDefaultWindowState(minWidth, minHeight)
+    return getDefaultWindowState(defaultWidth, defaultHeight)
   }
 
   try {
     const raw = JSON.parse(readFileSync(filePath, 'utf-8')) as Partial<WindowState>
-    return normalizeWindowState(raw, minWidth, minHeight)
+    return normalizeWindowState(raw, minWidth, minHeight, defaultWidth, defaultHeight)
   } catch {
-    return getDefaultWindowState(minWidth, minHeight)
+    return getDefaultWindowState(defaultWidth, defaultHeight)
   }
 }
 

@@ -7,10 +7,10 @@ export interface WindowState {
   isMaximized: boolean
 }
 
-export function getDefaultWindowState(minWidth: number, minHeight: number): WindowState {
+export function getDefaultWindowState(defaultWidth: number, defaultHeight: number): WindowState {
   return {
-    width: minWidth,
-    height: minHeight,
+    width: defaultWidth,
+    height: defaultHeight,
     isMaximized: false
   }
 }
@@ -18,9 +18,11 @@ export function getDefaultWindowState(minWidth: number, minHeight: number): Wind
 export function normalizeWindowState(
   raw: Partial<WindowState> | null | undefined,
   minWidth: number,
-  minHeight: number
+  minHeight: number,
+  defaultWidth: number = minWidth,
+  defaultHeight: number = minHeight
 ): WindowState {
-  const fallback = getDefaultWindowState(minWidth, minHeight)
+  const fallback = getDefaultWindowState(defaultWidth, defaultHeight)
   const width = Number(raw?.width)
   const height = Number(raw?.height)
   const x = raw?.x === undefined ? undefined : Number(raw.x)

@@ -148,7 +148,9 @@ function registerExtensionBridgeIpc(): void {
 /** 正在退出应用，避免托盘模式下 close 事件拦截 quit */
 let isQuitting = false
 
-/** 主窗口最小尺寸（亦为默认启动尺寸） */
+/** 主窗口默认与最小尺寸 */
+const WINDOW_DEFAULT_WIDTH = 1024
+const WINDOW_DEFAULT_HEIGHT = 720
 const WINDOW_MIN_WIDTH = 1024
 const WINDOW_MIN_HEIGHT = 640
 
@@ -200,7 +202,12 @@ function applyAppIcon(): void {
 function createWindow(notifyOpenOnLoad = false): void {
   const isMac = process.platform === 'darwin'
   const iconPath = resolveAppIconPath()
-  const savedState = seedCachedWindowState(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+  const savedState = seedCachedWindowState(
+    WINDOW_MIN_WIDTH,
+    WINDOW_MIN_HEIGHT,
+    WINDOW_DEFAULT_WIDTH,
+    WINDOW_DEFAULT_HEIGHT
+  )
 
   mainWindow = new BrowserWindow({
     width: savedState.width,

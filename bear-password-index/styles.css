@@ -478,6 +478,16 @@ code {
   background: var(--color-accent-light);
 }
 
+.hero-carousel__empty {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  padding: 2rem;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+}
+
 .section-divider {
   position: relative;
   z-index: 2;

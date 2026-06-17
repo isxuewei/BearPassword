@@ -269,12 +269,89 @@ function initReveal() {
   observeRevealElements(footerElements, { threshold: 0, rootMargin: '0px 0px 0px 0px' })
 }
 
-function initHeroCarousel() {
+const SCREENSHOTS_DIR = 'assets/screenshots'
+/** 命名规则：序号 + 名称，如 1首页.png */
+const SCREENSHOT_FILENAME_RE = /^(\d+)(.+)\.(png|jpe?g|webp)$/i
+
+function parseScreenshotFilename(filename) {
+  const match = filename.match(SCREENSHOT_FILENAME_RE)
+  if (!match) return null
+  return {
+    order: Number(match[1]),
+    label: match[2],
+    file: filename
+  }
+}
+
+async function loadScreenshots() {
+  try {
+    const res = await fetch(`${SCREENSHOTS_DIR}/manifest.json`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    const files = Array.isArray(data) ? data : data.files
+    if (!Array.isArray(files)) throw new Error('invalid manifest')
+
+    return files
+      .map(parseScreenshotFilename)
+      .filter(Boolean)
+      .sort((a, b) => a.order - b.order)
+  } catch {
+    return []
+  }
+}
+
+function buildCarouselSlides(viewport, dotsRoot, screenshots) {
+  viewport.replaceChildren()
+  dotsRoot.replaceChildren()
+
+  if (!screenshots.length) {
+    viewport.innerHTML = '<p class="hero-carousel__empty">暂无产品截图</p>'
+    return
+  }
+
+  for (const [index, shot] of screenshots.entries()) {
+    const src = `${SCREENSHOTS_DIR}/${shot.file}`
+    const slide = document.createElement('figure')
+    slide.className = `hero-carousel__slide${index === 0 ? ' is-active' : ''}`
+
+    const img = document.createElement('img')
+    img.src = src
+    img.alt = `BearPassword ${shot.label}`
+    img.width = 1280
+    img.height = 800
+    img.loading = index === 0 ? 'eager' : 'lazy'
+    img.decoding = 'async'
+
+    const caption = document.createElement('figcaption')
+    caption.className = 'hero-carousel__caption'
+    caption.textContent = shot.label
+
+    slide.append(img, caption)
+    viewport.append(slide)
+
+    const dot = document.createElement('button')
+    dot.type = 'button'
+    dot.className = `hero-carousel__dot${index === 0 ? ' is-active' : ''}`
+    dot.role = 'tab'
+    dot.setAttribute('aria-selected', String(index === 0))
+    dot.setAttribute('aria-label', shot.label)
+    dotsRoot.append(dot)
+  }
+}
+
+async function initHeroCarousel() {
   const carousel = document.querySelector('.hero-carousel')
-  if (!carousel) return
+  const viewport = document.getElementById('hero-carousel-viewport')
+  const dotsRoot = document.getElementById('hero-carousel-dots')
+  if (!carousel || !viewport || !dotsRoot) return
+
+  const screenshots = await loadScreenshots()
+  buildCarouselSlides(viewport, dotsRoot, screenshots)
 
   const slides = [...carousel.querySelectorAll('.hero-carousel__slide')]
   const dots = [...carousel.querySelectorAll('.hero-carousel__dot')]
+  if (!slides.length) return
+
   let index = 0
   let timer = null
 
@@ -317,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNav()
   initHeroEntrance()
   initReveal()
-  initHeroCarousel()
+  void initHeroCarousel()
   bindDownloadLink('cta-download-mac', 'mac')
   bindDownloadLink('cta-download-win', 'win')
   bindExtensionDownload()

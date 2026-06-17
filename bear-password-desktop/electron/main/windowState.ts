@@ -8,6 +8,15 @@ import { loadWindowState, saveWindowState } from './windowStateConfig'
 const SAVE_DEBOUNCE_MS = 300
 
 let cachedWindowState: WindowState | null = null
+let cachedDefaultWidth: number | undefined
+let cachedDefaultHeight: number | undefined
+
+function resolveDefaultSize(minWidth: number, minHeight: number): { width: number; height: number } {
+  return {
+    width: cachedDefaultWidth ?? minWidth,
+    height: cachedDefaultHeight ?? minHeight
+  }
+}
 let saveStateTimer: ReturnType<typeof setTimeout> | null = null
 
 function clampWindowState(state: WindowState, minWidth: number, minHeight: number): WindowState {
@@ -44,7 +53,8 @@ function clampWindowState(state: WindowState, minWidth: number, minHeight: numbe
 }
 
 export function getCachedWindowState(minWidth: number, minHeight: number): WindowState {
-  return cachedWindowState ?? loadWindowState(minWidth, minHeight)
+  const { width, height } = resolveDefaultSize(minWidth, minHeight)
+  return cachedWindowState ?? loadWindowState(minWidth, minHeight, width, height)
 }
 
 export function captureWindowState(win: BrowserWindow, minWidth: number, minHeight: number): WindowState {
@@ -129,8 +139,15 @@ export function attachMainWindowStateListeners(
   win.on('close', () => persistMainWindowState(win, minWidth, minHeight))
 }
 
-export function seedCachedWindowState(minWidth: number, minHeight: number): WindowState {
-  cachedWindowState = loadWindowState(minWidth, minHeight)
+export function seedCachedWindowState(
+  minWidth: number,
+  minHeight: number,
+  defaultWidth: number,
+  defaultHeight: number
+): WindowState {
+  cachedDefaultWidth = defaultWidth
+  cachedDefaultHeight = defaultHeight
+  cachedWindowState = loadWindowState(minWidth, minHeight, defaultWidth, defaultHeight)
   return cachedWindowState
 }
 
