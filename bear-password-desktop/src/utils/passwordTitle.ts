@@ -1,4 +1,5 @@
 import type {
+  AuthenticatorContent,
   BankCardContent,
   CustomContent,
   DatabaseContent,
@@ -9,6 +10,7 @@ import type {
   PasswordType,
   SecureNoteContent
 } from '@/types'
+import { getAuthenticatorTitle } from '@/utils/authenticatorContent'
 import { getBankCardTitle } from '@/utils/bankCardContent'
 import { getCustomTitle } from '@/utils/customContent'
 import { getDatabaseTitle } from '@/utils/databaseContent'
@@ -36,6 +38,8 @@ export function extractTitleFromContent(
       return getIdentityTitle(content)
     case '安全备注':
       return normalizeSecureNoteContent(content).title.trim() || '安全备注'
+    case '两步验证（2FA）':
+      return getAuthenticatorTitle(content)
     case '自定义':
       return getCustomTitle(content)
     case '数据库':
@@ -68,6 +72,7 @@ export function buildPasswordTitleFromForm(
     bank?: BankCardContent
     identity?: IdentityContent
     secureNote?: SecureNoteContent
+    authenticator?: AuthenticatorContent
     custom?: CustomContent
     database?: DatabaseContent
   }
@@ -90,6 +95,10 @@ export function buildPasswordTitleFromForm(
       const note = sources.secureNote!
       if (note.title.trim() && note.title.trim() !== '安全备注') return note.title.trim()
       return '安全备注'
+    }
+    case '两步验证（2FA）': {
+      const auth = sources.authenticator!
+      return getAuthenticatorTitle(auth as unknown as Record<string, unknown>)
     }
     case '自定义': {
       const custom = sources.custom!

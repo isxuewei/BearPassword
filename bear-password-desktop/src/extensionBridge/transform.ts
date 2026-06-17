@@ -4,7 +4,7 @@ import { resolveEntryWebsites } from '@/utils/passwordWebsites'
 import { entryMatchesPage } from '@/extensionBridge/websiteMatch'
 
 export interface FillCredential {
-  id: number
+  id: string
   title: string
   username: string
   password: string
@@ -63,9 +63,9 @@ export function buildMatchingCredentialsResult(
 
 export function applyFavoriteState(
   credentials: FillCredential[],
-  favoriteIds: number[]
+  favoriteIds: string[]
 ): FillCredential[] {
-  const idSet = new Set(favoriteIds.map((id) => Number(id)))
+  const idSet = new Set(favoriteIds)
   return credentials.map((item) => ({
     ...item,
     favorite: idSet.has(item.id)

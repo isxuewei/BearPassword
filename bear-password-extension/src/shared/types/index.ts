@@ -52,6 +52,7 @@ export type PasswordType =
   | '银行卡'
   | '身份信息'
   | '安全备注'
+  | '两步验证（2FA）'
   | '数据库'
   | '自定义'
 
@@ -74,7 +75,7 @@ export type PasswordContent =
   | Record<string, unknown>
 
 export interface PasswordEntry {
-  id: number
+  id: string
   passwordType: PasswordType
   content: PasswordContent
   createTime?: string
@@ -104,7 +105,7 @@ export interface PasswordQueryParams {
 
 /** 自动填充用精简条目 */
 export interface FillCredential {
-  id: number
+  id: string
   title: string
   username: string
   password: string
@@ -149,7 +150,7 @@ export interface ExtensionMessage<T = unknown> {
 
 export interface AutofillPayload {
   tabId?: number
-  credentialId: number
+  credentialId: string
 }
 
 export interface SaveCredentialPayload {
@@ -167,7 +168,7 @@ export interface UpsertCredentialPayload {
 }
 
 export interface UpdateCredentialPayload extends UpsertCredentialPayload {
-  credentialId: number
+  credentialId: string
 }
 
 /** host：按主机名/IP + 端口匹配；path：按完整路径匹配 */

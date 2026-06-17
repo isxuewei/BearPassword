@@ -30,7 +30,15 @@
               />
               <span v-else>{{ avatarLetter }}</span>
             </div>
-            <span class="main-layout__username">{{ authStore.displayName }}</span>
+            <div class="main-layout__user-meta">
+              <span class="main-layout__username">{{ authStore.displayName }}</span>
+              <span
+                v-if="offlineVaultStore.enabled"
+                class="main-layout__offline-tag"
+              >
+                {{ t('settings.offlineMode') }}
+              </span>
+            </div>
           </button>
         </div>
       </aside>
@@ -99,6 +107,9 @@ import { useSecurityStore } from '@/stores/security'
 import { useServerStore } from '@/stores/server'
 import { useSettingsDialogStore } from '@/stores/settingsDialog'
 import { useVersionStore } from '@/stores/version'
+import { useVaultStore } from '@/stores/vault'
+import { useOfflineVaultStore } from '@/stores/offlineVault'
+import { preloadVaultViewChunk } from '@/utils/vaultViewPreload'
 import { useAutoLockActivity } from '@/composables/useAutoLockActivity'
 import { useI18n } from '@/composables/useI18n'
 
@@ -109,6 +120,8 @@ const securityStore = useSecurityStore()
 const serverStore = useServerStore()
 const settingsDialog = useSettingsDialogStore()
 const versionStore = useVersionStore()
+const vaultStore = useVaultStore()
+const offlineVaultStore = useOfflineVaultStore()
 const route = useRoute()
 
 const VAULT_PAGE_NAMES = new Set(['Vault', 'Favorites', 'Recent'])
@@ -174,12 +187,51 @@ watch(
   }
 )
 
+/** 登录后预加载密码库壳与数据，减少首次进入等待 */
+function prefetchVaultResources(): void {
+  void import('@/views/vault/VaultViewHost.vue')
+  const scheduleChunk = () => {
+    void preloadVaultViewChunk()
+  }
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(scheduleChunk, { timeout: 1500 })
+  } else {
+    setTimeout(scheduleChunk, 200)
+  }
+}
+
+function scheduleVaultDataWarmup(): void {
+  const run = () => {
+    void vaultStore.ensureLoaded()
+  }
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(run, { timeout: 2500 })
+  } else {
+    setTimeout(run, 400)
+  }
+}
+
+watch(
+  () => [authStore.isLoggedIn, securityStore.hasVaultAccess] as const,
+  ([loggedIn, hasVaultAccess]) => {
+    if (!loggedIn) return
+    prefetchVaultResources()
+    if (hasVaultAccess) {
+      scheduleVaultDataWarmup()
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   window.addEventListener('keydown', onSettingsHotkey)
   void getCurrentUserApi()
     .then((profile) => authStore.syncProfile(profile))
     .catch(() => {})
   void versionStore.checkForUpdate()
+  if (!offlineVaultStore.initialized) {
+    void offlineVaultStore.loadSettings()
+  }
 })
 
 onUnmounted(() => {
@@ -283,6 +335,14 @@ useAutoLockActivity()
     display: block;
   }
 
+  &__user-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+
   &__username {
     flex: 1;
     min-width: 0;
@@ -290,6 +350,19 @@ useAutoLockActivity()
     font-weight: 500;
     color: $color-text-secondary;
     @include text-ellipsis;
+  }
+
+  &__offline-tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $color-warning;
+    background: rgba(244, 162, 97, 0.14);
+    border: 1px solid rgba(244, 162, 97, 0.35);
+    white-space: nowrap;
   }
 
   &__content {

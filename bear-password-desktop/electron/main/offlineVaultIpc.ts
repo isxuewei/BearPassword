@@ -20,6 +20,13 @@ import {
   updateOfflineVaultEntryRaw
 } from './offlineVaultStorage'
 import type { OfflineVaultSnapshot } from '../../shared/offlineVault'
+import type { VaultEntryId } from '../../shared/vaultEntryId'
+
+function parseEntryId(id: unknown): VaultEntryId | null {
+  if (typeof id === 'string' && id.trim()) return id.trim()
+  if (typeof id === 'number' && Number.isFinite(id)) return String(id)
+  return null
+}
 
 function resolveDataDir(): string {
   return loadOfflineVaultSettings().dataDir
@@ -88,11 +95,12 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   })
 
   ipcMain.handle('offline-vault:updateEntry', (_event, id: unknown, entry: unknown) => {
-    if (typeof id !== 'number' || !entry || typeof entry !== 'object') {
+    const entryId = parseEntryId(id)
+    if (!entryId || !entry || typeof entry !== 'object') {
       return { ok: false as const, error: '条目格式无效' }
     }
     try {
-      const updated = updateOfflineVaultEntry(resolveDataDir(), id, entry as Parameters<typeof updateOfflineVaultEntry>[2])
+      const updated = updateOfflineVaultEntry(resolveDataDir(), entryId, entry as Parameters<typeof updateOfflineVaultEntry>[2])
       if (!updated) {
         return { ok: false as const, error: '条目不存在' }
       }
@@ -104,13 +112,14 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   })
 
   ipcMain.handle('offline-vault:updateEntryRaw', (_event, id: unknown, entry: unknown) => {
-    if (typeof id !== 'number' || !entry || typeof entry !== 'object') {
+    const entryId = parseEntryId(id)
+    if (!entryId || !entry || typeof entry !== 'object') {
       return { ok: false as const, error: '条目格式无效' }
     }
     try {
       const updated = updateOfflineVaultEntryRaw(
         resolveDataDir(),
-        id,
+        entryId,
         entry as Parameters<typeof updateOfflineVaultEntryRaw>[2]
       )
       if (!updated) {
@@ -124,11 +133,12 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   })
 
   ipcMain.handle('offline-vault:deleteEntry', (_event, id: unknown) => {
-    if (typeof id !== 'number') {
+    const entryId = parseEntryId(id)
+    if (!entryId) {
       return { ok: false as const, error: '条目 ID 无效' }
     }
     try {
-      const deleted = deleteOfflineVaultEntry(resolveDataDir(), id)
+      const deleted = deleteOfflineVaultEntry(resolveDataDir(), entryId)
       return { ok: true as const, deleted }
     } catch (error) {
       const message = error instanceof Error ? error.message : '删除本地条目失败'
@@ -141,11 +151,12 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   ipcMain.handle('offline-vault:getFavoriteIds', () => getOfflineVaultFavoriteIds(resolveDataDir()))
 
   ipcMain.handle('offline-vault:addFavorite', (_event, passwordId: unknown) => {
-    if (typeof passwordId !== 'number') {
+    const id = parseEntryId(passwordId)
+    if (!id) {
       return { ok: false as const, error: '密码 ID 无效' }
     }
     try {
-      addOfflineVaultFavorite(resolveDataDir(), passwordId)
+      addOfflineVaultFavorite(resolveDataDir(), id)
       return { ok: true as const }
     } catch (error) {
       const message = error instanceof Error ? error.message : '添加收藏失败'
@@ -154,11 +165,12 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   })
 
   ipcMain.handle('offline-vault:removeFavorite', (_event, passwordId: unknown) => {
-    if (typeof passwordId !== 'number') {
+    const id = parseEntryId(passwordId)
+    if (!id) {
       return { ok: false as const, error: '密码 ID 无效' }
     }
     try {
-      removeOfflineVaultFavorite(resolveDataDir(), passwordId)
+      removeOfflineVaultFavorite(resolveDataDir(), id)
       return { ok: true as const }
     } catch (error) {
       const message = error instanceof Error ? error.message : '取消收藏失败'
@@ -169,11 +181,12 @@ export function registerOfflineVaultIpc(getMainWindow: () => BrowserWindow | nul
   ipcMain.handle('offline-vault:getRecentMeta', () => getOfflineVaultRecentVisits(resolveDataDir()))
 
   ipcMain.handle('offline-vault:recordRecent', (_event, passwordId: unknown) => {
-    if (typeof passwordId !== 'number') {
+    const id = parseEntryId(passwordId)
+    if (!id) {
       return { ok: false as const, error: '密码 ID 无效' }
     }
     try {
-      recordOfflineVaultRecentVisit(resolveDataDir(), passwordId)
+      recordOfflineVaultRecentVisit(resolveDataDir(), id)
       return { ok: true as const }
     } catch (error) {
       const message = error instanceof Error ? error.message : '记录最近访问失败'

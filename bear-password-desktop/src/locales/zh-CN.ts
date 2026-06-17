@@ -291,7 +291,7 @@ const messages: MessageDict = {
   'settings.offlineMode': '离线模式',
   'settings.offlineModeDesc': '开启后密码库数据仅从本地目录读写，不再向服务器请求',
   'settings.offlineModeEnableConfirm':
-    '开启后将把当前密码库快照写入本地目录，之后新增、修改、删除均只保存在本地。是否继续？',
+    '开启后将合并本地目录与服务器数据：相同 ID 以本地为准，并补充服务器新增的条目。之后读写均仅在本地。是否继续？',
   'settings.offlineModeDisableConfirm':
     '关闭后将恢复从服务器同步数据，本地目录中的变更不会自动上传。是否继续？',
   'settings.offlineModeEnabled': '已开启离线模式',
@@ -438,6 +438,7 @@ const messages: MessageDict = {
   'vault.type.bankCard': '银行卡',
   'vault.type.identity': '身份标识',
   'vault.type.secureNote': '安全备注',
+  'vault.type.authenticator': '两步验证（2FA）',
   'vault.type.database': '数据库',
   'vault.type.custom': '自定义',
 

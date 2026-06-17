@@ -3,12 +3,13 @@
   <component
     :is="clickable ? 'button' : 'div'"
     class="stat-card"
-    :class="{ 'stat-card--clickable': clickable }"
+    :class="{ 'stat-card--clickable': clickable, 'stat-card--loading': loading }"
     :type="clickable ? 'button' : undefined"
     @click="handleClick"
   >
     <div class="stat-card__icon" :style="{ background: iconBg }">
-      <span v-html="icon" />
+      <span v-if="loading" class="stat-card__icon-skeleton" />
+      <span v-else v-html="icon" />
     </div>
     <div class="stat-card__content">
       <p class="stat-card__label">{{ label }}</p>
@@ -112,19 +113,28 @@ function handleClick(): void {
     line-height: 1.2;
   }
 
+  &--loading {
+    pointer-events: none;
+
+    .stat-card__label {
+      color: $color-text-muted;
+    }
+  }
+
+  &__icon-skeleton {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    @include skeleton-shimmer;
+  }
+
   &__skeleton {
     display: inline-block;
     width: 60px;
     height: 28px;
     border-radius: $radius-sm;
-    background: linear-gradient(90deg, $color-skeleton-base 25%, $color-skeleton-shine 50%, $color-skeleton-base 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    @include skeleton-shimmer;
   }
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 </style>

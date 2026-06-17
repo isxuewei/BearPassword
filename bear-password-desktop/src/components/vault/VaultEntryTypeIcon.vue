@@ -11,6 +11,13 @@
       <rect x="5" y="3" width="14" height="18" rx="2" stroke="white" stroke-width="1.5"/>
       <path d="M9 8H15M9 12H15M9 16H12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
     </template>
+    <!-- 两步验证 -->
+    <template v-else-if="type === '两步验证'">
+      <rect x="4" y="8" width="16" height="12" rx="2" stroke="white" stroke-width="1.5"/>
+      <path d="M8 8V6.5C8 4.5 9.8 3 12 3C14.2 3 16 4.5 16 6.5V8" stroke="white" stroke-width="1.5"/>
+      <circle cx="12" cy="14" r="2" stroke="white" stroke-width="1.5"/>
+      <path d="M9 17H15" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </template>
     <!-- 银行卡 -->
     <template v-else-if="type === '银行卡'">
       <rect x="2" y="5" width="20" height="14" rx="2" stroke="white" stroke-width="1.5"/>

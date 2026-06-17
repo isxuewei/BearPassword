@@ -1,6 +1,6 @@
 <template>
   <!-- Dashboard 首页：展示密码库统计数据 -->
-  <div class="dashboard-view">
+  <div class="dashboard-view" :aria-busy="loading">
     <header class="dashboard-view__header">
       <h1 class="dashboard-view__title">{{ t('dashboard.welcome') }}</h1>
       <p class="dashboard-view__desc">{{ t('dashboard.tagline') }}</p>

@@ -75,9 +75,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       return
     }
 
-    const credentialMatch = pathname.match(/^\/vault\/credentials\/(\d+)$/)
+    const credentialMatch = pathname.match(/^\/vault\/credentials\/(\d{1,20})$/)
     if (credentialMatch) {
-      const id = Number(credentialMatch[1])
+      const id = credentialMatch[1]
       if (req.method === 'GET') {
         const data = await invoke('getCredential', { id })
         writeJson(res, 200, { code: 0, message: 'ok', data })
@@ -103,9 +103,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       return
     }
 
-    const favoriteMatch = pathname.match(/^\/vault\/favorites\/(\d+)\/toggle$/)
+    const favoriteMatch = pathname.match(/^\/vault\/favorites\/(\d{1,20})\/toggle$/)
     if (req.method === 'POST' && favoriteMatch) {
-      const credentialId = Number(favoriteMatch[1])
+      const credentialId = favoriteMatch[1]
       const body = (await readJsonBody(req)) as { favorite?: boolean }
       await invoke('toggleFavorite', { credentialId, favorite: !!body?.favorite })
       writeJson(res, 200, { code: 0, message: 'ok', data: null })

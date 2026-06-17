@@ -5,6 +5,7 @@ import { isServerLoginContent } from '@/utils/loginContent'
 export type VaultEntryIconType =
   | '登录信息'
   | '安全备注'
+  | '两步验证'
   | '银行卡'
   | '身份标识'
   | '服务器'
@@ -33,12 +34,28 @@ export function getEntryIconType(entry: PasswordEntry): VaultEntryIconType {
   if (type === '自定义') return '自定义'
   if (type === '登录信息') return '登录信息'
   if (type === '安全备注') return '安全备注'
+  if (type === '两步验证（2FA）') return '两步验证'
   if (type === '银行卡') return '银行卡'
   return '自定义'
 }
 
+const VAULT_ENTRY_ICON_COLORS: Record<VaultEntryIconType, string> = {
+  登录信息: '#2ec4b6',
+  安全备注: '#f4a261',
+  两步验证: '#e63946',
+  银行卡: '#4ea8de',
+  身份标识: '#06d6a0',
+  服务器: '#1b998b',
+  数据库: '#5e60ce',
+  自定义: '#9b5de5'
+}
+
+export function getVaultEntryIconTypeColor(iconType: VaultEntryIconType): string {
+  return VAULT_ENTRY_ICON_COLORS[iconType]
+}
+
 export function getEntryTypeColor(entry: PasswordEntry): string {
-  return getPasswordTypeColor(getEntryIconType(entry))
+  return getVaultEntryIconTypeColor(getEntryIconType(entry))
 }
 
 export function getPasswordTypeIconType(type: PasswordType): VaultEntryIconType {
@@ -48,19 +65,11 @@ export function getPasswordTypeIconType(type: PasswordType): VaultEntryIconType 
   if (type === '自定义') return '自定义'
   if (type === '登录信息') return '登录信息'
   if (type === '安全备注') return '安全备注'
+  if (type === '两步验证（2FA）') return '两步验证'
   if (type === '银行卡') return '银行卡'
   return '自定义'
 }
 
 export function getPasswordTypeColor(type: PasswordType): string {
-  const colorMap: Record<VaultEntryIconType, string> = {
-    登录信息: '#2ec4b6',
-    安全备注: '#f4a261',
-    银行卡: '#4ea8de',
-    身份标识: '#06d6a0',
-    服务器: '#1b998b',
-    数据库: '#5e60ce',
-    自定义: '#9b5de5'
-  }
-  return colorMap[getPasswordTypeIconType(type)]
+  return getVaultEntryIconTypeColor(getPasswordTypeIconType(type))
 }

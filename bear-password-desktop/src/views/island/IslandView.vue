@@ -205,7 +205,7 @@ function handleEnter(): void {
 }
 
 function openEntry(entry: PasswordEntry): void {
-  window.islandApi?.openEntry(Number(entry.id))
+  window.islandApi?.openEntry(entry.id)
   collapse()
 }
 

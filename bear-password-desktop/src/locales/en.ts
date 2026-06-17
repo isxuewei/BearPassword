@@ -301,7 +301,7 @@ const messages: MessageDict = {
   'settings.offlineMode': 'Offline mode',
   'settings.offlineModeDesc': 'When enabled, vault data is read and written only from a local folder—no server requests',
   'settings.offlineModeEnableConfirm':
-    'Enabling will save a snapshot of your current vault to the local folder. All changes will stay local afterward. Continue?',
+    'Enabling merges local data with the server: matching IDs keep the local copy; new server-only items are added. All changes stay local afterward. Continue?',
   'settings.offlineModeDisableConfirm':
     'Disabling will sync from the server again. Local changes will not be uploaded automatically. Continue?',
   'settings.offlineModeEnabled': 'Offline mode enabled',
@@ -455,6 +455,7 @@ const messages: MessageDict = {
   'vault.type.bankCard': 'Bank card',
   'vault.type.identity': 'Identity',
   'vault.type.secureNote': 'Secure note',
+  'vault.type.authenticator': 'Two-factor (2FA)',
   'vault.type.database': 'Database',
   'vault.type.custom': 'Custom',
 

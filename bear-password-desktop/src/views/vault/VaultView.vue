@@ -112,7 +112,7 @@
       </el-button>
     </header>
 
-    <div v-loading="loading" class="vault-view__split">
+    <div class="vault-view__split" :aria-busy="pageLoading">
       <aside class="vault-view__list-pane">
         <div v-if="selectionMode" class="vault-view__batch-bar">
           <el-checkbox
@@ -154,14 +154,16 @@
           </div>
         </div>
 
-        <div v-if="!loading && entries.length === 0" class="vault-view__list-empty">
+        <VaultListSkeleton v-if="pageLoading" />
+
+        <div v-else-if="entries.length === 0" class="vault-view__list-empty">
           <p>{{ emptyListText }}</p>
           <button v-if="!isSpecialListMode" type="button" class="vault-view__list-empty-btn" @click="openCreate">
             + {{ t('vault.newItem') }}
           </button>
         </div>
 
-        <div v-else class="vault-view__list-scroll">
+        <div v-else ref="listScrollRef" class="vault-view__list-scroll" @scroll="onListScroll">
           <section
             v-for="group in groupedEntries"
             :key="group.label"
@@ -244,11 +246,18 @@
               </el-dropdown>
             </div>
           </section>
+          <div v-if="hasMoreVisibleEntries" class="vault-view__list-more" aria-hidden="true">
+            <span class="vault-view__list-more-dot" />
+            <span class="vault-view__list-more-dot" />
+            <span class="vault-view__list-more-dot" />
+          </div>
         </div>
       </aside>
 
       <main class="vault-view__detail-pane">
-        <div v-if="selectedEntry" class="vault-view__detail-inner">
+        <VaultDetailSkeleton v-if="pageLoading" />
+
+        <div v-else-if="selectedEntry" class="vault-view__detail-inner">
           <div class="vault-view__field-panel">
             <div class="vault-view__panel-hero">
               <span
@@ -287,6 +296,21 @@
             </div>
 
             <div class="vault-view__field-divider" />
+
+            <div
+              v-if="resolveEntryType(selectedEntry) === '两步验证（2FA）'"
+              class="vault-view__totp-panel"
+            >
+              <TotpCodeDisplay
+                :content="getAuthenticatorContent(selectedEntry)"
+                size="large"
+              />
+            </div>
+
+            <div
+              v-if="getPreviewFields(selectedEntry).length"
+              class="vault-view__field-divider"
+            />
 
             <div
               v-for="(item, index) in getPreviewFields(selectedEntry)"
@@ -477,12 +501,12 @@
 
 <script lang="ts">
 export default {
-  name: 'VaultView'
+  name: 'VaultViewCore'
 }
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   Plus,
@@ -501,6 +525,8 @@ import PasswordEntryDialog from '@/components/vault/PasswordEntryDialog.vue'
 import PasswordImportDialog from '@/components/vault/PasswordImportDialog.vue'
 import PasswordTypePicker from '@/components/vault/PasswordTypePicker.vue'
 import VaultEntryTypeIcon from '@/components/vault/VaultEntryTypeIcon.vue'
+import VaultListSkeleton from '@/components/vault/VaultListSkeleton.vue'
+import VaultDetailSkeleton from '@/components/vault/VaultDetailSkeleton.vue'
 import {
   addFavoriteApi,
   createPasswordApi,
@@ -519,6 +545,7 @@ import { useServerStore } from '@/stores/server'
 import { useSecurityStore } from '@/stores/security'
 import { useTrayStore } from '@/stores/tray'
 import { useVaultStore } from '@/stores/vault'
+import { normalizeAuthenticatorContent } from '@/utils/authenticatorContent'
 import { normalizeCustomContent } from '@/utils/customContent'
 import { normalizeDatabaseContent } from '@/utils/databaseContent'
 import { normalizeBankCardContent } from '@/utils/bankCardContent'
@@ -555,6 +582,8 @@ import {
   type VaultSortState
 } from '@/utils/vaultSort'
 
+const TotpCodeDisplay = defineAsyncComponent(() => import('@/components/vault/TotpCodeDisplay.vue'))
+
 interface PreviewField {
   label: string
   value: string
@@ -566,6 +595,10 @@ interface EntryGroup {
   label: string
   entries: PasswordEntry[]
 }
+
+/** 列表每次增量渲染条数（数据仍一次性拉取，仅控制 DOM 展示） */
+const LIST_BATCH_SIZE = 30
+const LIST_SCROLL_THRESHOLD = 120
 
 const route = useRoute()
 const { t, locale } = useI18n()
@@ -654,9 +687,11 @@ const sortOrderOptions = computed(() => {
   })
 })
 
-const loading = computed(() => vaultStore.loading)
-const selectedEntryId = ref<number | null>(null)
+const pageLoading = computed(() => vaultStore.loading || !vaultStore.loaded)
+const selectedEntryId = ref<string | null>(null)
 const searchInputRef = ref<InputInstance>()
+const listScrollRef = ref<HTMLElement | null>(null)
+const visibleEntryCount = ref(LIST_BATCH_SIZE)
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const dialogVisible = ref(false)
@@ -670,9 +705,9 @@ const fieldHideTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const SECRET_FIELD_AUTO_HIDE_MS = 3000
 const favoriteLoading = ref(false)
 const selectionMode = ref(false)
-const selectedIds = ref<Set<number>>(new Set())
+const selectedIds = ref<Set<string>>(new Set())
 const batchLoading = ref(false)
-const entryDropdownRefs = new Map<number, DropdownInstance>()
+const entryDropdownRefs = new Map<string, DropdownInstance>()
 
 type EntryMenuCommand = 'select' | 'favorite' | 'share' | 'duplicate' | 'edit' | 'delete'
 
@@ -683,7 +718,7 @@ const selectedEntry = computed(() =>
 const selectedCount = computed(() => selectedIds.value.size)
 
 const currentPageEntryIds = computed(() =>
-  entriesForDisplay.value.map((entry) => Number(entry.id))
+  visibleEntriesForDisplay.value.map((entry) => entry.id)
 )
 
 const isAllPageSelected = computed(() => {
@@ -715,9 +750,60 @@ const entriesForDisplay = computed(() => {
   return entries.value
 })
 
-const groupedEntries = computed(() =>
-  sortAndGroupEntries(entriesForDisplay.value, sortState.value, getEntryTitle)
+const visibleEntriesForDisplay = computed(() =>
+  entriesForDisplay.value.slice(0, visibleEntryCount.value)
 )
+
+const hasMoreVisibleEntries = computed(
+  () => visibleEntryCount.value < entriesForDisplay.value.length
+)
+
+const groupedEntries = computed(() =>
+  sortAndGroupEntries(visibleEntriesForDisplay.value, sortState.value, getEntryTitle)
+)
+
+function resetListWindow(): void {
+  visibleEntryCount.value = LIST_BATCH_SIZE
+  listScrollRef.value?.scrollTo({ top: 0 })
+}
+
+function loadMoreEntries(): void {
+  if (!hasMoreVisibleEntries.value) return
+  visibleEntryCount.value = Math.min(
+    visibleEntryCount.value + LIST_BATCH_SIZE,
+    entriesForDisplay.value.length
+  )
+}
+
+function onListScroll(event: Event): void {
+  const el = event.target as HTMLElement
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - LIST_SCROLL_THRESHOLD) {
+    loadMoreEntries()
+  }
+}
+
+function ensureListFillsViewport(): void {
+  const el = listScrollRef.value
+  if (!el || !hasMoreVisibleEntries.value) return
+  if (el.scrollHeight <= el.clientHeight + 1) {
+    loadMoreEntries()
+    void nextTick(ensureListFillsViewport)
+  }
+}
+
+watch(
+  [keyword, filterType, sortState, () => route.name, sourceEntries],
+  () => {
+    resetListWindow()
+    void nextTick(ensureListFillsViewport)
+  }
+)
+
+watch(pageLoading, (loading) => {
+  if (!loading) {
+    void nextTick(ensureListFillsViewport)
+  }
+})
 
 watch(entries, (list) => {
   if (!list.length) {
@@ -756,7 +842,7 @@ watch(
 
 function enterSelectionMode(entry?: PasswordEntry): void {
   selectionMode.value = true
-  selectedIds.value = entry ? new Set([Number(entry.id)]) : new Set()
+  selectedIds.value = entry ? new Set([entry.id]) : new Set()
 }
 
 function exitSelectionMode(): void {
@@ -764,15 +850,14 @@ function exitSelectionMode(): void {
   selectedIds.value = new Set()
 }
 
-function isEntrySelected(entryId: number): boolean {
-  return selectedIds.value.has(Number(entryId))
+function isEntrySelected(entryId: string): boolean {
+  return selectedIds.value.has(entryId)
 }
 
-function setEntrySelected(entryId: number, selected: boolean): void {
+function setEntrySelected(entryId: string, selected: boolean): void {
   const next = new Set(selectedIds.value)
-  const id = Number(entryId)
-  if (selected) next.add(id)
-  else next.delete(id)
+  if (selected) next.add(entryId)
+  else next.delete(entryId)
   selectedIds.value = next
 }
 
@@ -898,7 +983,7 @@ async function handleBatchDelete(): Promise<void> {
 
 function isEntryFavorite(entry: PasswordEntry): boolean {
   if (isFavoritesMode.value) return true
-  return vaultStore.favoriteIds.includes(Number(entry.id))
+  return vaultStore.favoriteIds.includes(entry.id)
 }
 
 async function syncFavoriteState(): Promise<void> {
@@ -906,7 +991,7 @@ async function syncFavoriteState(): Promise<void> {
 }
 
 async function handleToggleFavorite(entry: PasswordEntry): Promise<void> {
-  const entryId = Number(entry.id)
+  const entryId = entry.id
   const favorited = isEntryFavorite(entry)
   favoriteLoading.value = true
   try {
@@ -930,11 +1015,11 @@ async function handleToggleFavorite(entry: PasswordEntry): Promise<void> {
   }
 }
 
-function fieldVisibleKey(entryId: number, label: string): string {
+function fieldVisibleKey(entryId: string, label: string): string {
   return `${entryId}:${label}`
 }
 
-function isFieldVisible(entryId: number, label: string): boolean {
+function isFieldVisible(entryId: string, label: string): boolean {
   return !!visibleFields.value[fieldVisibleKey(entryId, label)]
 }
 
@@ -945,7 +1030,7 @@ function cancelFieldHideTimer(key: string): void {
   fieldHideTimers.delete(key)
 }
 
-function scheduleFieldHide(entryId: number, label: string): void {
+function scheduleFieldHide(entryId: string, label: string): void {
   const key = fieldVisibleKey(entryId, label)
   cancelFieldHideTimer(key)
   fieldHideTimers.set(key, setTimeout(() => {
@@ -954,7 +1039,7 @@ function scheduleFieldHide(entryId: number, label: string): void {
   }, SECRET_FIELD_AUTO_HIDE_MS))
 }
 
-function toggleFieldVisible(entryId: number, label: string): void {
+function toggleFieldVisible(entryId: string, label: string): void {
   const key = fieldVisibleKey(entryId, label)
   const nextVisible = !visibleFields.value[key]
   visibleFields.value[key] = nextVisible
@@ -963,7 +1048,7 @@ function toggleFieldVisible(entryId: number, label: string): void {
   }
 }
 
-async function handleFieldClick(entryId: number, item: PreviewField): Promise<void> {
+async function handleFieldClick(entryId: string, item: PreviewField): Promise<void> {
   if (!item.value || item.value === '-') return
 
   if (item.secret) {
@@ -1078,11 +1163,11 @@ async function copyText(successMessage: string, text: string): Promise<boolean> 
   return false
 }
 
-function selectEntry(id: number): void {
+function selectEntry(id: string): void {
   selectedEntryId.value = id
 }
 
-function setEntryDropdownRef(id: number, el: unknown): void {
+function setEntryDropdownRef(id: string, el: unknown): void {
   const instance = el as DropdownInstance | null
   if (instance?.handleOpen) {
     entryDropdownRefs.set(id, instance)
@@ -1091,14 +1176,14 @@ function setEntryDropdownRef(id: number, el: unknown): void {
   }
 }
 
-function closeAllEntryMenus(exceptId?: number): void {
+function closeAllEntryMenus(exceptId?: string): void {
   entryDropdownRefs.forEach((instance, id) => {
     if (exceptId !== undefined && id === exceptId) return
     instance.handleClose?.()
   })
 }
 
-function onEntryMenuVisibleChange(visible: boolean, entryId: number): void {
+function onEntryMenuVisibleChange(visible: boolean, entryId: string): void {
   if (visible) {
     closeAllEntryMenus(entryId)
   }
@@ -1150,6 +1235,7 @@ function handleSortCommand(command: { type: 'field' | 'order'; value: VaultSortF
     sortState.value = { ...sortState.value, order: command.value as VaultSortOrder }
   }
   saveVaultSort(sortState.value)
+  resetListWindow()
 }
 
 async function refreshVaultData(): Promise<void> {
@@ -1170,6 +1256,7 @@ async function ensureVaultData(): Promise<void> {
 
 function handleSearch(): void {
   exitSelectionMode()
+  resetListWindow()
 }
 
 function scheduleSearch(): void {
@@ -1295,6 +1382,8 @@ function getEntrySubtitle(entry: PasswordEntry): string {
       return normalizeIdentityContent(content).name || '-'
     case '安全备注':
       return getSecureNoteBodyPreview(content)
+    case '两步验证（2FA）':
+      return ''
     case '自定义': {
       const custom = normalizeCustomContent(content)
       const first = custom.fields.find((field) => field.label.trim())
@@ -1303,6 +1392,10 @@ function getEntrySubtitle(entry: PasswordEntry): string {
     default:
       return '-'
   }
+}
+
+function getAuthenticatorContent(entry: PasswordEntry) {
+  return normalizeAuthenticatorContent(entry.content as Record<string, unknown>)
 }
 
 function getPreviewFields(entry: PasswordEntry): PreviewField[] {
@@ -1426,6 +1519,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
       })
       return fields
     }
+    case '两步验证（2FA）':
+      return []
     case '自定义': {
       const custom = normalizeCustomContent(entry.content as Record<string, unknown>)
       return custom.fields.map((field) => ({
@@ -1460,8 +1555,14 @@ function formatDateTime(dateStr?: string): string {
 }
 
 onMounted(() => {
-  void ensureVaultData()
   window.addEventListener('keydown', onSearchHotkey)
+  requestAnimationFrame(() => {
+    void ensureVaultData()
+  })
+})
+
+onActivated(() => {
+  void vaultStore.ensureLoaded()
 })
 
 watch(
@@ -1683,6 +1784,29 @@ onUnmounted(() => {
     flex: 1;
     overflow-y: auto;
     padding: $spacing-sm 0;
+  }
+
+  &__list-more {
+    @include flex-center;
+    gap: 6px;
+    padding: $spacing-md 0 $spacing-lg;
+  }
+
+  &__list-more-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $color-text-muted;
+    opacity: 0.45;
+    animation: vault-list-more-pulse 1.2s ease-in-out infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
   }
 
   &__list-empty {
@@ -2021,6 +2145,14 @@ onUnmounted(() => {
     }
   }
 
+  &__totp-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-lg $spacing-md;
+  }
+
   &__field-label {
     width: 72px;
     flex-shrink: 0;
@@ -2138,6 +2270,20 @@ onUnmounted(() => {
   &__detail-meta {
     font-size: $font-size-xs;
     color: $color-text-muted;
+  }
+}
+
+@keyframes vault-list-more-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+
+  40% {
+    opacity: 0.9;
+    transform: scale(1);
   }
 }
 </style>

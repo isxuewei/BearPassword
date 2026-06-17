@@ -1,4 +1,5 @@
 import type { PageResult, PasswordContent, PasswordEntry, PasswordEntryParams } from '@/types'
+import { toVaultEntryId } from '../../shared/vaultEntryId'
 import {
   decryptContentObject,
   encryptContentObject,
@@ -24,11 +25,12 @@ export function isDecryptFailedContent(content: PasswordContent): boolean {
 }
 
 export async function decryptPasswordEntry(entry: PasswordEntry): Promise<PasswordEntry> {
+  const normalized: PasswordEntry = { ...entry, id: toVaultEntryId(entry.id) }
   const unlock = getUnlockContext()
   if (!unlock) {
-    if (isEncryptedContent(entry.content)) {
+    if (isEncryptedContent(normalized.content)) {
       return {
-        ...entry,
+        ...normalized,
         content: {
           title: '内容已加密',
           __decryptFailed__: true
@@ -37,15 +39,15 @@ export async function decryptPasswordEntry(entry: PasswordEntry): Promise<Passwo
         remark: ''
       }
     }
-    return enrichEntryFromContent(entry)
+    return enrichEntryFromContent(normalized)
   }
 
   try {
-    const content = await decryptContentObject(entry.content, unlock)
-    return enrichEntryFromContent({ ...entry, content })
+    const content = await decryptContentObject(normalized.content, unlock)
+    return enrichEntryFromContent({ ...normalized, content })
   } catch {
     return {
-      ...entry,
+      ...normalized,
       content: {
         title: '解密失败，请检查主密码与账户密钥',
         __decryptFailed__: true

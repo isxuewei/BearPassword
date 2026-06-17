@@ -9,6 +9,7 @@ export type PasswordType =
   | '银行卡'
   | '身份信息'
   | '安全备注'
+  | '两步验证（2FA）'
   | '数据库'
   | '自定义'
 
@@ -82,6 +83,17 @@ export interface SecureNoteContent {
   extraFields: LoginExtraField[]
 }
 
+/** 两步验证（2FA / TOTP）内容 */
+export interface AuthenticatorContent {
+  title: string
+  issuer: string
+  account: string
+  secret: string
+  algorithm: 'SHA1' | 'SHA256' | 'SHA512'
+  digits: number
+  period: number
+}
+
 /** 密码内容（按类型扩展） */
 export type PasswordContent =
   | LoginContent
@@ -90,11 +102,13 @@ export type PasswordContent =
   | CustomContent
   | DatabaseContent
   | SecureNoteContent
+  | AuthenticatorContent
   | Record<string, unknown>
 
 /** 密码条目（服务端仅返回 passwordType + content，衍生字段由客户端解析） */
 export interface PasswordEntry {
-  id: number
+  /** 雪花 ID，JSON 中为字符串 */
+  id: string
   passwordType: PasswordType
   content: PasswordContent
   createTime?: string
@@ -129,7 +143,7 @@ export interface PasswordQueryParams {
 
 /** 收藏 / 最近访问关联元数据（不含 content） */
 export interface PasswordRelationMetaItem {
-  passwordId: number
+  passwordId: string
   time?: string
 }
 
@@ -170,13 +184,6 @@ export const PASSWORD_PICKER_ITEMS: PasswordPickerItem[] = [
     featured: true
   },
   {
-    label: '银行卡',
-    value: '银行卡',
-    keywords: ['银行卡', '信用卡', '卡号', 'card'],
-    color: '#4ea8de',
-    featured: true
-  },
-  {
     label: '身份标识',
     value: '身份信息',
     keywords: ['身份', '证件', '身份证', 'identity'],
@@ -184,17 +191,10 @@ export const PASSWORD_PICKER_ITEMS: PasswordPickerItem[] = [
     featured: true
   },
   {
-    label: '服务器',
-    value: '服务器',
-    keywords: ['服务器', 'server', 'ssh', '主机', 'vps', 'linux'],
-    color: '#1b998b',
-    featured: true
-  },
-  {
-    label: '数据库',
-    value: '数据库',
-    keywords: ['数据库', 'database', 'mysql', 'postgres', 'redis', 'sql'],
-    color: '#5e60ce',
+    label: '银行卡',
+    value: '银行卡',
+    keywords: ['银行卡', '信用卡', '卡号', 'card'],
+    color: '#4ea8de',
     featured: true
   },
   {
@@ -202,6 +202,27 @@ export const PASSWORD_PICKER_ITEMS: PasswordPickerItem[] = [
     value: '自定义',
     keywords: ['自定义', 'custom', '其他'],
     color: '#9b5de5',
+    featured: true
+  },
+  {
+    label: '两步验证（2FA）',
+    value: '两步验证（2FA）',
+    keywords: ['两步验证', '2fa', '验证器', 'authenticator', 'totp', 'otp', '双重验证', '谷歌验证'],
+    color: '#e63946',
+    featured: true
+  },
+  {
+    label: '服务器',
+    value: '服务器',
+    keywords: ['服务器', 'server', 'ssh', '主机', 'vps', 'linux'],
+    color: '#1b998b',
+    featured: false
+  },
+  {
+    label: '数据库',
+    value: '数据库',
+    keywords: ['数据库', 'database', 'mysql', 'postgres', 'redis', 'sql'],
+    color: '#5e60ce',
     featured: false
   }
 ]
@@ -209,10 +230,11 @@ export const PASSWORD_PICKER_ITEMS: PasswordPickerItem[] = [
 /** 列表筛选用（后端类型） */
 export const PASSWORD_TYPE_OPTIONS: { label: string; value: PasswordType }[] = [
   { label: '登录信息', value: '登录信息' },
-  { label: '服务器', value: '服务器' },
   { label: '安全备注', value: '安全备注' },
-  { label: '银行卡', value: '银行卡' },
   { label: '身份标识', value: '身份信息' },
-  { label: '数据库', value: '数据库' },
-  { label: '自定义', value: '自定义' }
+  { label: '银行卡', value: '银行卡' },
+  { label: '自定义', value: '自定义' },
+  { label: '两步验证（2FA）', value: '两步验证（2FA）' },
+  { label: '服务器', value: '服务器' },
+  { label: '数据库', value: '数据库' }
 ]

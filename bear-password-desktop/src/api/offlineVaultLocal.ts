@@ -1,5 +1,6 @@
 import type { PasswordEntry, PasswordRelationMetaItem } from '@/types'
 import type { PasswordEntryApiParams } from '@/utils/contentMetadata'
+import { toVaultEntryId, type VaultEntryId } from '../../shared/vaultEntryId'
 import { isOfflineVaultApiAvailable, isOfflineVaultMode } from '@/utils/offlineVaultMode'
 
 function assertOfflineApi(): void {
@@ -12,13 +13,17 @@ function unwrapEntry(result: { ok: true; entry: unknown } | { ok: false; error: 
   if (!result.ok) {
     throw new Error(result.error)
   }
-  return result.entry as PasswordEntry
+  const entry = result.entry as PasswordEntry
+  return { ...entry, id: toVaultEntryId(entry.id) }
 }
 
 export async function fetchOfflinePasswordEntriesRaw(): Promise<PasswordEntry[]> {
   assertOfflineApi()
   const entries = await window.offlineVaultApi!.listEntries()
-  return entries as PasswordEntry[]
+  return (entries as PasswordEntry[]).map((entry) => ({
+    ...entry,
+    id: toVaultEntryId(entry.id)
+  }))
 }
 
 export async function createOfflinePasswordEntryRaw(
@@ -30,17 +35,17 @@ export async function createOfflinePasswordEntryRaw(
 }
 
 export async function updateOfflinePasswordEntryRaw(
-  id: number,
+  id: VaultEntryId,
   data: PasswordEntryApiParams
 ): Promise<PasswordEntry> {
   assertOfflineApi()
-  const result = await window.offlineVaultApi!.updateEntryRaw(id, data)
+  const result = await window.offlineVaultApi!.updateEntryRaw(toVaultEntryId(id), data)
   return unwrapEntry(result)
 }
 
-export async function deleteOfflinePasswordEntry(id: number): Promise<void> {
+export async function deleteOfflinePasswordEntry(id: VaultEntryId): Promise<void> {
   assertOfflineApi()
-  const result = await window.offlineVaultApi!.deleteEntry(id)
+  const result = await window.offlineVaultApi!.deleteEntry(toVaultEntryId(id))
   if (!result.ok) {
     throw new Error(result.error)
   }
@@ -51,22 +56,22 @@ export function getOfflineFavoriteMetaApi(): Promise<PasswordRelationMetaItem[]>
   return window.offlineVaultApi!.getFavoritesMeta() as Promise<PasswordRelationMetaItem[]>
 }
 
-export function getOfflineFavoriteIdsApi(): Promise<number[]> {
+export function getOfflineFavoriteIdsApi(): Promise<VaultEntryId[]> {
   assertOfflineApi()
-  return window.offlineVaultApi!.getFavoriteIds()
+  return window.offlineVaultApi!.getFavoriteIds().then((ids) => ids.map((id) => toVaultEntryId(id)))
 }
 
-export async function addOfflineFavoriteApi(passwordId: number): Promise<void> {
+export async function addOfflineFavoriteApi(passwordId: VaultEntryId): Promise<void> {
   assertOfflineApi()
-  const result = await window.offlineVaultApi!.addFavorite(passwordId)
+  const result = await window.offlineVaultApi!.addFavorite(toVaultEntryId(passwordId))
   if (!result.ok) {
     throw new Error(result.error)
   }
 }
 
-export async function removeOfflineFavoriteApi(passwordId: number): Promise<void> {
+export async function removeOfflineFavoriteApi(passwordId: VaultEntryId): Promise<void> {
   assertOfflineApi()
-  const result = await window.offlineVaultApi!.removeFavorite(passwordId)
+  const result = await window.offlineVaultApi!.removeFavorite(toVaultEntryId(passwordId))
   if (!result.ok) {
     throw new Error(result.error)
   }
@@ -77,9 +82,9 @@ export function getOfflineRecentVisitMetaApi(): Promise<PasswordRelationMetaItem
   return window.offlineVaultApi!.getRecentMeta() as Promise<PasswordRelationMetaItem[]>
 }
 
-export async function recordOfflineRecentVisitApi(passwordId: number): Promise<void> {
+export async function recordOfflineRecentVisitApi(passwordId: VaultEntryId): Promise<void> {
   assertOfflineApi()
-  const result = await window.offlineVaultApi!.recordRecent(passwordId)
+  const result = await window.offlineVaultApi!.recordRecent(toVaultEntryId(passwordId))
   if (!result.ok) {
     throw new Error(result.error)
   }

@@ -2,6 +2,7 @@
  * 密码库列表排序（参考 1Password）
  */
 import type { PasswordEntry } from '@/types'
+import { toVaultEntryId } from '../../shared/vaultEntryId'
 
 export type VaultSortField = 'title' | 'createTime' | 'updateTime' | 'recent'
 export type VaultSortOrder = 'asc' | 'desc'
@@ -59,9 +60,9 @@ export function saveVaultSort(state: VaultSortState): void {
   localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(state))
 }
 
-export function recordRecentAccess(entryId: number): void {
+export function recordRecentAccess(entryId: string): void {
   const map = loadRecentAccessMap()
-  map[String(entryId)] = Date.now()
+  map[toVaultEntryId(entryId)] = Date.now()
   localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(map))
 }
 
@@ -76,8 +77,8 @@ function loadRecentAccessMap(): Record<string, number> {
   }
 }
 
-function getRecentAccessTime(entryId: number): number {
-  return loadRecentAccessMap()[String(entryId)] ?? 0
+function getRecentAccessTime(entryId: string): number {
+  return loadRecentAccessMap()[toVaultEntryId(entryId)] ?? 0
 }
 
 function compareStrings(a: string, b: string, order: VaultSortOrder): number {

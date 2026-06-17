@@ -1,22 +1,23 @@
 import type { PasswordEntry } from '@/types'
+import { toVaultEntryId, type VaultEntryId } from '../../shared/vaultEntryId'
 
 export interface PasswordRelationMetaItem {
-  passwordId: number
+  passwordId: VaultEntryId
   time?: string
 }
 
 export interface FavoriteMetaItem {
-  passwordId: number
+  passwordId: VaultEntryId
   favoriteTime: string
 }
 
 export interface RecentVisitMetaItem {
-  passwordId: number
+  passwordId: VaultEntryId
   recentVisitTime: string
 }
 
-function toEntryMap(entries: PasswordEntry[]): Map<number, PasswordEntry> {
-  return new Map(entries.map((entry) => [Number(entry.id), entry]))
+function toEntryMap(entries: PasswordEntry[]): Map<VaultEntryId, PasswordEntry> {
+  return new Map(entries.map((entry) => [toVaultEntryId(entry.id), entry]))
 }
 
 /** 从密码库缓存 + 收藏元数据组装收藏列表 */
@@ -28,7 +29,7 @@ export function buildFavoriteEntries(
   const result: PasswordEntry[] = []
 
   for (const item of meta) {
-    const entry = entryMap.get(Number(item.passwordId))
+    const entry = entryMap.get(toVaultEntryId(item.passwordId))
     if (!entry) continue
     result.push({
       ...entry,
@@ -49,7 +50,7 @@ export function buildRecentEntries(
   const result: PasswordEntry[] = []
 
   for (const item of meta) {
-    const entry = entryMap.get(Number(item.passwordId))
+    const entry = entryMap.get(toVaultEntryId(item.passwordId))
     if (!entry) continue
     result.push({
       ...entry,
@@ -62,14 +63,14 @@ export function buildRecentEntries(
 
 export function mapFavoriteMeta(items: PasswordRelationMetaItem[]): FavoriteMetaItem[] {
   return items.map((item) => ({
-    passwordId: Number(item.passwordId),
+    passwordId: toVaultEntryId(item.passwordId),
     favoriteTime: item.time ?? ''
   }))
 }
 
 export function mapRecentVisitMeta(items: PasswordRelationMetaItem[]): RecentVisitMetaItem[] {
   return items.map((item) => ({
-    passwordId: Number(item.passwordId),
+    passwordId: toVaultEntryId(item.passwordId),
     recentVisitTime: item.time ?? ''
   }))
 }

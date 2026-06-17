@@ -126,6 +126,11 @@ interface FileApi {
   }) => Promise<{ ok: true; filePath: string } | { ok: false; canceled: true }>
 }
 
+/** Electron preload 暴露的剪贴板图片读取 API */
+interface ClipboardApi {
+  readImageDataUrl: () => Promise<{ ok: true; dataUrl: string } | { ok: false; reason: 'empty' }>
+}
+
 /** Electron preload 暴露的安全密钥存储 API（系统钥匙串） */
 interface SecureStorageApi {
   isAvailable: () => Promise<boolean>
@@ -195,24 +200,24 @@ interface OfflineVaultApi {
     | { ok: true; entry: unknown }
     | { ok: false; error: string }
   >
-  updateEntry: (id: number, entry: unknown) => Promise<
+  updateEntry: (id: string, entry: unknown) => Promise<
     | { ok: true; entry: unknown }
     | { ok: false; error: string }
   >
-  updateEntryRaw: (id: number, entry: unknown) => Promise<
+  updateEntryRaw: (id: string, entry: unknown) => Promise<
     | { ok: true; entry: unknown }
     | { ok: false; error: string }
   >
-  deleteEntry: (id: number) => Promise<
+  deleteEntry: (id: string) => Promise<
     | { ok: true; deleted: boolean }
     | { ok: false; error: string }
   >
   getFavoritesMeta: () => Promise<unknown[]>
-  getFavoriteIds: () => Promise<number[]>
-  addFavorite: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
-  removeFavorite: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
+  getFavoriteIds: () => Promise<string[]>
+  addFavorite: (passwordId: string) => Promise<{ ok: true } | { ok: false; error: string }>
+  removeFavorite: (passwordId: string) => Promise<{ ok: true } | { ok: false; error: string }>
   getRecentMeta: () => Promise<unknown[]>
-  recordRecent: (passwordId: number) => Promise<{ ok: true } | { ok: false; error: string }>
+  recordRecent: (passwordId: string) => Promise<{ ok: true } | { ok: false; error: string }>
 }
 
 declare global {
@@ -224,6 +229,7 @@ declare global {
     trayApi?: TrayApi
     dockApi?: DockApi
     fileApi?: FileApi
+    clipboardApi?: ClipboardApi
     secureStorageApi?: SecureStorageApi
     vaultPasswordApi?: VaultPasswordApi
     biometricApi?: BiometricApi

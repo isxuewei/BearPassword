@@ -84,7 +84,7 @@ export async function getMatchingCredentialsApi(
   return bridgeFetch<MatchingCredentialsResult>(`/vault/match?${query.toString()}`)
 }
 
-export async function getCredentialApi(id: number): Promise<FillCredential> {
+export async function getCredentialApi(id: string): Promise<FillCredential> {
   return bridgeFetch<FillCredential>(`/vault/credentials/${id}`)
 }
 
@@ -111,11 +111,11 @@ export async function saveCredentialApi(payload: SaveCredentialPayload): Promise
   })
 }
 
-export async function deleteCredentialApi(id: number): Promise<void> {
+export async function deleteCredentialApi(id: string): Promise<void> {
   await bridgeFetch<null>(`/vault/credentials/${id}`, { method: 'DELETE' })
 }
 
-export async function toggleFavoriteApi(credentialId: number, favorite: boolean): Promise<void> {
+export async function toggleFavoriteApi(credentialId: string, favorite: boolean): Promise<void> {
   await bridgeFetch<null>(`/vault/favorites/${credentialId}/toggle`, {
     method: 'POST',
     body: JSON.stringify({ favorite })

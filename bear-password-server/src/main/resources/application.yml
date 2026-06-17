@@ -144,6 +144,9 @@ bear:
       send-interval-seconds: 60
     redis:
       key-prefix: bear:password
+    snowflake:
+      worker-id: ${SNOWFLAKE_WORKER_ID:1}
+      datacenter-id: ${SNOWFLAKE_DATACENTER_ID:1}
     mfa:
       totp-encryption-key: ${MFA_TOTP_ENCRYPTION_KEY:}
       session-ttl-seconds: 300

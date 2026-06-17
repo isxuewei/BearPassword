@@ -157,7 +157,7 @@ export const useVaultStore = defineStore('vault', () => {
     }
   }
 
-  async function autofill(credentialId: number): Promise<void> {
+  async function autofill(credentialId: string): Promise<void> {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab?.id) {
       showToast(t('vault.toast.fillNoTab'))

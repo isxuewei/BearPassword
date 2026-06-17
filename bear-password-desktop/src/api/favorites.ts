@@ -1,6 +1,7 @@
 import { request } from '@/utils/request'
 import type { PageResult, PasswordRelationMetaItem } from '@/types'
 import type { PasswordEntry } from '@/types'
+import { toVaultEntryId, type VaultEntryId } from '../../shared/vaultEntryId'
 import { decryptPasswordPage } from '@/utils/vaultEntryTransform'
 import {
   addOfflineFavoriteApi,
@@ -29,25 +30,27 @@ export function getFavoriteMetaApi(): Promise<PasswordRelationMetaItem[]> {
 }
 
 /** 获取已收藏的 password ID 列表 */
-export function getFavoriteIdsApi(): Promise<number[]> {
+export function getFavoriteIdsApi(): Promise<VaultEntryId[]> {
   if (shouldUseOfflineVault()) {
     return getOfflineFavoriteIdsApi()
   }
-  return request.get<number[]>('/favorites/ids')
+  return request.get<VaultEntryId[]>('/favorites/ids')
 }
 
 /** 添加收藏 */
-export function addFavoriteApi(passwordId: number): Promise<void> {
+export function addFavoriteApi(passwordId: VaultEntryId): Promise<void> {
+  const id = toVaultEntryId(passwordId)
   if (shouldUseOfflineVault()) {
-    return addOfflineFavoriteApi(passwordId)
+    return addOfflineFavoriteApi(id)
   }
-  return request.post<void>(`/favorites/${passwordId}`)
+  return request.post<void>(`/favorites/${id}`)
 }
 
 /** 取消收藏 */
-export function removeFavoriteApi(passwordId: number): Promise<void> {
+export function removeFavoriteApi(passwordId: VaultEntryId): Promise<void> {
+  const id = toVaultEntryId(passwordId)
   if (shouldUseOfflineVault()) {
-    return removeOfflineFavoriteApi(passwordId)
+    return removeOfflineFavoriteApi(id)
   }
-  return request.delete<void>(`/favorites/${passwordId}`)
+  return request.delete<void>(`/favorites/${id}`)
 }

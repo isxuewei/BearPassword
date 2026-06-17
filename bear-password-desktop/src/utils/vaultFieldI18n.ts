@@ -27,6 +27,13 @@ const FIELD_LABEL_I18N_KEYS: Record<string, string> = {
   端口: 'entry.field.port',
   数据库: 'entry.field.databaseName',
   数据库名: 'entry.field.databaseNameLegacy',
+  发行方: 'entry.field.issuer',
+  账户: 'entry.field.account',
+  密钥: 'entry.field.secret',
+  算法: 'entry.field.algorithm',
+  位数: 'entry.field.digits',
+  周期: 'entry.field.period',
+  验证码: 'entry.field.totpCode',
   备注: 'entry.form.remark',
   标签: 'entry.form.tags',
   标题: 'entry.form.fieldTitle'

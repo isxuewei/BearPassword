@@ -1,11 +1,13 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { OfflineVaultSettings } from '../../shared/offlineVault'
+import type { OfflineVaultSettings, OfflineVaultSnapshot } from '../../shared/offlineVault'
+import { mergeOfflineVaultSnapshots, normalizeOfflineVaultSnapshot } from '../../shared/offlineVault'
 import { setOfflineVaultModeEnabled, isOfflineVaultApiAvailable } from '@/utils/offlineVaultMode'
 import { fetchAllPasswordEntriesRaw } from '@/api/vaultRaw'
 import { getFavoriteMetaApi } from '@/api/favorites'
 import { getRecentVisitMetaApi } from '@/api/recent'
 import { useVaultStore } from '@/stores/vault'
+import type { PasswordEntry } from '@/types'
 
 export const useOfflineVaultStore = defineStore('offlineVault', () => {
   const enabled = ref(false)
@@ -80,27 +82,18 @@ export const useOfflineVaultStore = defineStore('offlineVault', () => {
   async function importCurrentVaultToLocal(): Promise<boolean> {
     if (!isOfflineVaultApiAvailable()) return false
 
-    const [entries, favorites, recents] = await Promise.all([
+    const [localSnapshotRaw, serverEntries, favorites, recents] = await Promise.all([
+      window.offlineVaultApi!.readSnapshot(),
       fetchAllPasswordEntriesRaw(),
       getFavoriteMetaApi().catch(() => []),
       getRecentVisitMetaApi().catch(() => [])
     ])
 
-    const maxId = entries.reduce((max, entry) => Math.max(max, Number(entry.id) || 0), 0)
-    const result = await window.offlineVaultApi!.importSnapshot({
-      version: 1,
-      nextId: maxId + 1,
-      entries,
-      favorites: favorites.map((item) => ({
-        passwordId: item.passwordId,
-        time: item.time
-      })),
-      recentVisits: recents.map((item) => ({
-        passwordId: item.passwordId,
-        time: item.time
-      }))
-    })
+    const localSnapshot = normalizeOfflineVaultSnapshot(localSnapshotRaw)
+    const serverSnapshot = buildOfflineVaultSnapshot(serverEntries, favorites, recents)
+    const mergedSnapshot = mergeOfflineVaultSnapshots(localSnapshot, serverSnapshot)
 
+    const result = await window.offlineVaultApi!.importSnapshot(mergedSnapshot)
     return result.ok
   }
 
@@ -140,3 +133,29 @@ export const useOfflineVaultStore = defineStore('offlineVault', () => {
     importCurrentVaultToLocal
   }
 })
+
+function buildOfflineVaultSnapshot(
+  entries: PasswordEntry[],
+  favorites: Array<{ passwordId: string; time?: string }>,
+  recents: Array<{ passwordId: string; time?: string }>
+): OfflineVaultSnapshot {
+  return {
+    version: 1,
+    nextId: 1,
+    entries: entries.map((entry) => ({
+      id: entry.id,
+      passwordType: entry.passwordType,
+      content: entry.content,
+      createTime: entry.createTime,
+      updateTime: entry.updateTime
+    })),
+    favorites: favorites.map((item) => ({
+      passwordId: item.passwordId,
+      time: item.time
+    })),
+    recentVisits: recents.map((item) => ({
+      passwordId: item.passwordId,
+      time: item.time
+    }))
+  }
+}

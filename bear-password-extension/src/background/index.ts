@@ -138,7 +138,7 @@ async function updateBadgeForTab(tabId: number, url?: string, force = false): Pr
 }
 
 async function resolveFillCredential(
-  credentialId: number,
+  credentialId: string,
   pageUrl?: string
 ): Promise<FillCredential> {
   if (pageUrl) {
@@ -321,7 +321,7 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
 
     case 'TOGGLE_FAVORITE': {
       await assertDesktopUnlocked()
-      const { credentialId, favorite } = message.payload as { credentialId: number; favorite: boolean }
+      const { credentialId, favorite } = message.payload as { credentialId: string; favorite: boolean }
       await toggleFavoriteApi(credentialId, favorite)
       clearCredentialsCache()
       return true
@@ -329,7 +329,7 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
 
     case 'DELETE_CREDENTIAL': {
       await assertDesktopUnlocked()
-      const { credentialId } = message.payload as { credentialId: number }
+      const { credentialId } = message.payload as { credentialId: string }
       await deleteCredentialApi(credentialId)
       clearCredentialsCache()
       await updateBadgeForActiveTab()

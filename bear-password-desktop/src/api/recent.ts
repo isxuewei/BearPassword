@@ -27,7 +27,7 @@ export function getRecentVisitMetaApi(): Promise<PasswordRelationMetaItem[]> {
 }
 
 /** 记录一次最近访问（点击明细字段复制时调用） */
-export function recordRecentVisitApi(passwordId: number): Promise<void> {
+export function recordRecentVisitApi(passwordId: string): Promise<void> {
   if (shouldUseOfflineVault()) {
     return recordOfflineRecentVisitApi(passwordId)
   }

@@ -148,6 +148,15 @@ const fileApi = {
 
 contextBridge.exposeInMainWorld('fileApi', fileApi)
 
+const clipboardApi = {
+  readImageDataUrl: () =>
+    ipcRenderer.invoke('clipboard:readImageDataUrl') as Promise<
+      { ok: true; dataUrl: string } | { ok: false; reason: 'empty' }
+    >
+}
+
+contextBridge.exposeInMainWorld('clipboardApi', clipboardApi)
+
 const secureStorageApi = {
   isAvailable: (): Promise<boolean> => ipcRenderer.invoke('secure-storage:isAvailable'),
   get: (): Promise<string | null> => ipcRenderer.invoke('secure-storage:get'),
@@ -223,35 +232,35 @@ const offlineVaultApi = {
       | { ok: true; entry: unknown }
       | { ok: false; error: string }
     >,
-  updateEntry: (id: number, entry: unknown) =>
+  updateEntry: (id: string, entry: unknown) =>
     ipcRenderer.invoke('offline-vault:updateEntry', id, entry) as Promise<
       | { ok: true; entry: unknown }
       | { ok: false; error: string }
     >,
-  updateEntryRaw: (id: number, entry: unknown) =>
+  updateEntryRaw: (id: string, entry: unknown) =>
     ipcRenderer.invoke('offline-vault:updateEntryRaw', id, entry) as Promise<
       | { ok: true; entry: unknown }
       | { ok: false; error: string }
     >,
-  deleteEntry: (id: number) =>
+  deleteEntry: (id: string) =>
     ipcRenderer.invoke('offline-vault:deleteEntry', id) as Promise<
       | { ok: true; deleted: boolean }
       | { ok: false; error: string }
     >,
   getFavoritesMeta: () => ipcRenderer.invoke('offline-vault:getFavoritesMeta') as Promise<unknown[]>,
-  getFavoriteIds: () => ipcRenderer.invoke('offline-vault:getFavoriteIds') as Promise<number[]>,
-  addFavorite: (passwordId: number) =>
+  getFavoriteIds: () => ipcRenderer.invoke('offline-vault:getFavoriteIds') as Promise<string[]>,
+  addFavorite: (passwordId: string) =>
     ipcRenderer.invoke('offline-vault:addFavorite', passwordId) as Promise<
       | { ok: true }
       | { ok: false; error: string }
     >,
-  removeFavorite: (passwordId: number) =>
+  removeFavorite: (passwordId: string) =>
     ipcRenderer.invoke('offline-vault:removeFavorite', passwordId) as Promise<
       | { ok: true }
       | { ok: false; error: string }
     >,
   getRecentMeta: () => ipcRenderer.invoke('offline-vault:getRecentMeta') as Promise<unknown[]>,
-  recordRecent: (passwordId: number) =>
+  recordRecent: (passwordId: string) =>
     ipcRenderer.invoke('offline-vault:recordRecent', passwordId) as Promise<
       | { ok: true }
       | { ok: false; error: string }

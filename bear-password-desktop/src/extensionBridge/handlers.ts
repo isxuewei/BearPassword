@@ -70,7 +70,7 @@ export async function extensionBridgeMatchCredentials(params: {
 
   const [entries, favoriteIds] = await Promise.all([
     getLoginEntriesForMatch(),
-    getFavoriteIdsApi().catch(() => [] as number[])
+    getFavoriteIdsApi().catch(() => [] as string[])
   ])
 
   const result = url
@@ -88,7 +88,7 @@ export async function extensionBridgeMatchCredentials(params: {
   }
 }
 
-export async function extensionBridgeGetCredential(params: { id: number }): Promise<FillCredential> {
+export async function extensionBridgeGetCredential(params: { id: string }): Promise<FillCredential> {
   assertVaultReady()
   const entry = await getPasswordDetailApi(params.id)
   const credential = toFillCredential(entry)
@@ -138,7 +138,7 @@ export async function extensionBridgeCreateCredential(params: {
 }
 
 export async function extensionBridgeUpdateCredential(params: {
-  credentialId: number
+  credentialId: string
   title: string
   username: string
   password: string
@@ -157,14 +157,14 @@ export async function extensionBridgeUpdateCredential(params: {
   await useVaultStore().refreshAfterMutation()
 }
 
-export async function extensionBridgeDeleteCredential(params: { id: number }): Promise<void> {
+export async function extensionBridgeDeleteCredential(params: { id: string }): Promise<void> {
   assertVaultReady()
   await deletePasswordApi(params.id)
   await useVaultStore().refreshAfterMutation()
 }
 
 export async function extensionBridgeToggleFavorite(params: {
-  credentialId: number
+  credentialId: string
   favorite: boolean
 }): Promise<void> {
   assertVaultReady()
@@ -180,7 +180,7 @@ export type ExtensionBridgeHandler = (params: unknown) => Promise<unknown> | unk
 export const extensionBridgeHandlers: Record<string, ExtensionBridgeHandler> = {
   health: () => extensionBridgeHealth(),
   matchCredentials: (params) => extensionBridgeMatchCredentials(params as { url?: string; matchBy?: 'host' | 'path' }),
-  getCredential: (params) => extensionBridgeGetCredential(params as { id: number }),
+  getCredential: (params) => extensionBridgeGetCredential(params as { id: string }),
   createCredential: (params) =>
     extensionBridgeCreateCredential(
       params as { title: string; username: string; password: string; websites: string[] }
@@ -188,14 +188,14 @@ export const extensionBridgeHandlers: Record<string, ExtensionBridgeHandler> = {
   updateCredential: (params) =>
     extensionBridgeUpdateCredential(
       params as {
-        credentialId: number
+        credentialId: string
         title: string
         username: string
         password: string
         websites: string[]
       }
     ),
-  deleteCredential: (params) => extensionBridgeDeleteCredential(params as { id: number }),
+  deleteCredential: (params) => extensionBridgeDeleteCredential(params as { id: string }),
   toggleFavorite: (params) =>
-    extensionBridgeToggleFavorite(params as { credentialId: number; favorite: boolean })
+    extensionBridgeToggleFavorite(params as { credentialId: string; favorite: boolean })
 }

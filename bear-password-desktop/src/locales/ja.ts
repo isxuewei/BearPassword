@@ -300,7 +300,7 @@ const messages: MessageDict = {
   'settings.offlineMode': 'オフラインモード',
   'settings.offlineModeDesc': '有効にすると、保管庫データはローカルフォルダのみから読み書きし、サーバーへはリクエストしません',
   'settings.offlineModeEnableConfirm':
-    '有効にすると現在の保管庫のスナップショットをローカルフォルダに保存します。以降の変更はすべてローカルのみに保存されます。続行しますか？',
+    '有効にするとローカルとサーバーのデータを統合します。同じ ID はローカルを優先し、サーバーにのみある項目を追加します。以降はローカルのみで読み書きします。続行しますか？',
   'settings.offlineModeDisableConfirm':
     '無効にするとサーバーからの同期に戻ります。ローカルの変更は自動的にアップロードされません。続行しますか？',
   'settings.offlineModeEnabled': 'オフラインモードを有効にしました',
@@ -453,6 +453,7 @@ const messages: MessageDict = {
   'vault.type.bankCard': '銀行カード',
   'vault.type.identity': '本人確認',
   'vault.type.secureNote': 'セキュアメモ',
+  'vault.type.authenticator': '二段階認証（2FA）',
   'vault.type.database': 'データベース',
   'vault.type.custom': 'カスタム',
 

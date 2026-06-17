@@ -7,6 +7,7 @@
       :to="{ name: item.name }"
       class="side-nav__item"
       :class="{ 'side-nav__item--active': isActive(item.name) }"
+      @mouseenter="handleNavHover(item.name)"
     >
       <span class="side-nav__icon" v-html="item.icon" />
       <span class="side-nav__label">{{ item.label }}</span>
@@ -18,6 +19,9 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { preloadVaultViewChunk } from '@/utils/vaultViewPreload'
+
+const VAULT_NAV_NAMES = new Set(['Vault', 'Favorites', 'Recent'])
 
 const route = useRoute()
 const { t } = useI18n()
@@ -48,6 +52,11 @@ const navItems = computed(() => [
 
 function isActive(name: string): boolean {
   return route.name === name
+}
+
+function handleNavHover(name: string): void {
+  if (!VAULT_NAV_NAMES.has(name)) return
+  void preloadVaultViewChunk()
 }
 </script>
 

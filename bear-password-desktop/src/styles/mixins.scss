@@ -50,6 +50,27 @@
   -webkit-app-region: drag;
 }
 
+@mixin skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    $color-skeleton-base 25%,
+    $color-skeleton-shine 50%,
+    $color-skeleton-base 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /** 密码库条目表单：标签在上、输入在下（与备注区块一致） */
 @mixin vault-entry-form-layout {
   &__row {

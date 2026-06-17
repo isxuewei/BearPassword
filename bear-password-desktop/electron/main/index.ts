@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
@@ -561,6 +561,22 @@ function registerTrayIpc(): void {
   })
 }
 
+/** 读取剪贴板中的图片（用于二维码识别） */
+function registerClipboardIpc(): void {
+  ipcMain.handle('clipboard:readImageDataUrl', () => {
+    const image = clipboard.readImage()
+    if (image.isEmpty()) {
+      return { ok: false as const, reason: 'empty' as const }
+    }
+
+    const png = image.toPNG()
+    return {
+      ok: true as const,
+      dataUrl: `data:image/png;base64,${png.toString('base64')}`
+    }
+  })
+}
+
 /** 注册文件选择 IPC（密码 CSV 导入） */
 function registerFileIpc(): void {
   ipcMain.handle('file:pickPasswordCsv', async () => {
@@ -728,6 +744,7 @@ function startApp(): void {
     registerTrayIpc()
     registerDockIpc()
     registerFileIpc()
+    registerClipboardIpc()
     registerOfflineVaultIpc(() => mainWindow)
     registerSecureStorageIpc()
     registerVaultPasswordIpc()

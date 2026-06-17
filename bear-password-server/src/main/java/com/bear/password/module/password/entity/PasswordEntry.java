@@ -1,17 +1,33 @@
 package com.bear.password.module.password.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bear.password.common.entity.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * 密码库条目
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @TableName("bp_password")
-public class PasswordEntry extends BaseEntity {
+public class PasswordEntry {
+
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
+
+    @TableLogic
+    private Integer deleted;
 
     /**
      * 所属用户 ID

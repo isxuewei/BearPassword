@@ -12,13 +12,18 @@ import {
   mapRecentVisitMeta
 } from '@/utils/vaultEntryLists'
 import { isOfflineVaultMode } from '@/utils/offlineVaultMode'
+import { toVaultEntryId } from '../../shared/vaultEntryId'
 
 /** 后台定时刷新间隔（毫秒） */
 const BACKGROUND_REFRESH_MS = 5 * 60 * 1000
+/** ensureLoaded 触发后台同步的最小间隔，避免频繁进入密码库重复解密 */
+const ENSURE_LOADED_STALE_MS = 60 * 1000
 
 interface RefreshOptions {
   /** 已有缓存时静默刷新，不展示全屏加载 */
   background?: boolean
+  /** 忽略 stale 间隔，强制同步 */
+  force?: boolean
 }
 
 /**
@@ -31,6 +36,7 @@ export const useVaultStore = defineStore('vault', () => {
   const initialLoading = ref(false)
   const backgroundRefreshing = ref(false)
   const loaded = ref(false)
+  const lastFetchedAt = ref(0)
 
   let refreshPromise: Promise<void> | null = null
   let backgroundTimer: ReturnType<typeof setInterval> | null = null
@@ -74,6 +80,7 @@ export const useVaultStore = defineStore('vault', () => {
     favoriteMeta.value = mapFavoriteMeta(favorites)
     recentMeta.value = mapRecentVisitMeta(recents)
     loaded.value = true
+    lastFetchedAt.value = Date.now()
   }
 
   async function refresh(options: RefreshOptions = {}): Promise<void> {
@@ -86,6 +93,9 @@ export const useVaultStore = defineStore('vault', () => {
         backgroundRefreshing.value = true
       } else {
         initialLoading.value = true
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve())
+        })
       }
 
       try {
@@ -101,18 +111,22 @@ export const useVaultStore = defineStore('vault', () => {
     return refreshPromise
   }
 
-  /** 进入密码库：有缓存则立即展示，并后台静默同步 */
-  async function ensureLoaded(): Promise<void> {
+  /** 进入密码库：有缓存则立即展示；距上次同步较久时才后台刷新 */
+  async function ensureLoaded(options: RefreshOptions = {}): Promise<void> {
     if (loaded.value) {
-      void refresh({ background: true })
+      const stale = Date.now() - lastFetchedAt.value >= ENSURE_LOADED_STALE_MS
+      if (!options.force && !stale) {
+        return
+      }
+      void refresh({ background: true, force: options.force })
       return
     }
-    await refresh()
+    await refresh(options)
   }
 
   /** 条目新增/修改/删除/导入后强制同步 */
   async function refreshAfterMutation(): Promise<void> {
-    await refresh({ background: loaded.value })
+    await refresh({ background: loaded.value, force: true })
   }
 
   /** 仅刷新收藏与最近访问元数据（不涉及密码条目 content） */
@@ -137,15 +151,19 @@ export const useVaultStore = defineStore('vault', () => {
     loaded.value = false
     initialLoading.value = false
     backgroundRefreshing.value = false
+    lastFetchedAt.value = 0
     refreshPromise = null
   }
 
-  function setFavoriteIds(ids: number[]): void {
+  function setFavoriteIds(ids: Array<string | number>): void {
     const timeById = new Map(favoriteMeta.value.map((item) => [item.passwordId, item.favoriteTime]))
-    favoriteMeta.value = ids.map((id) => ({
-      passwordId: Number(id),
-      favoriteTime: timeById.get(Number(id)) ?? new Date().toISOString()
-    }))
+    favoriteMeta.value = ids.map((id) => {
+      const passwordId = toVaultEntryId(id)
+      return {
+        passwordId,
+        favoriteTime: timeById.get(passwordId) ?? new Date().toISOString()
+      }
+    })
   }
 
   return {

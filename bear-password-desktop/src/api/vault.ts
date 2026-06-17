@@ -1,6 +1,7 @@
 import { request } from '@/utils/request'
 import type { PageResult } from '@/types'
 import type { PasswordEntry, PasswordEntryParams, PasswordQueryParams } from '@/types'
+import { toVaultEntryId, type VaultEntryId } from '../../shared/vaultEntryId'
 import { fetchAllPages } from '@/utils/fetchAllPages'
 import { fetchAllPasswordEntriesRaw } from '@/api/vaultRaw'
 import {
@@ -38,17 +39,18 @@ export async function fetchAllPasswordEntries(): Promise<PasswordEntry[]> {
 }
 
 /** 获取密码详情 */
-export async function getPasswordDetailApi(id: number): Promise<PasswordEntry> {
+export async function getPasswordDetailApi(id: VaultEntryId): Promise<PasswordEntry> {
+  const entryId = toVaultEntryId(id)
   if (shouldUseOfflineVault()) {
     const raw = await fetchOfflinePasswordEntriesRaw()
-    const entry = raw.find((item) => item.id === id)
+    const entry = raw.find((item) => toVaultEntryId(item.id) === entryId)
     if (!entry) {
       throw new Error('密码条目不存在')
     }
     return decryptPasswordEntry(entry)
   }
 
-  const entry = await request.get<PasswordEntry>(`/passwords/${id}`)
+  const entry = await request.get<PasswordEntry>(`/passwords/${entryId}`)
   return decryptPasswordEntry(entry)
 }
 
@@ -66,27 +68,29 @@ export async function createPasswordApi(data: PasswordEntryParams): Promise<Pass
 
 /** 更新密码条目 */
 export async function updatePasswordApi(
-  id: number,
+  id: VaultEntryId,
   data: PasswordEntryParams
 ): Promise<PasswordEntry> {
+  const entryId = toVaultEntryId(id)
   const payload = await encryptPasswordEntryParams(data)
   if (shouldUseOfflineVault()) {
-    const entry = await updateOfflinePasswordEntryRaw(id, payload)
+    const entry = await updateOfflinePasswordEntryRaw(entryId, payload)
     return decryptPasswordEntry(entry)
   }
 
-  const entry = await request.put<PasswordEntry>(`/passwords/${id}`, payload)
+  const entry = await request.put<PasswordEntry>(`/passwords/${entryId}`, payload)
   return decryptPasswordEntry(entry)
 }
 
 /** 删除密码条目 */
-export async function deletePasswordApi(id: number): Promise<void> {
+export async function deletePasswordApi(id: VaultEntryId): Promise<void> {
+  const entryId = toVaultEntryId(id)
   if (shouldUseOfflineVault()) {
-    await deleteOfflinePasswordEntry(id)
+    await deleteOfflinePasswordEntry(entryId)
     return
   }
 
-  return request.delete<void>(`/passwords/${id}`)
+  return request.delete<void>(`/passwords/${entryId}`)
 }
 
 /** 获取当前用户已使用过的标签 */

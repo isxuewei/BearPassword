@@ -10,6 +10,7 @@ public final class PasswordTypeConstants {
     public static final String BANK_CARD = "银行卡";
     public static final String IDENTITY = "身份信息";
     public static final String SECURE_NOTE = "安全备注";
+    public static final String AUTHENTICATOR = "两步验证（2FA）";
     public static final String DATABASE = "数据库";
     public static final String CUSTOM = "自定义";
 

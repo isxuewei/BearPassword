@@ -9,6 +9,7 @@ const PASSWORD_TYPE_I18N_KEYS: Record<PasswordType, string> = {
   银行卡: 'vault.type.bankCard',
   身份信息: 'vault.type.identity',
   安全备注: 'vault.type.secureNote',
+  '两步验证（2FA）': 'vault.type.authenticator',
   数据库: 'vault.type.database',
   自定义: 'vault.type.custom'
 }
@@ -16,12 +17,13 @@ const PASSWORD_TYPE_I18N_KEYS: Record<PasswordType, string> = {
 /** 筛选下拉中的类型顺序 */
 export const PASSWORD_TYPE_FILTER_ORDER: PasswordType[] = [
   '登录信息',
-  '服务器',
   '安全备注',
-  '银行卡',
   '身份信息',
-  '数据库',
-  '自定义'
+  '银行卡',
+  '自定义',
+  '两步验证（2FA）',
+  '服务器',
+  '数据库'
 ]
 
 /** 将数据库中的中文类型转为当前语言的展示名 */

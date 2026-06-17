@@ -72,6 +72,14 @@
         @update:labels="form.passwordLabels = $event"
       />
 
+      <!-- 两步验证（2FA） -->
+      <AuthenticatorEntryForm
+        v-else-if="isAuthenticatorForm"
+        :content="authenticatorContent"
+        :labels="form.passwordLabels"
+        @update:labels="form.passwordLabels = $event"
+      />
+
       <!-- 银行卡 -->
       <BankCardEntryForm
         v-else-if="isBankCardForm"
@@ -137,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, defineAsyncComponent } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import BankCardEntryForm from '@/components/vault/BankCardEntryForm.vue'
@@ -146,6 +154,11 @@ import DatabaseEntryForm from '@/components/vault/DatabaseEntryForm.vue'
 import IdentityEntryForm from '@/components/vault/IdentityEntryForm.vue'
 import LoginEntryForm from '@/components/vault/LoginEntryForm.vue'
 import SecureNoteEntryForm from '@/components/vault/SecureNoteEntryForm.vue'
+import {
+  createEmptyAuthenticatorContent,
+  normalizeAuthenticatorContent,
+  serializeAuthenticatorContent
+} from '@/utils/authenticatorContent'
 import {
   createEmptyCustomContent,
   normalizeCustomContent,
@@ -180,6 +193,7 @@ import {
   serializeSecureNoteContent
 } from '@/utils/secureNoteContent'
 import { isEncryptedContent } from '@/utils/contentCrypto'
+import { isValidAuthenticatorSecret } from '@/utils/totp'
 import { isDecryptFailedContent } from '@/utils/vaultEntryTransform'
 import {
   buildPasswordTitleFromForm,
@@ -193,6 +207,7 @@ import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constan
 import { useI18n } from '@/composables/useI18n'
 import { getPasswordTypeFilterOptions, getPasswordTypeLabel } from '@/utils/passwordTypeI18n'
 import {
+  type AuthenticatorContent,
   type BankCardContent,
   type CustomContent,
   type DatabaseContent,
@@ -203,6 +218,10 @@ import {
   type PasswordType,
   type SecureNoteContent
 } from '@/types'
+
+const AuthenticatorEntryForm = defineAsyncComponent(
+  () => import('@/components/vault/AuthenticatorEntryForm.vue')
+)
 
 const props = defineProps<{
   visible: boolean
@@ -227,6 +246,7 @@ const isLoginForm = computed(
   () => form.passwordType === '登录信息' || form.passwordType === '服务器'
 )
 const isSecureNoteForm = computed(() => form.passwordType === '安全备注')
+const isAuthenticatorForm = computed(() => form.passwordType === '两步验证（2FA）')
 const isBankCardForm = computed(() => form.passwordType === '银行卡')
 const isIdentityForm = computed(() => form.passwordType === '身份信息')
 const isCustomForm = computed(() => form.passwordType === '自定义')
@@ -235,6 +255,7 @@ const isVaultItemForm = computed(
   () =>
     isLoginForm.value ||
     isSecureNoteForm.value ||
+    isAuthenticatorForm.value ||
     isBankCardForm.value ||
     isIdentityForm.value ||
     isDatabaseForm.value ||
@@ -267,6 +288,8 @@ const loginContent = reactive<LoginContent>(createEmptyLoginContent())
 const loginFormMode = ref<'login' | 'server'>('login')
 
 const secureNoteContent = reactive<SecureNoteContent>(createEmptySecureNoteContent())
+
+const authenticatorContent = reactive<AuthenticatorContent>(createEmptyAuthenticatorContent())
 
 const bankContent = reactive<BankCardContent>(createEmptyBankCardContent())
 
@@ -326,6 +349,7 @@ function resetForm(): void {
   loginContent.extraFields.splice(0, loginContent.extraFields.length)
   loginFormMode.value = 'login'
   Object.assign(secureNoteContent, createEmptySecureNoteContent())
+  Object.assign(authenticatorContent, createEmptyAuthenticatorContent())
   Object.assign(bankContent, createEmptyBankCardContent())
   Object.assign(identityContent, createEmptyIdentityContent())
   Object.assign(customContent, createEmptyCustomContent())
@@ -379,6 +403,9 @@ function applyTitleToForm(type: PasswordType, title: string): void {
     case '安全备注':
       secureNoteContent.title = title
       break
+    case '两步验证（2FA）':
+      authenticatorContent.title = title
+      break
     case '自定义':
       customContent.title = title
       break
@@ -391,6 +418,8 @@ function applyTitleToForm(type: PasswordType, title: string): void {
 function applyPresetContent(type: PasswordType): void {
   if (type === '安全备注') {
     Object.assign(secureNoteContent, createEmptySecureNoteContent())
+  } else if (type === '两步验证（2FA）') {
+    Object.assign(authenticatorContent, createEmptyAuthenticatorContent())
   } else if (type === '银行卡') {
     Object.assign(bankContent, createEmptyBankCardContent())
   } else if (type === '身份信息') {
@@ -430,6 +459,8 @@ function fillContentByType(type: PasswordType, content: PasswordEntry['content']
     Object.assign(identityContent, normalizeIdentityContent(data))
   } else if (type === '安全备注') {
     Object.assign(secureNoteContent, normalizeSecureNoteContent(data))
+  } else if (type === '两步验证（2FA）') {
+    Object.assign(authenticatorContent, normalizeAuthenticatorContent(data))
   } else if (type === '自定义') {
     Object.assign(customContent, normalizeCustomContent(data))
   } else if (type === '数据库') {
@@ -448,6 +479,8 @@ function buildContent(): PasswordEntryParams['content'] {
       return serializeIdentityContent(identityContent)
     case '安全备注':
       return serializeSecureNoteContent(secureNoteContent)
+    case '两步验证（2FA）':
+      return serializeAuthenticatorContent(authenticatorContent)
     case '自定义':
       return serializeCustomContent(customContent)
     case '数据库':
@@ -480,6 +513,13 @@ function validateContent(): string | null {
       return null
     case '安全备注':
       if (!secureNoteContent.body.trim()) return 'entry.validate.noteBodyRequired'
+      return null
+    case '两步验证（2FA）':
+      if (!authenticatorContent.account.trim() && !authenticatorContent.title.trim()) {
+        return 'entry.validate.accountNameRequired'
+      }
+      if (!authenticatorContent.secret.trim()) return 'entry.validate.secretRequired'
+      if (!isValidAuthenticatorSecret(authenticatorContent.secret)) return 'entry.validate.secretInvalid'
       return null
     case '自定义':
       if (!customContent.title.trim()) return 'entry.validate.titleRequired'
@@ -520,6 +560,7 @@ async function handleSubmit(): Promise<void> {
     bank: bankContent,
     identity: identityContent,
     secureNote: secureNoteContent,
+    authenticator: authenticatorContent,
     custom: customContent,
     database: databaseContent
   })

@@ -57,7 +57,7 @@ export async function getPasswordListApi(
   return { ...data, list }
 }
 
-export function deletePasswordApi(origin: string, token: string, id: number): Promise<void> {
+export function deletePasswordApi(origin: string, token: string, id: string): Promise<void> {
   return http.delete<void>(`/passwords/${id}`, { origin, token })
 }
 
@@ -65,7 +65,7 @@ export async function getPasswordDetailApi(
   origin: string,
   token: string,
   unlock: VaultUnlockContext | null,
-  id: number
+  id: string
 ): Promise<PasswordEntry> {
   const entry = await http.get<PasswordEntry>(`/passwords/${id}`, { origin, token })
   return decryptPasswordEntry(entry, unlock)
@@ -86,7 +86,7 @@ export async function updatePasswordApi(
   origin: string,
   token: string,
   unlock: VaultUnlockContext | null,
-  id: number,
+  id: string,
   data: PasswordEntryParams
 ): Promise<PasswordEntry> {
   const payload = await encryptPasswordEntryParams(data, unlock)

@@ -5,7 +5,7 @@ import AuthPage from '@/views/login/AuthPage.vue'
  * 路由表定义（模块化）
  * 按功能区域划分：认证区 / 主应用区
  */
-const VaultView = () => import('@/views/vault/VaultView.vue')
+const VaultView = () => import('@/views/vault/VaultViewHost.vue')
 
 export const routes: RouteRecordRaw[] = [
   {

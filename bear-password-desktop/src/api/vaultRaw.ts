@@ -2,6 +2,7 @@ import { request } from '@/utils/request'
 import type { PageResult } from '@/types'
 import type { PasswordEntry, PasswordQueryParams } from '@/types'
 import type { PasswordEntryApiParams } from '@/utils/contentMetadata'
+import { toVaultEntryId, type VaultEntryId } from '../../shared/vaultEntryId'
 import {
   fetchOfflinePasswordEntriesRaw,
   shouldUseOfflineVault,
@@ -19,13 +20,14 @@ export function getPasswordListRawApi(
 }
 
 export function updatePasswordRawApi(
-  id: number,
+  id: VaultEntryId,
   data: PasswordEntryApiParams
 ): Promise<PasswordEntry> {
+  const entryId = toVaultEntryId(id)
   if (shouldUseOfflineVault()) {
-    return updateOfflinePasswordEntryRaw(id, data)
+    return updateOfflinePasswordEntryRaw(entryId, data)
   }
-  return request.put<PasswordEntry>(`/passwords/${id}`, data)
+  return request.put<PasswordEntry>(`/passwords/${entryId}`, data)
 }
 
 /** 拉取当前用户全部密码条目（原始 content） */
@@ -40,7 +42,7 @@ export async function fetchAllPasswordEntriesRaw(): Promise<PasswordEntry[]> {
 
   while (true) {
     const data = await getPasswordListRawApi({ page, pageSize })
-    all.push(...data.list)
+    all.push(...data.list.map((entry) => ({ ...entry, id: toVaultEntryId(entry.id) })))
     if (all.length >= data.total || data.list.length === 0) {
       break
     }
