@@ -95,9 +95,9 @@ export function isEntryBlockedForAutofill(
 
 export function applyFavoriteState(
   credentials: FillCredential[],
-  favoriteIds: number[]
+  favoriteIds: string[]
 ): FillCredential[] {
-  const idSet = new Set(favoriteIds.map((id) => Number(id)))
+  const idSet = new Set(favoriteIds)
   return credentials.map((item) => ({
     ...item,
     favorite: idSet.has(item.id)
