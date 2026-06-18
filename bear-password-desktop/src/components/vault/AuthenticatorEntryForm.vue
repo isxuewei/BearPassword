@@ -91,6 +91,85 @@
       </div>
     </div>
 
+    <div class="authenticator-form__card authenticator-form__card--advanced">
+      <button
+        type="button"
+        class="authenticator-form__advanced-toggle"
+        :aria-expanded="advancedExpanded"
+        @click="advancedExpanded = !advancedExpanded"
+      >
+        <span class="authenticator-form__advanced-toggle-text">
+          <span class="authenticator-form__advanced-title">{{ t('entry.form.authenticator.advanced') }}</span>
+          <span class="authenticator-form__advanced-hint">{{ t('entry.form.authenticator.advancedHint') }}</span>
+        </span>
+        <svg
+          class="authenticator-form__advanced-chevron"
+          :class="{ 'is-expanded': advancedExpanded }"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div v-show="advancedExpanded" class="authenticator-form__advanced-panel">
+        <div class="authenticator-form__advanced-grid">
+          <div class="authenticator-form__field">
+            <label class="authenticator-form__label">{{ t('entry.form.authenticator.algorithm') }}</label>
+            <select v-model="content.algorithm" class="authenticator-form__select">
+              <option v-for="item in ALGORITHM_OPTIONS" :key="item" :value="item">{{ item }}</option>
+            </select>
+          </div>
+          <div class="authenticator-form__field">
+            <label class="authenticator-form__label">{{ t('entry.form.authenticator.digits') }}</label>
+            <select v-model.number="content.digits" class="authenticator-form__select">
+              <option v-for="item in DIGITS_OPTIONS" :key="item" :value="item">{{ item }}</option>
+            </select>
+          </div>
+          <div class="authenticator-form__field">
+            <label class="authenticator-form__label">{{ t('entry.form.authenticator.period') }}</label>
+            <select v-model.number="content.period" class="authenticator-form__select">
+              <option v-for="item in periodOptions" :key="item" :value="item">
+                {{ t('entry.form.authenticator.periodOption', { n: item }) }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="authenticator-form__field">
+          <label class="authenticator-form__label">{{ t('entry.form.authenticator.issuer') }}</label>
+          <input
+            v-model="content.issuer"
+            class="authenticator-form__input"
+            :placeholder="t('entry.form.authenticator.issuerPlaceholder')"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="authenticator-form__field">
+          <label class="authenticator-form__label">{{ t('entry.form.authenticator.importUri') }}</label>
+          <div class="authenticator-form__import-row">
+            <input
+              v-model="otpauthUriInput"
+              class="authenticator-form__input authenticator-form__input--mono"
+              :placeholder="t('entry.form.authenticator.importUriPlaceholder')"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button type="button" class="authenticator-form__import-btn" @click="handleImportUri">
+              {{ t('entry.form.authenticator.import') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="authenticator-form__card authenticator-form__card--soft">
       <label class="authenticator-form__block-label">{{ t('entry.form.tags') }}</label>
       <TagInput v-model="labelsModel" />
@@ -99,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import TagInput from '@/components/vault/TagInput.vue'
 import TotpCodeDisplay from '@/components/vault/TotpCodeDisplay.vue'
@@ -110,6 +189,18 @@ import { decodeQrTextFromClipboard, decodeQrTextFromFile } from '@/utils/qrCodeD
 import { applyParsedOtpAuthImport, isValidAuthenticatorSecret, parseOtpAuthUri } from '@/utils/totp'
 
 type InputMode = 'secret' | 'qrcode'
+
+const ALGORITHM_OPTIONS = ['SHA1', 'SHA256', 'SHA512'] as const
+const DIGITS_OPTIONS = [6, 8] as const
+const PERIOD_OPTIONS = [15, 30, 60, 90, 120] as const
+
+const periodOptions = computed(() => {
+  const current = props.content.period
+  if (PERIOD_OPTIONS.includes(current as (typeof PERIOD_OPTIONS)[number])) {
+    return [...PERIOD_OPTIONS]
+  }
+  return [...PERIOD_OPTIONS, current].sort((a, b) => a - b)
+})
 
 const props = defineProps<{
   content: AuthenticatorContent
@@ -124,6 +215,27 @@ const { t } = useI18n()
 const inputMode = ref<InputMode>('secret')
 const qrProcessing = ref(false)
 const qrFileInputRef = ref<HTMLInputElement>()
+const advancedExpanded = ref(false)
+const otpauthUriInput = ref('')
+
+function hasNonDefaultAdvancedSettings(content: AuthenticatorContent): boolean {
+  return (
+    content.algorithm !== 'SHA1' ||
+    content.digits !== 6 ||
+    content.period !== 30 ||
+    Boolean(content.issuer.trim())
+  )
+}
+
+watch(
+  () => props.content,
+  (content) => {
+    if (hasNonDefaultAdvancedSettings(content)) {
+      advancedExpanded.value = true
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 const labelsModel = computed({
   get: () => props.labels,
@@ -214,7 +326,23 @@ function applyQrPayload(qrText: string): void {
 
   applyParsedOtpAuthImport(props.content, parsed)
   inputMode.value = 'secret'
+  otpauthUriInput.value = ''
   ElMessage.success(t('entry.form.authenticator.qrSuccess'))
+}
+
+function handleImportUri(): void {
+  const parsed = parseOtpAuthUri(otpauthUriInput.value)
+  if (!parsed) {
+    ElMessage.warning(t('entry.form.authenticator.importFailed'))
+    return
+  }
+
+  applyParsedOtpAuthImport(props.content, parsed)
+  otpauthUriInput.value = ''
+  if (hasNonDefaultAdvancedSettings(props.content)) {
+    advancedExpanded.value = true
+  }
+  ElMessage.success(t('entry.form.authenticator.importSuccess'))
 }
 </script>
 
@@ -399,6 +527,115 @@ function applyQrPayload(qrText: string): void {
     margin: 0;
     font-size: $font-size-xs;
     color: $color-danger;
+  }
+
+  &__card--advanced {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  &__advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-sm;
+    width: 100%;
+    border: none;
+    padding: $spacing-md;
+    font-family: $font-family;
+    text-align: left;
+    color: $color-text-primary;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $color-surface-hover;
+    }
+  }
+
+  &__advanced-toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__advanced-title {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $color-text-primary;
+  }
+
+  &__advanced-hint {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    line-height: 1.4;
+  }
+
+  &__advanced-chevron {
+    flex-shrink: 0;
+    color: $color-text-secondary;
+    transition: transform 0.2s ease;
+
+    &.is-expanded {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__advanced-panel {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+    padding: 0 $spacing-md $spacing-md;
+    border-top: 1px solid $color-border;
+  }
+
+  &__advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $spacing-sm;
+  }
+
+  &__select {
+    width: 100%;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    padding: $spacing-sm $spacing-md;
+    font-family: $font-family;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: $color-accent;
+    }
+  }
+
+  &__import-row {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  &__import-btn {
+    flex-shrink: 0;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    padding: $spacing-sm $spacing-md;
+    font-family: $font-family;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $color-text-primary;
+    background: $color-bg-elevated;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $color-surface-hover;
+    }
   }
 }
 </style>

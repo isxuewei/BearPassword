@@ -53,7 +53,7 @@ export function getFontDescKey(value: string): string {
 }
 
 export function getAutoLockLabelKey(minutes: number): string {
-  return `autoLock.${minutes}`
+  return minutes === 0 ? 'autoLock.never' : `autoLock.${minutes}`
 }
 
 export function getClipboardClearLabelKey(seconds: number): string {
