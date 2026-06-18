@@ -4,6 +4,7 @@ import { useI18n } from '@/popup/composables/useI18n'
 import { usePopupStore } from '@/popup/stores/popup'
 import { useSessionStore } from '@/popup/stores/session'
 import AppLogo from '@/popup/components/AppLogo.vue'
+import { OFFICIAL_WEBSITE_URL } from '@/shared/constants/app'
 
 const { t } = useI18n()
 const popupStore = usePopupStore()
@@ -55,52 +56,86 @@ async function handleWakeDesktop(): Promise<void> {
 
 <template>
   <div class="login-view">
-    <div class="login-card bear-card">
-      <button class="settings-btn" type="button" :title="t('login.settings')" @click="popupStore.openSettings()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
-          />
-        </svg>
-      </button>
+    <div class="login-view__body">
+      <div class="login-card bear-card">
+        <button class="settings-btn" type="button" :title="t('login.settings')" @click="popupStore.openSettings()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
+            />
+          </svg>
+        </button>
 
-      <header class="header">
-        <AppLogo size="lg" />
-        <p class="subtitle">{{ t('login.subtitle') }}</p>
-      </header>
+        <header class="header">
+          <AppLogo size="lg" />
+          <p class="subtitle">{{ t('login.subtitle') }}</p>
+        </header>
 
-      <div class="status-panel">
-        <div class="status-row">
-          <span class="status-label">{{ t('login.connectionStatus') }}</span>
-          <span class="status-badge" :class="`status-badge--${sessionStore.desktopStatus}`">
-            {{ t(statusKey) }}
-          </span>
+        <div class="status-panel">
+          <div class="status-row">
+            <span class="status-label">{{ t('login.connectionStatus') }}</span>
+            <span class="status-badge" :class="`status-badge--${sessionStore.desktopStatus}`">
+              {{ t(statusKey) }}
+            </span>
+          </div>
+          <p class="status-hint">{{ t(hintKey) }}</p>
         </div>
-        <p class="status-hint">{{ t(hintKey) }}</p>
+
+        <button
+          class="bear-btn bear-btn-primary submit-btn"
+          type="button"
+          :disabled="waking || sessionStore.loading"
+          @click="handleWakeDesktop"
+        >
+          {{ waking ? t('login.openingDesktop') : t('login.openDesktop') }}
+        </button>
+
+        <p v-if="sessionStore.wakeHint" class="status-hint status-hint--info">{{ sessionStore.wakeHint }}</p>
+
+        <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
       </div>
-
-      <button
-        class="bear-btn bear-btn-primary submit-btn"
-        type="button"
-        :disabled="waking || sessionStore.loading"
-        @click="handleWakeDesktop"
-      >
-        {{ waking ? t('login.openingDesktop') : t('login.openDesktop') }}
-      </button>
-
-      <p v-if="sessionStore.wakeHint" class="status-hint status-hint--info">{{ sessionStore.wakeHint }}</p>
-
-      <p v-if="sessionStore.error" class="bear-error">{{ sessionStore.error }}</p>
     </div>
+
+    <a
+      :href="OFFICIAL_WEBSITE_URL"
+      class="official-link"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {{ t('settings.officialWebsiteLink') }}
+    </a>
   </div>
 </template>
 
 <style scoped>
 .login-view {
-  padding: 16px;
+  padding: 16px 16px 20px;
   min-height: 480px;
   display: flex;
+  flex-direction: column;
+}
+
+.login-view__body {
+  flex: 1;
+  display: flex;
   align-items: center;
+  width: 100%;
+}
+
+.official-link {
+  flex-shrink: 0;
+  display: block;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--bear-text-muted);
+  text-decoration: none;
+  transition: color 0.12s ease;
+}
+
+.official-link:hover {
+  color: var(--bear-primary);
+  text-decoration: underline;
 }
 
 .login-card {
