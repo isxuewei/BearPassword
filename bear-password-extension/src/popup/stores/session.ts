@@ -7,6 +7,8 @@ import {
 } from '@/shared/types'
 import type { WakeDesktopResult } from '@/shared/api/desktopBridge'
 import { sendMessage } from '@/shared/utils/messaging'
+import { buildCredentialShareText } from '@/shared/utils/shareCredentialText'
+import { OFFICIAL_WEBSITE_URL } from '@/shared/constants/app'
 import { t } from '@/popup/i18n'
 import { useLocaleStore } from '@/popup/stores/locale'
 import { useThemeStore } from '@/popup/stores/theme'
@@ -187,14 +189,13 @@ export const useVaultStore = defineStore('vault', () => {
   }
 
   async function shareCredential(credential: FillCredential): Promise<void> {
-    const lines = [
-      `${t('vault.share.title')}: ${credential.title}`,
-      `${t('vault.share.username')}: ${credential.username}`,
-      `${t('vault.share.password')}: ${credential.password}`,
-      '',
-      t('vault.share.footer')
-    ]
-    await navigator.clipboard.writeText(lines.join('\n'))
+    const text = buildCredentialShareText(credential, {
+      website: t('entry.website'),
+      username: t('vault.share.username'),
+      password: t('vault.share.password'),
+      footer: t('vault.share.footer', { url: OFFICIAL_WEBSITE_URL })
+    })
+    await navigator.clipboard.writeText(text)
     showToast(t('vault.toast.shareCopied'))
   }
 

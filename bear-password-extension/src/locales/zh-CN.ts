@@ -90,10 +90,9 @@ const messages: MessageDict = {
   'vault.toast.filled': '已填充到当前页面',
   'vault.toast.fillFailed': '填充失败',
   'vault.toast.fillNoTab': '无法获取当前标签页',
-  'vault.share.title': '标题',
   'vault.share.username': '用户名',
   'vault.share.password': '密码',
-  'vault.share.footer': '— 由 BearPassword 分享',
+  'vault.share.footer': '此内容复制于 BearPassword，零知识 · 简洁 · 专业的密码管理工具。官网：{url}',
 
   'credential.autofill': '自动填充',
   'credential.fill': '填充',

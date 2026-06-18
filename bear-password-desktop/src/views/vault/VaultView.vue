@@ -537,6 +537,7 @@ import {
   updatePasswordApi
 } from '@/api'
 import type { PasswordEntry, PasswordEntryParams, PasswordType } from '@/types'
+import { OFFICIAL_WEBSITE_URL } from '@/constants/app'
 import { useI18n } from '@/composables/useI18n'
 import {
   getPasswordTypeFilterOptions,
@@ -1109,7 +1110,7 @@ function buildEntryCopyText(entry: PasswordEntry): string {
   }
 
   lines.push('')
-  lines.push(t('vault.msg.shareFooter'))
+  lines.push(t('vault.msg.shareFooter', { url: OFFICIAL_WEBSITE_URL }))
   return lines.join('\n')
 }
 

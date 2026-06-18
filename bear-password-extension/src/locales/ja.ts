@@ -91,10 +91,9 @@ const messages: MessageDict = {
   'vault.toast.filled': '現在のページに入力しました',
   'vault.toast.fillFailed': '自動入力に失敗しました',
   'vault.toast.fillNoTab': 'アクティブなタブを取得できません',
-  'vault.share.title': 'タイトル',
   'vault.share.username': 'ユーザー名',
   'vault.share.password': 'パスワード',
-  'vault.share.footer': '— BearPassword から共有',
+  'vault.share.footer': 'BearPassword からコピーした内容です。ゼロ知識 · シンプル · プロフェッショナルなパスワード管理ツール。公式サイト：{url}',
 
   'credential.autofill': '自動入力',
   'credential.fill': '入力',

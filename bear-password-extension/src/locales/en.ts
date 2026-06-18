@@ -91,10 +91,9 @@ const messages: MessageDict = {
   'vault.toast.filled': 'Filled on the current page',
   'vault.toast.fillFailed': 'Autofill failed',
   'vault.toast.fillNoTab': 'Cannot access the active tab',
-  'vault.share.title': 'Title',
   'vault.share.username': 'Username',
   'vault.share.password': 'Password',
-  'vault.share.footer': '— Shared from BearPassword',
+  'vault.share.footer': 'Copied from BearPassword — zero-knowledge, simple, professional password management. Website: {url}',
 
   'credential.autofill': 'Autofill',
   'credential.fill': 'Fill',

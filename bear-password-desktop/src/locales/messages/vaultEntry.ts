@@ -236,7 +236,7 @@ export const vaultEntryZh: MessageDict = {
   'vault.msg.created': '创建成功',
   'vault.msg.saveFailed': '保存失败',
   'vault.msg.operationFailed': '操作失败',
-  'vault.msg.shareFooter': '当前内容复制自 BearPassword。',
+  'vault.msg.shareFooter': '此内容复制于 BearPassword，零知识 · 简洁 · 专业的密码管理工具。官网：{url}',
   'vault.msg.remarkLine': '备注：{text}',
 
   'vault.batch.select': '批量操作',
@@ -493,7 +493,7 @@ export const vaultEntryEn: MessageDict = {
   'vault.msg.created': 'Created',
   'vault.msg.saveFailed': 'Failed to save',
   'vault.msg.operationFailed': 'Operation failed',
-  'vault.msg.shareFooter': 'Copied from BearPassword.',
+  'vault.msg.shareFooter': 'Copied from BearPassword — zero-knowledge, simple, professional password management. Website: {url}',
   'vault.msg.remarkLine': 'Notes: {text}',
 
   'vault.batch.select': 'Batch actions',
@@ -750,7 +750,7 @@ export const vaultEntryJa: MessageDict = {
   'vault.msg.created': '作成しました',
   'vault.msg.saveFailed': '保存に失敗しました',
   'vault.msg.operationFailed': '操作に失敗しました',
-  'vault.msg.shareFooter': 'BearPassword からコピーした内容です。',
+  'vault.msg.shareFooter': 'BearPassword からコピーした内容です。ゼロ知識 · シンプル · プロフェッショナルなパスワード管理ツール。公式サイト：{url}',
   'vault.msg.remarkLine': 'メモ：{text}',
 
   'vault.batch.select': '一括操作',
