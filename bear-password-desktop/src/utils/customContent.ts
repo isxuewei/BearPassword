@@ -1,7 +1,8 @@
 /**
  * 自定义 content 读写
  */
-import type { CustomContent, CustomField } from '@/types'
+import type { CustomContent } from '@/types'
+import { normalizeExtraFields } from '@/utils/extraField'
 
 export function createEmptyCustomContent(): CustomContent {
   return {
@@ -10,21 +11,10 @@ export function createEmptyCustomContent(): CustomContent {
   }
 }
 
-function normalizeFields(raw: unknown): CustomField[] {
-  if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    const field = item as Record<string, unknown>
-    return {
-      label: String(field.label ?? ''),
-      value: String(field.value ?? '')
-    }
-  })
-}
-
 export function normalizeCustomContent(raw: Record<string, unknown>): CustomContent {
   return {
     title: String(raw.title ?? '自定义'),
-    fields: normalizeFields(raw.fields)
+    fields: normalizeExtraFields(raw.fields)
   }
 }
 

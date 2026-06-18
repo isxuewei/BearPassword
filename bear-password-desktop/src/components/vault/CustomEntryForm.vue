@@ -18,9 +18,7 @@
 
     <div class="custom-form__card custom-form__card--soft custom-form__card--fields">
       <div class="custom-form__fields-header">
-        <button type="button" class="custom-form__add-link" @click="addField">
-          <span>+</span> {{ t('entry.form.addMore') }}
-        </button>
+        <ExtraFieldAddMenu @add="addField" />
       </div>
 
       <div v-if="content.fields.length" class="custom-form__fields">
@@ -52,7 +50,7 @@
           <textarea
             v-model="field.value"
             class="custom-form__field-value"
-            :class="{ 'custom-form__field-value--secret': isSecretField(field.label) }"
+            :class="{ 'custom-form__field-value--secret': isSecretField(field) }"
             :placeholder="t('entry.form.fieldContent')"
             rows="1"
           />
@@ -82,10 +80,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import TagInput from '@/components/vault/TagInput.vue'
+import ExtraFieldAddMenu from '@/components/vault/ExtraFieldAddMenu.vue'
 import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
+import type { ExtraFieldTypeId } from '@/constants/extraFieldTypes'
 import { useI18n } from '@/composables/useI18n'
-import { isSecretCustomField } from '@/utils/customContent'
 import type { CustomContent } from '@/types'
+import { addExtraFieldByType, isSecretExtraField } from '@/utils/extraField'
 
 const props = defineProps<{
   content: CustomContent
@@ -105,8 +105,8 @@ const labelsModel = computed({
   set: (value: string[]) => emit('update:labels', value)
 })
 
-function addField(): void {
-  props.content.fields.push({ label: '', value: '' })
+function addField(type: ExtraFieldTypeId): void {
+  addExtraFieldByType(props.content.fields, type)
 }
 
 function removeField(index: number): void {
@@ -114,7 +114,7 @@ function removeField(index: number): void {
 }
 
 function isSecretField(label: string): boolean {
-  return isSecretCustomField(label)
+  return isSecretExtraFieldLabel(label)
 }
 
 function onRemarkInput(event: Event): void {

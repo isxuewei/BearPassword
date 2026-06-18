@@ -103,48 +103,8 @@
       </div>
     </div>
 
-    <!-- 自定义字段 -->
     <div class="login-entry-form__card login-entry-form__card--soft login-entry-form__card--extras">
-      <div class="login-entry-form__extras-header">
-        <button type="button" class="login-entry-form__add-link" @click="addExtraField">
-          <span>+</span> {{ t('entry.form.addMore') }}
-        </button>
-      </div>
-
-      <div v-if="content.extraFields.length" class="login-entry-form__extras">
-        <div
-          v-for="(field, index) in content.extraFields"
-          :key="index"
-          class="login-entry-form__extra-item"
-        >
-          <div v-if="index > 0" class="login-entry-form__divider" />
-          <div class="login-entry-form__extra-header">
-            <input
-              v-model="field.label"
-              class="login-entry-form__extra-title"
-              :placeholder="t('entry.form.fieldTitle')"
-              type="text"
-            />
-            <button
-              type="button"
-              class="login-entry-form__remove"
-              :aria-label="t('entry.form.removeField')"
-              @click="removeExtraField(index)"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M5 8H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-          <textarea
-            v-model="field.value"
-            class="login-entry-form__extra-value"
-            :placeholder="t('entry.form.fieldContent')"
-            rows="1"
-          />
-        </div>
-      </div>
+      <ExtraFieldsEditor :fields="content.extraFields" />
     </div>
 
     <!-- 备注 -->
@@ -172,6 +132,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import TagInput from '@/components/vault/TagInput.vue'
+import ExtraFieldsEditor from '@/components/vault/ExtraFieldsEditor.vue'
 import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
 import { useI18n } from '@/composables/useI18n'
 import type { LoginContent } from '@/types'
@@ -202,14 +163,6 @@ const labelsModel = computed({
   get: () => props.labels,
   set: (value: string[]) => emit('update:labels', value)
 })
-
-function addExtraField(): void {
-  props.content.extraFields.push({ label: '', value: '' })
-}
-
-function removeExtraField(index: number): void {
-  props.content.extraFields.splice(index, 1)
-}
 
 function onPasswordMouseDown(event: MouseEvent): void {
   event.preventDefault()
@@ -333,7 +286,7 @@ function onRemarkInput(event: Event): void {
 
     &--extras {
       padding: 0;
-      overflow: hidden;
+      overflow: visible;
     }
   }
 

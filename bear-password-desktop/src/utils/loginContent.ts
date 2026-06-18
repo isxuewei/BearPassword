@@ -1,7 +1,8 @@
 /**
  * 登录信息 content 读写
  */
-import type { LoginContent, LoginExtraField } from '@/types'
+import type { LoginContent } from '@/types'
+import { normalizeExtraFields } from '@/utils/extraField'
 
 export function createEmptyLoginContent(): LoginContent {
   return {
@@ -14,17 +15,6 @@ export function createEmptyLoginContent(): LoginContent {
   }
 }
 
-function normalizeExtraFields(raw: unknown): LoginExtraField[] {
-  if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    const field = item as Record<string, unknown>
-    return {
-      label: String(field.label ?? ''),
-      value: String(field.value ?? '')
-    }
-  })
-}
-
 export function createServerPresetContent(): LoginContent {
   return {
     title: '',
@@ -33,8 +23,8 @@ export function createServerPresetContent(): LoginContent {
     websites: [],
     host: '',
     extraFields: [
-      { label: '端口', value: '22' },
-      { label: '协议', value: 'SSH' }
+      { label: '端口', value: '22', type: 'custom' },
+      { label: '协议', value: 'SSH', type: 'custom' }
     ]
   }
 }

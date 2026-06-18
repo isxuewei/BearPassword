@@ -86,9 +86,7 @@
 
     <div class="identity-form__card identity-form__card--soft identity-form__card--extras">
       <div class="identity-form__extras-header">
-        <button type="button" class="identity-form__add-link" @click="addExtraField">
-          <span>+</span> {{ t('entry.form.addMore') }}
-        </button>
+        <ExtraFieldAddMenu @add="addExtraField" />
       </div>
 
       <div v-if="content.extraFields.length" class="identity-form__extras">
@@ -150,9 +148,12 @@
 import { computed, nextTick, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import TagInput from '@/components/vault/TagInput.vue'
+import ExtraFieldAddMenu from '@/components/vault/ExtraFieldAddMenu.vue'
 import { PASSWORD_REMARK_MAX_LENGTH, PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
+import type { ExtraFieldTypeId } from '@/constants/extraFieldTypes'
 import { useI18n } from '@/composables/useI18n'
 import type { IdentityContent } from '@/types'
+import { addExtraFieldByType } from '@/utils/extraField'
 import { appendClipboardClearHint, copySensitiveText } from '@/utils/sensitiveClipboard'
 
 const props = defineProps<{
@@ -175,8 +176,8 @@ const labelsModel = computed({
   set: (value: string[]) => emit('update:labels', value)
 })
 
-function addExtraField(): void {
-  props.content.extraFields.push({ label: '', value: '' })
+function addExtraField(type: ExtraFieldTypeId): void {
+  addExtraFieldByType(props.content.extraFields, type)
 }
 
 function removeExtraField(index: number): void {

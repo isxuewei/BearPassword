@@ -30,9 +30,7 @@
     <!-- 自定义字段 -->
     <div class="secure-note-form__card secure-note-form__card--soft secure-note-form__card--extras">
       <div class="secure-note-form__extras-header">
-        <button type="button" class="secure-note-form__add-link" @click="addExtraField">
-          <span>+</span> {{ t('entry.form.addMore') }}
-        </button>
+        <ExtraFieldAddMenu @add="addExtraField" />
       </div>
 
       <div v-if="content.extraFields.length" class="secure-note-form__extras">
@@ -82,9 +80,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import TagInput from '@/components/vault/TagInput.vue'
+import ExtraFieldAddMenu from '@/components/vault/ExtraFieldAddMenu.vue'
 import { PASSWORD_TITLE_MAX_LENGTH } from '@/constants/vaultFieldLimits'
+import type { ExtraFieldTypeId } from '@/constants/extraFieldTypes'
 import { useI18n } from '@/composables/useI18n'
 import type { SecureNoteContent } from '@/types'
+import { addExtraFieldByType } from '@/utils/extraField'
 
 const props = defineProps<{
   content: SecureNoteContent
@@ -102,8 +103,8 @@ const labelsModel = computed({
   set: (value: string[]) => emit('update:labels', value)
 })
 
-function addExtraField(): void {
-  props.content.extraFields.push({ label: '', value: '' })
+function addExtraField(type: ExtraFieldTypeId): void {
+  addExtraFieldByType(props.content.extraFields, type)
 }
 
 function removeExtraField(index: number): void {

@@ -1,7 +1,8 @@
 /**
  * 身份信息 content 读写
  */
-import type { IdentityContent, LoginExtraField } from '@/types'
+import type { IdentityContent } from '@/types'
+import { normalizeExtraFields } from '@/utils/extraField'
 
 export function createEmptyIdentityContent(): IdentityContent {
   return {
@@ -14,17 +15,6 @@ export function createEmptyIdentityContent(): IdentityContent {
     address: '',
     extraFields: []
   }
-}
-
-function normalizeExtraFields(raw: unknown): LoginExtraField[] {
-  if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    const field = item as Record<string, unknown>
-    return {
-      label: String(field.label ?? ''),
-      value: String(field.value ?? '')
-    }
-  })
 }
 
 export function normalizeIdentityContent(raw: Record<string, unknown>): IdentityContent {

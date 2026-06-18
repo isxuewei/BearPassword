@@ -323,14 +323,20 @@
                 <span class="vault-view__field-label">{{ item.label }}</span>
                 <div class="vault-view__field-value-wrap">
                   <div
-                    v-if="item.links?.length"
+                    v-if="item.authenticator"
+                    class="vault-view__field-value-wrap--totp"
+                  >
+                    <TotpCodeDisplay :content="item.authenticator" size="compact" />
+                  </div>
+                  <div
+                    v-else-if="item.links?.length"
                     class="vault-view__field-value vault-view__field-value--links"
                     @click="handleFieldClick(selectedEntry.id, item)"
                   >
                     <template v-for="(link, linkIndex) in item.links" :key="`${link}-${linkIndex}`">
                       <span v-if="linkIndex > 0">, </span>
                       <a
-                        :href="normalizeWebsiteHref(link)"
+                        :href="item.extraFieldType ? getExtraFieldLinkHref(item.extraFieldType, link) : normalizeWebsiteHref(link)"
                         target="_blank"
                         rel="noopener noreferrer"
                         @click.stop
@@ -570,6 +576,17 @@ import {
   resolveEntryType
 } from '@/utils/vaultEntryDisplay'
 import { translateVaultFieldLabel } from '@/utils/vaultFieldI18n'
+import {
+  extraFieldToAuthenticatorContent,
+  getExtraFieldLinkHref,
+  hasExtraFieldContent,
+  isAuthenticatorExtraField,
+  isLinkExtraField,
+  isSecretExtraField,
+  resolveExtraFieldType
+} from '@/utils/extraField'
+import type { ExtraFieldTypeId } from '@/constants/extraFieldTypes'
+import type { AuthenticatorContent, LoginExtraField } from '@/types'
 import { filterVaultEntries } from '@/utils/vaultEntrySearch'
 import {
   getVaultSortOrderOptions,
@@ -591,6 +608,8 @@ interface PreviewField {
   value: string
   secret?: boolean
   links?: string[]
+  extraFieldType?: ExtraFieldTypeId
+  authenticator?: AuthenticatorContent
 }
 
 interface EntryGroup {
@@ -1400,6 +1419,22 @@ function getAuthenticatorContent(entry: PasswordEntry) {
   return normalizeAuthenticatorContent(entry.content as Record<string, unknown>)
 }
 
+function toPreviewExtraField(field: LoginExtraField): PreviewField {
+  const extraFieldType = resolveExtraFieldType(field)
+  const preview: PreviewField = {
+    label: previewFieldLabel(field.label),
+    value: field.value || '-',
+    extraFieldType,
+    secret: isSecretExtraField(field)
+  }
+  if (isAuthenticatorExtraField(field)) {
+    preview.authenticator = extraFieldToAuthenticatorContent(field)
+  } else if (isLinkExtraField(field) && field.value.trim()) {
+    preview.links = [field.value.trim()]
+  }
+  return preview
+}
+
 function getPreviewFields(entry: PasswordEntry): PreviewField[] {
   const entryType = resolveEntryType(entry)
   switch (entryType) {
@@ -1412,12 +1447,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         }
       ]
       note.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1431,12 +1462,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         { label: previewFieldLabel('密码'), value: String(content.password ?? '-'), secret: true }
       ]
       normalized.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1449,12 +1476,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         { label: previewFieldLabel('密码'), value: String(content.password ?? '-'), secret: true }
       ]
       normalized.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1469,12 +1492,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         { label: previewFieldLabel('安全码'), value: card.cvv || '-', secret: true }
       ]
       card.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1490,12 +1509,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         { label: previewFieldLabel('地址'), value: identity.address || '-' }
       ]
       identity.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1511,12 +1526,8 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
         { label: previewFieldLabel('密码'), value: database.password || '-', secret: true }
       ]
       database.extraFields.forEach((field) => {
-        if (field.label.trim() || field.value.trim()) {
-          fields.push({
-            label: previewFieldLabel(field.label),
-            value: field.value || '-',
-            secret: true
-          })
+        if (hasExtraFieldContent(field)) {
+          fields.push(toPreviewExtraField(field))
         }
       })
       return fields
@@ -1525,11 +1536,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
       return []
     case '自定义': {
       const custom = normalizeCustomContent(entry.content as Record<string, unknown>)
-      return custom.fields.map((field) => ({
-        label: previewFieldLabel(field.label),
-        value: field.value || '-',
-        secret: true
-      }))
+      return custom.fields.map((field) => toPreviewExtraField(field))
     }
     default:
       return []
@@ -2172,6 +2179,10 @@ onUnmounted(() => {
     align-items: center;
     justify-content: space-between;
     gap: $spacing-md;
+
+    &--totp {
+      justify-content: flex-start;
+    }
   }
 
   &__field-value {

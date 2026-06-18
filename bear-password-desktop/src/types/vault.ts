@@ -2,6 +2,8 @@
  * 密码库类型定义
  */
 
+import type { ExtraFieldTypeId } from '@/constants/extraFieldTypes'
+
 /** 密码类型 */
 export type PasswordType =
   | '登录信息'
@@ -13,10 +15,29 @@ export type PasswordType =
   | '数据库'
   | '自定义'
 
+/** 两步验证（2FA / TOTP）内容 */
+export interface AuthenticatorContent {
+  title: string
+  issuer: string
+  account: string
+  secret: string
+  algorithm: 'SHA1' | 'SHA256' | 'SHA512'
+  digits: number
+  period: number
+}
+
 /** 登录信息自定义字段 */
 export interface LoginExtraField {
   label: string
   value: string
+  type?: ExtraFieldTypeId
+  /** type 为 authenticator 时使用 */
+  secret?: string
+  issuer?: string
+  account?: string
+  algorithm?: AuthenticatorContent['algorithm']
+  digits?: number
+  period?: number
 }
 
 /** 登录信息内容 */
@@ -65,10 +86,7 @@ export interface DatabaseContent {
 }
 
 /** 自定义字段 */
-export interface CustomField {
-  label: string
-  value: string
-}
+export type CustomField = LoginExtraField
 
 /** 自定义内容 */
 export interface CustomContent {
@@ -81,17 +99,6 @@ export interface SecureNoteContent {
   title: string
   body: string
   extraFields: LoginExtraField[]
-}
-
-/** 两步验证（2FA / TOTP）内容 */
-export interface AuthenticatorContent {
-  title: string
-  issuer: string
-  account: string
-  secret: string
-  algorithm: 'SHA1' | 'SHA256' | 'SHA512'
-  digits: number
-  period: number
 }
 
 /** 密码内容（按类型扩展） */

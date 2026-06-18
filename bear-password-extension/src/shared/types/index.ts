@@ -56,9 +56,19 @@ export type PasswordType =
   | '数据库'
   | '自定义'
 
+export type ExtraFieldTypeId =
+  | 'url'
+  | 'email'
+  | 'address'
+  | 'date'
+  | 'phone'
+  | 'password'
+  | 'custom'
+
 export interface LoginExtraField {
   label: string
   value: string
+  type?: ExtraFieldTypeId
 }
 
 export interface LoginContent {

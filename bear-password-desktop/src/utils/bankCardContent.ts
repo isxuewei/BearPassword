@@ -1,7 +1,8 @@
 /**
  * 银行卡 content 读写
  */
-import type { BankCardContent, LoginExtraField } from '@/types'
+import type { BankCardContent } from '@/types'
+import { normalizeExtraFields } from '@/utils/extraField'
 
 export function createEmptyBankCardContent(): BankCardContent {
   return {
@@ -13,17 +14,6 @@ export function createEmptyBankCardContent(): BankCardContent {
     cvv: '',
     extraFields: []
   }
-}
-
-function normalizeExtraFields(raw: unknown): LoginExtraField[] {
-  if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    const field = item as Record<string, unknown>
-    return {
-      label: String(field.label ?? ''),
-      value: String(field.value ?? '')
-    }
-  })
 }
 
 export function normalizeBankCardContent(raw: Record<string, unknown>): BankCardContent {

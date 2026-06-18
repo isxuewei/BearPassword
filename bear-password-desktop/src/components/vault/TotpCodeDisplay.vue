@@ -1,5 +1,11 @@
 <template>
-  <div class="totp-display" :class="{ 'totp-display--large': size === 'large' }">
+  <div
+    class="totp-display"
+    :class="{
+      'totp-display--large': size === 'large',
+      'totp-display--compact': size === 'compact'
+    }"
+  >
     <div class="totp-display__code-wrap">
       <button
         type="button"
@@ -45,7 +51,7 @@ import { copySensitiveText } from '@/utils/sensitiveClipboard'
 const props = withDefaults(
   defineProps<{
     content: AuthenticatorContent
-    size?: 'normal' | 'large'
+    size?: 'normal' | 'large' | 'compact'
   }>(),
   {
     size: 'normal'
@@ -131,6 +137,31 @@ async function handleCopy(): Promise<void> {
 
     .totp-display__countdown {
       font-size: 11px;
+    }
+  }
+
+  &--compact {
+    align-items: flex-start;
+
+    .totp-display__code-wrap {
+      gap: $spacing-md;
+    }
+
+    .totp-display__code {
+      font-size: $font-size-md;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      padding: 0;
+    }
+
+    .totp-display__ring-wrap {
+      width: 32px;
+      height: 32px;
+    }
+
+    .totp-display__countdown {
+      font-size: 8px;
+      fill: $color-text-primary;
     }
   }
 

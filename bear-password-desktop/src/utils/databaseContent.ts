@@ -2,6 +2,7 @@
  * 数据库 content 读写
  */
 import type { DatabaseContent, LoginExtraField } from '@/types'
+import { normalizeExtraFields } from '@/utils/extraField'
 
 export function createEmptyDatabaseContent(): DatabaseContent {
   return {
@@ -14,17 +15,6 @@ export function createEmptyDatabaseContent(): DatabaseContent {
     password: '',
     extraFields: []
   }
-}
-
-function normalizeExtraFields(raw: unknown): LoginExtraField[] {
-  if (!Array.isArray(raw)) return []
-  return raw.map((item) => {
-    const field = item as Record<string, unknown>
-    return {
-      label: String(field.label ?? ''),
-      value: String(field.value ?? '')
-    }
-  })
 }
 
 function fieldValue(fields: LoginExtraField[], labels: string[]): string {
