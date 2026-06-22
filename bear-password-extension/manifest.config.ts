@@ -4,7 +4,7 @@ export default defineManifest({
   manifest_version: 3,
   name: 'BearPassword',
   description: '简洁、安全、专业的密码管理浏览器扩展',
-  version: '26.6.16',
+  version: '26.6.20',
   icons: {
     16: 'public/icons/icon-16.png',
     32: 'public/icons/icon-32.png',

@@ -66,7 +66,7 @@ function bindExtensionDownload() {
 }
 
 async function loadVersions() {
-  const fallback = { version: '26.6.16', url: null }
+  const fallback = { version: '26.6.20', url: null }
 
   try {
     const [macData, winData, extensionData] = await Promise.all([
