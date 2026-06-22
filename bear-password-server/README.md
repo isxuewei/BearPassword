@@ -1,43 +1,34 @@
-# BearPassword Server
+<p align="center">
+  <img src="../bear-password-desktop/src/assets/logo.svg" alt="BearPassword" width="80" height="80" />
+</p>
 
-BearPassword 密码管理工具后端服务，基于 **Spring Boot 3 + MyBatis Plus + MySQL 8**。
+<h1 align="center">BearPassword 服务端</h1>
 
-## 技术栈
+<p align="center">为桌面端与扩展提供账号登录、保险库同步与版本更新</p>
 
-| 技术           | 版本     | 说明           |
-|--------------|--------|--------------|
-| Java         | 17     | LTS          |
-| Spring Boot  | 3.3.5  | Web 框架       |
-| MyBatis Plus | 3.5.9  | ORM          |
-| MySQL        | 8.x    | 数据库          |
-| Druid        | 1.2.28 | 连接池 / SQL 监控 |
-| Lombok       | -      | 简化样板代码       |
+<p align="center">
+  <a href="../README.md">返回项目首页</a>
+</p>
 
-## 目录结构
+---
 
-```
-bear-password-server/
-├── sql/                          # 数据库脚本
-│   └── init.sql
-├── src/main/java/com/bear/password/
-│   ├── BearPasswordApplication.java
-│   ├── common/                   # 公共模块
-│   │   ├── config/               # 配置类
-│   │   ├── controller/           # 通用控制器
-│   │   ├── entity/               # 实体基类
-│   │   ├── exception/            # 异常处理
-│   │   └── result/               # 统一响应
-│   └── module/                   # 业务模块（按领域划分）
-│       ├── auth/                 # 认证
-│       ├── user/                 # 用户
-│       └── dashboard/            # 仪表盘
-└── src/main/resources/
-    ├── application.yml
-    ├── application-dev.yml
-    └── application-prod.yml
-```
+## 这是做什么的？
 
-## 快速开始
+普通用户使用 [官网](https://bear-password.xuewei.fun) 提供的云服务即可，**无需自行部署服务端**。
+
+本模块面向希望**自建 BearPassword 后端**的用户或开发者，负责：
+
+- 用户注册、登录与账号安全（含二次验证登录保护）
+- 保险库条目的加密数据存储与同步
+- 收藏、公告、客户端版本与更新包分发
+
+桌面端与浏览器扩展通过 API 与服务器通信；**敏感内容在客户端加密**，服务器侧存储的是密文。
+
+---
+
+## 本地部署（开发者 / 自建）
+
+**环境要求：** Java 17、Maven、MySQL 8
 
 ### 1. 初始化数据库
 
@@ -45,48 +36,47 @@ bear-password-server/
 mysql -u root -p < sql/init.sql
 ```
 
-### 2. 修改数据库配置
+### 2. 配置数据库连接
 
-编辑 `src/main/resources/application-dev.yml`：
+编辑 `src/main/resources/application-dev.yml`，填写数据库地址、用户名和密码。
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/bear_password?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 你的密码
-```
-
-开发环境已启用 Druid 监控页：`http://localhost:8080/api/druid/`（账号 `admin` / `admin123`，仅允许本机访问）。
-
-### 3. 启动项目
-
-在 IDEA 中运行 `BearPasswordApplication`，或使用 Maven：
+### 3. 启动服务
 
 ```bash
 mvn spring-boot:run
 ```
 
-服务地址：`http://localhost:8080/api`
+启动后 API 根路径：`http://localhost:8080/api`
 
-### 4. 测试接口
+### 4. 验证是否正常
 
 ```bash
-# 健康检查
 curl http://localhost:8080/api/health
-
-# 登录（测试账号 admin / 123456）
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"123456"}'
-
-# 仪表盘统计
-curl http://localhost:8080/api/dashboard/stats
 ```
 
-## API 响应格式
+开发环境可选开启 Druid 监控：`http://localhost:8080/api/druid/`（默认仅本机可访问）。
 
-与桌面端 `ApiResponse` 对齐：
+---
+
+## 生产环境
+
+使用 `prod` 配置，通过环境变量注入数据库等信息，例如：
+
+| 变量 | 说明 |
+|------|------|
+| `DB_URL` | 数据库连接地址 |
+| `DB_USERNAME` | 数据库用户名 |
+| `DB_PASSWORD` | 数据库密码 |
+
+```bash
+java -jar bear-password-server.jar --spring.profiles.active=prod
+```
+
+---
+
+## API 约定
+
+接口统一返回格式（与桌面端一致）：
 
 ```json
 {
@@ -96,38 +86,16 @@ curl http://localhost:8080/api/dashboard/stats
 }
 ```
 
-- `code = 0` 表示成功
-- 其他 code 表示业务或系统错误
+`code = 0` 表示成功。
 
-## 环境配置
+---
 
-| Profile | 文件                   | 用途                  |
-|---------|----------------------|---------------------|
-| dev     | application-dev.yml  | 本地开发                |
-| prod    | application-prod.yml | 生产环境（通过环境变量注入数据库配置） |
+## 技术概要
 
-生产环境连接池参数继承 `application.yml`，可通过环境变量覆盖 Druid 监控：
+Java 17 · Spring Boot 3 · MyBatis Plus · MySQL · Druid
 
-| 变量                    | 说明                                          | 默认          |
-|-----------------------|---------------------------------------------|-------------|
-| `DB_URL`              | JDBC 地址（建议带 `serverTimezone=Asia/Shanghai`） | -           |
-| `DB_USERNAME`         | 数据库用户名                                      | -           |
-| `DB_PASSWORD`         | 数据库密码                                       | -           |
-| `DRUID_STAT_ENABLED`  | 是否开启监控页                                     | `false`     |
-| `DRUID_STAT_USERNAME` | 监控页账号                                       | `admin`     |
-| `DRUID_STAT_PASSWORD` | 监控页密码                                       | 空           |
-| `DRUID_STAT_ALLOW`    | 允许访问 IP                                     | `127.0.0.1` |
+---
 
-切换环境：
+## 许可证
 
-```bash
-java -jar bear-password-server.jar --spring.profiles.active=prod
-```
-
-## 后续开发路线
-
-- [ ] JWT 认证与 Spring Security
-- [ ] BCrypt 密码校验
-- [ ] 密码库 CRUD
-- [ ] 收藏夹 / 最近访问
-- [ ] 接口文档（Knife4j / SpringDoc）
+MIT · 作者：薛伟同学

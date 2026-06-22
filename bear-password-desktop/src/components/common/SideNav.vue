@@ -1,5 +1,5 @@
 <template>
-  <!-- 左侧导航菜单，类似 1Password 侧边栏 -->
+  <!-- 左侧导航菜单 -->
   <nav class="side-nav">
     <router-link
       v-for="item in navItems"

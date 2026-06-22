@@ -265,7 +265,7 @@ const messages: MessageDict = {
   'settings.mfaTotpDisable': 'Disable',
   'settings.mfaTotpDisablePlaceholder': 'Enter the current 6-digit code from your authenticator',
   'settings.mfaTotpSetupTitle': 'Link authenticator app',
-  'settings.mfaTotpSetupBody': 'Scan the QR code with Google Authenticator, 1Password, or similar—or enter the secret manually—then confirm with a 6-digit code.',
+  'settings.mfaTotpSetupBody': 'Scan the QR code with Google Authenticator, Microsoft Authenticator, or another authenticator app—or enter the secret manually—then confirm with a 6-digit code.',
   'settings.mfaTotpEnablePlaceholder': '6-digit code',
   'settings.mfaTotpEnable': 'Enable',
   'settings.mfaTotpEnabledMsg': 'TOTP enabled',

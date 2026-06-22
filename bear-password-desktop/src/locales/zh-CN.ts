@@ -256,7 +256,7 @@ const messages: MessageDict = {
   'settings.mfaTotpDisable': '关闭验证',
   'settings.mfaTotpDisablePlaceholder': '输入验证器当前显示的 6 位动态码',
   'settings.mfaTotpSetupTitle': '绑定身份验证器',
-  'settings.mfaTotpSetupBody': '用 Google Authenticator、1Password 等 App 扫描二维码或手动输入密钥，再输入 6 位动态码完成绑定。',
+  'settings.mfaTotpSetupBody': '用 Google Authenticator、Microsoft Authenticator 等验证器 App 扫描二维码或手动输入密钥，再输入 6 位动态码完成绑定。',
   'settings.mfaTotpEnablePlaceholder': '6 位验证码',
   'settings.mfaTotpEnable': '确认启用',
   'settings.mfaTotpEnabledMsg': 'TOTP 已启用',

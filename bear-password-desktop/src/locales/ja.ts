@@ -264,7 +264,7 @@ const messages: MessageDict = {
   'settings.mfaTotpDisable': '無効にする',
   'settings.mfaTotpDisablePlaceholder': '認証アプリに表示されている 6 桁コードを入力',
   'settings.mfaTotpSetupTitle': '認証アプリを連携',
-  'settings.mfaTotpSetupBody': 'Google Authenticator、1Password などで QR コードをスキャンするか秘密鍵を入力し、6 桁コードで確認してください。',
+  'settings.mfaTotpSetupBody': 'Google Authenticator、Microsoft Authenticator などの認証アプリで QR コードをスキャンするか秘密鍵を入力し、6 桁コードで確認してください。',
   'settings.mfaTotpEnablePlaceholder': '6 桁のコード',
   'settings.mfaTotpEnable': '有効化',
   'settings.mfaTotpEnabledMsg': 'TOTP を有効にしました',

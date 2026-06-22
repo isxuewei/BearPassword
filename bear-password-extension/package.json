@@ -1,7 +1,7 @@
 {
   "name": "bear-password-extension",
   "version": "26.6.20",
-  "description": "BearPassword 浏览器扩展 — 模仿 1Password 的自动填充与保险库管理",
+  "description": "BearPassword 浏览器扩展 — 网页自动填充、保险库管理与两步验证",
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' vite",

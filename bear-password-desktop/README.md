@@ -1,124 +1,81 @@
-# BearPassword Desktop
+<p align="center">
+  <img src="src/assets/logo.svg" alt="BearPassword" width="80" height="80" />
+</p>
 
-简洁、安全、专业的桌面密码管理工具（MVP 骨架版本）。
+<h1 align="center">BearPassword 桌面端</h1>
 
-## 技术栈
+<p align="center">在电脑上管理密码库、生成强密码、查看两步验证码的主应用</p>
 
-| 技术 | 用途 |
-|------|------|
-| Electron | 桌面应用运行时 |
-| Vite | 构建工具 |
-| Vue 3 | 前端框架 |
-| TypeScript | 类型安全 |
-| Pinia | 状态管理 |
-| Vue Router | 路由 |
-| Axios | HTTP 请求（已封装，预留 API 对接） |
-| Element Plus | UI 组件库 |
-| SCSS | 样式预处理 |
+<p align="center">
+  <a href="https://bear-password.xuewei.fun">官网下载</a> ·
+  <a href="../README.md">返回项目首页</a>
+</p>
 
-## 目录结构
+---
 
-```
-bear-password-desktop/
-├── electron/                  # Electron 主进程 & 预加载脚本
-│   ├── main/index.ts          # 主进程：窗口创建、IPC
-│   └── preload/index.ts       # 预加载：安全暴露 windowApi
-├── src/
-│   ├── api/                   # API 层（按业务模块拆分）
-│   ├── assets/                # 静态资源
-│   ├── components/            # 可复用组件
-│   │   ├── common/            # 通用组件（Logo、导航）
-│   │   ├── dashboard/         # 仪表盘组件
-│   │   └── window/            # 窗口控制组件
-│   ├── layouts/               # 页面布局
-│   ├── locales/               # 国际化预留
-│   ├── router/                # 路由配置
-│   ├── stores/                # Pinia 状态管理
-│   ├── styles/                # 全局样式 & 设计令牌
-│   ├── types/                 # TypeScript 类型定义
-│   ├── utils/                 # 工具函数（Axios 封装、存储）
-│   └── views/                 # 页面视图
-├── index.html
-├── electron.vite.config.ts
-├── package.json
-└── tsconfig.json
-```
+## 你可以用它做什么
 
-## 快速开始
+- **保存各类敏感信息**：网站登录、银行卡、身份证信息、服务器与数据库连接、安全备注、独立的两步验证条目等
+- **登录条目更丰富**：通过「添加更多」补充 URL、邮箱、地址、电话、备用密码、**两步验证**等字段
+- **查看 TOTP 验证码**：在条目详情中实时显示 6 位验证码与倒计时；支持扫码或粘贴密钥导入
+- **保护隐私**：主密码 + 可选安全密钥；离开一段时间自动锁定；复制敏感内容后可定时清空剪贴板
+- **配合浏览器扩展**：桌面端解锁后，扩展才能在网页中自动填充
 
-### 环境要求
+<p align="center">
+  <img src="../bear-password-index/assets/screenshots/6新增密码.png" alt="新增密码条目" width="640" />
+</p>
 
-- Node.js >= 18
-- npm >= 9
+<p align="center">
+  <img src="../bear-password-index/assets/screenshots/10安全设置.png" alt="安全设置" width="640" />
+</p>
 
-### 安装依赖
+---
+
+## 下载与安装
+
+请前往 [BearPassword 官网](https://bear-password.xuewei.fun) 下载对应系统安装包：
+
+- **macOS**：`.dmg` 安装包
+- **Windows**：安装程序或便携版压缩包
+
+安装后注册账号，按引导完成保险库初始化即可使用。
+
+---
+
+## 与浏览器扩展配合
+
+1. 安装 [浏览器扩展](../bear-password-extension/)
+2. 保持 BearPassword 桌面端**已登录且保险库已解锁**
+3. 打开需要登录的网站，点击输入框旁的 BearPassword 图标进行填充
+
+扩展通过本机安全通道读取数据，无需在浏览器里再次输入主密码。
+
+---
+
+## 从源码运行（开发者）
+
+**要求：** Node.js ≥ 18，npm ≥ 9
 
 ```bash
 npm install
+npm run dev          # 开发模式，自动打开窗口
+npm run build        # 构建
+npm run build:mac    # 打包 macOS 安装包
+npm run build:win    # 打包 Windows 安装包
+npm run typecheck    # 类型检查
 ```
 
-### 开发模式
+开发环境默认连接 `http://127.0.0.1:8080` 的后端 API。  
+打包产物位于 `release/` 目录。
 
-```bash
-npm run dev
-```
+---
 
-启动后会自动打开 Electron 窗口，支持热更新。
+## 技术概要
 
-### 构建（渲染层 + 主进程）
+Electron · Vue 3 · TypeScript · Pinia · Element Plus · Vite
 
-```bash
-npm run build
-```
+---
 
-### 打包发布
+## 许可证
 
-| 平台 | 命令 | 产物（`release/`） |
-|------|------|-------------------|
-| macOS (Apple Silicon) | `npm run build:mac` | `BearPassword.dmg`、`BearPassword.zip`、`BearPassword-mac-安装包.zip` |
-| Windows (x64) | `npm run build:win` | `BearPassword-Setup.exe`（NSIS 安装程序）、`BearPassword-win-x64.zip`（便携版）、`BearPassword-Windows-安装包.zip`（安装程序 + 说明） |
-
-Windows 打包可在 macOS 上交叉编译（需本机已安装 NSIS 相关依赖，electron-builder 会自动处理）。未配置代码签名时，Windows 可能弹出 SmartScreen 提示，属正常现象。
-
-图标由 `npm run generate:icons` 从 `resources/icon.svg` 生成（`build:win` 会自动执行）。
-
-### 类型检查
-
-```bash
-npm run typecheck
-```
-
-## 功能说明
-
-### 登录页
-
-- 输入任意非空用户名和密码即可登录（Mock 逻辑）
-- 登录态通过 Pinia + localStorage 持久化
-
-### 主界面
-
-- 左侧导航：Dashboard / 密码库 / 收藏夹 / 最近访问 / 设置
-- 自定义窗口标题栏（最小化 / 最大化 / 关闭）
-- macOS 保留原生交通灯，Windows 显示自定义按钮
-
-### Dashboard
-
-- 展示总密码数、收藏数、最近访问数（模拟数据）
-
-## 架构设计要点
-
-1. **API 层独立** — `src/api/` 按模块拆分，Mock 与真实接口切换只需修改 API 文件
-2. **Axios 二次封装** — `src/utils/request.ts` 统一 Token 注入和错误处理
-3. **类型统一管理** — `src/types/` 集中定义接口类型
-4. **主题可扩展** — `data-theme` 属性 + SCSS 变量，已预留浅色主题
-5. **国际化可扩展** — `src/locales/` 预留文案字典结构
-
-## 后续开发路线
-
-- [ ] 对接 REST API 后端
-- [ ] 密码库 CRUD 功能
-- [ ] 密码生成器
-- [ ] 自动锁定
-- [ ] 浅色主题切换
-- [ ] vue-i18n 国际化
-- [x] electron-builder 打包发布（macOS / Windows）
+MIT · 作者：薛伟同学

@@ -1,5 +1,5 @@
 /**
- * 密码库列表排序（参考 1Password）
+ * 密码库列表排序
  */
 import type { PasswordEntry } from '@/types'
 import { toVaultEntryId } from '../../shared/vaultEntryId'
