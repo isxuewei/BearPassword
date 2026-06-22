@@ -63,12 +63,29 @@ export type ExtraFieldTypeId =
   | 'date'
   | 'phone'
   | 'password'
+  | 'authenticator'
   | 'custom'
+
+export interface AuthenticatorContent {
+  title: string
+  issuer: string
+  account: string
+  secret: string
+  algorithm: 'SHA1' | 'SHA256' | 'SHA512'
+  digits: number
+  period: number
+}
 
 export interface LoginExtraField {
   label: string
   value: string
   type?: ExtraFieldTypeId
+  secret?: string
+  issuer?: string
+  account?: string
+  algorithm?: AuthenticatorContent['algorithm']
+  digits?: number
+  period?: number
 }
 
 export interface LoginContent {
@@ -121,6 +138,7 @@ export interface FillCredential {
   password: string
   websites: string[]
   favorite?: boolean
+  authenticator?: AuthenticatorContent
 }
 
 /** 桌面端连接状态（扩展通过本地桥接 127.0.0.1:6892 获取） */
@@ -151,6 +169,7 @@ export type MessageType =
   | 'DELETE_CREDENTIAL'
   | 'UPDATE_BADGE'
   | 'GENERATE_PASSWORD'
+  | 'COPY_TEXT'
   | 'WAKE_DESKTOP'
 
 export interface ExtensionMessage<T = unknown> {

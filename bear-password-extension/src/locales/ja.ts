@@ -103,6 +103,9 @@ const messages: MessageDict = {
   'credential.unfavorite': 'お気に入り解除',
   'credential.delete': '削除',
   'credential.noUsername': '（ユーザー名なし）',
+  'credential.totpView': '認証コードを表示',
+  'credential.totpCopy': 'クリックでコードをコピー',
+  'credential.totpCopied': '認証コードをコピーしました',
 
   'entry.create': 'ログインを追加',
   'entry.edit': 'ログインを編集',
@@ -192,6 +195,9 @@ const messages: MessageDict = {
   'content.picker.saveSuccess': 'ログインを保存しました',
   'content.picker.saveFailed': '保存に失敗しました。BearPassword にサインインしているか確認してください',
   'content.picker.noUsername': '（ユーザー名なし）',
+  'content.picker.totpCopy': 'クリックでコードをコピー',
+  'content.picker.totpCopied': '認証コードをコピーしました',
+  'content.picker.totpCopyFailed': 'コピーに失敗しました。手動でコピーしてください。',
 
   'content.banner.title': 'BearPassword に保存しますか？',
   'content.banner.desc': '新しいログインを検出しました：{username}',

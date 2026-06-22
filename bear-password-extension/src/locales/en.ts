@@ -103,6 +103,9 @@ const messages: MessageDict = {
   'credential.unfavorite': 'Unfavorite',
   'credential.delete': 'Delete',
   'credential.noUsername': '(no username)',
+  'credential.totpView': 'View verification code',
+  'credential.totpCopy': 'Click to copy code',
+  'credential.totpCopied': 'Verification code copied',
 
   'entry.create': 'Add login',
   'entry.edit': 'Edit login',
@@ -192,6 +195,9 @@ const messages: MessageDict = {
   'content.picker.saveSuccess': 'Login saved successfully',
   'content.picker.saveFailed': 'Save failed. Make sure you are signed in to BearPassword',
   'content.picker.noUsername': '(no username)',
+  'content.picker.totpCopy': 'Click to copy code',
+  'content.picker.totpCopied': 'Verification code copied',
+  'content.picker.totpCopyFailed': 'Copy failed. Please copy the code manually.',
 
   'content.banner.title': 'Save to BearPassword?',
   'content.banner.desc': 'New login detected: {username}',

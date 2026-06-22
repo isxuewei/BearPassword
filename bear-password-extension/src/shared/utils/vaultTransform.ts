@@ -6,6 +6,7 @@ import type {
   PasswordEntry,
   PasswordEntryParams
 } from '@/shared/types'
+import { extractLoginAuthenticatorFromContent } from '@/shared/utils/extraField'
 import {
   decryptContentObject,
   encryptContentObject,
@@ -130,13 +131,16 @@ export function toFillCredential(entry: PasswordEntry): FillCredential | null {
   const password = content.password ?? ''
   if (!username && !password) return null
 
+  const authenticator = extractLoginAuthenticatorFromContent(content)
+
   return {
     id: entry.id,
     title,
     username,
     password,
     websites: resolveEntryWebsites(entry),
-    favorite: entry.favorite ?? false
+    favorite: entry.favorite ?? false,
+    ...(authenticator ? { authenticator } : {})
   }
 }
 

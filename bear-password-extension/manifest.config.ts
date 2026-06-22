@@ -25,7 +25,7 @@ export default defineManifest({
     service_worker: 'src/background/index.ts',
     type: 'module'
   },
-  permissions: ['storage', 'activeTab', 'tabs', 'scripting', 'contextMenus'],
+  permissions: ['storage', 'activeTab', 'tabs', 'scripting', 'contextMenus', 'clipboardWrite'],
   host_permissions: ['http://127.0.0.1:6892/*', '<all_urls>'],
   content_scripts: [
     {

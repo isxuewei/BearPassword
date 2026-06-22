@@ -1,7 +1,10 @@
-import type { FillCredential } from '@/shared/types'
+import type { AuthenticatorContent, FillCredential } from '@/shared/types'
 import { tContent } from '@/shared/locale/contentLocale'
 import { getContentThemeTokens } from '@/shared/theme/contentTheme'
 import { inlinePickerStyles } from '@/shared/theme/contentStyles'
+import { generateTotpSnapshot } from '@/shared/utils/totp'
+import { copyCredentialTotpCode, copyCredentialTotpCodeSync } from '@/shared/utils/credentialTotp'
+import { showContentToast } from '@/content/contentToast'
 
 const PICKER_ID = 'bear-password-inline-picker'
 const STYLE_ID = 'bear-password-inline-picker-style'
@@ -23,6 +26,8 @@ export interface InlinePickerOptions {
 let scrollHandler: (() => void) | null = null
 let resizeHandler: (() => void) | null = null
 let anchorInput: HTMLInputElement | null = null
+let totpTimer: ReturnType<typeof setInterval> | null = null
+const totpCredentials = new Map<string, AuthenticatorContent>()
 
 function escapeHtml(text: string): string {
   return text
@@ -63,7 +68,7 @@ function positionPicker(picker: HTMLElement, anchor: HTMLInputElement): void {
 
   picker.style.top = `${top}px`
   picker.style.left = `${left}px`
-  picker.style.width = `${Math.max(rect.width, 280)}px`
+  picker.style.width = `${Math.max(rect.width, 300)}px`
 }
 
 function renderQuickSaveFooter(picker: HTMLElement, quickSave: QuickSaveOptions | null | undefined): void {
@@ -109,6 +114,101 @@ function renderQuickSaveFooter(picker: HTMLElement, quickSave: QuickSaveOptions 
   picker.appendChild(footer)
 }
 
+function syncTotpCredentials(credentials: FillCredential[]): void {
+  totpCredentials.clear()
+  for (const cred of credentials) {
+    if (cred.authenticator) {
+      totpCredentials.set(cred.id, cred.authenticator)
+    }
+  }
+}
+
+function renderTotpRing(snapshot: ReturnType<typeof generateTotpSnapshot>): string {
+  const countdown = snapshot ? String(snapshot.remainingSeconds).padStart(2, '0') : '--'
+  const ringOffset = snapshot ? 97.4 * (1 - snapshot.remainingSeconds / snapshot.period) : 97.4
+
+  return `
+    <span class="bear-picker-item-totp-ring" aria-hidden="true">
+      <svg viewBox="0 0 36 36">
+        <g class="bear-picker-item-totp-ring-rotate">
+          <circle class="bear-picker-item-totp-ring-track" cx="18" cy="18" r="15.5" />
+          <circle
+            class="bear-picker-item-totp-ring-progress"
+            cx="18"
+            cy="18"
+            r="15.5"
+            style="stroke-dashoffset: ${ringOffset}"
+          />
+        </g>
+        <text class="bear-picker-item-totp-countdown" x="18" y="18" text-anchor="middle" dominant-baseline="central">${countdown}</text>
+      </svg>
+    </span>
+  `
+}
+
+function refreshTotpDisplays(picker: HTMLElement): void {
+  const nowMs = Date.now()
+
+  for (const [credId, auth] of totpCredentials) {
+    const totpEl = picker.querySelector<HTMLElement>(`.bear-picker-item-totp[data-cred-id="${credId}"]`)
+    if (!totpEl) continue
+
+    const snapshot = generateTotpSnapshot(auth, nowMs)
+    const codeEl = totpEl.querySelector('.bear-picker-item-totp-code')
+    const countdownEl = totpEl.querySelector('.bear-picker-item-totp-countdown')
+    const progressEl = totpEl.querySelector('.bear-picker-item-totp-ring-progress') as SVGCircleElement | null
+
+    if (codeEl) codeEl.textContent = snapshot?.code ?? '------'
+    if (countdownEl) {
+      countdownEl.textContent = snapshot ? String(snapshot.remainingSeconds).padStart(2, '0') : '--'
+    }
+    if (progressEl && snapshot) {
+      progressEl.style.strokeDashoffset = String(97.4 * (1 - snapshot.remainingSeconds / snapshot.period))
+    }
+  }
+}
+
+function stopTotpTimer(): void {
+  if (totpTimer) {
+    clearInterval(totpTimer)
+    totpTimer = null
+  }
+  totpCredentials.clear()
+}
+
+function startTotpTimer(credentials: FillCredential[]): void {
+  if (totpTimer) {
+    clearInterval(totpTimer)
+    totpTimer = null
+  }
+
+  syncTotpCredentials(credentials)
+  if (totpCredentials.size === 0) return
+
+  totpTimer = setInterval(() => {
+    const activePicker = document.getElementById(PICKER_ID)
+    if (!activePicker) {
+      stopTotpTimer()
+      return
+    }
+    refreshTotpDisplays(activePicker)
+  }, 1000)
+}
+
+function handleTotpCopy(cred: FillCredential): void {
+  const copiedCode = copyCredentialTotpCodeSync(cred, document)
+  if (copiedCode) {
+    showContentToast(tContent('content.picker.totpCopied'))
+    return
+  }
+
+  void copyCredentialTotpCode(cred, document).then((code) => {
+    showContentToast(
+      code ? tContent('content.picker.totpCopied') : tContent('content.picker.totpCopyFailed')
+    )
+  })
+}
+
 function renderList(
   listEl: HTMLElement,
   credentials: FillCredential[],
@@ -116,19 +216,47 @@ function renderList(
 ): void {
   listEl.innerHTML = ''
   for (const cred of credentials) {
-    const item = document.createElement('button')
-    item.type = 'button'
+    const item = document.createElement('div')
     item.className = 'bear-picker-item'
-    item.innerHTML = `
+
+    const info = document.createElement('div')
+    info.className = 'bear-picker-item-info'
+    info.innerHTML = `
       <div class="bear-picker-item-title">${escapeHtml(cred.title)}</div>
       <div class="bear-picker-item-user">${escapeHtml(cred.username || tContent('content.picker.noUsername'))}</div>
     `
-    item.addEventListener('click', (e) => {
+    info.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
       onSelect(cred)
       hideInlinePicker()
     })
+
+    item.appendChild(info)
+
+    if (cred.authenticator) {
+      const snapshot = generateTotpSnapshot(cred.authenticator)
+      const code = snapshot?.code ?? '------'
+      const totp = document.createElement('button')
+      totp.type = 'button'
+      totp.className = 'bear-picker-item-totp'
+      totp.dataset.credId = cred.id
+      totp.title = tContent('content.picker.totpCopy')
+      totp.innerHTML = `
+        <span class="bear-picker-item-totp-code">${escapeHtml(code)}</span>
+        ${renderTotpRing(snapshot)}
+      `
+      totp.addEventListener('mousedown', (e) => {
+        e.stopPropagation()
+      })
+      totp.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        handleTotpCopy(cred)
+      })
+      item.appendChild(totp)
+    }
+
     listEl.appendChild(item)
   }
 }
@@ -159,8 +287,10 @@ export function showInlinePicker(
 
   if (!credentials.length) {
     list.innerHTML = `<div class="bear-picker-empty">${escapeHtml(options.emptyText ?? tContent('content.picker.emptyDefault'))}</div>`
+    stopTotpTimer()
   } else {
     renderList(list, credentials, options.onSelect)
+    startTotpTimer(credentials)
   }
 
   picker.appendChild(header)
@@ -168,6 +298,8 @@ export function showInlinePicker(
   renderQuickSaveFooter(picker, options.quickSave)
 
   picker.addEventListener('mousedown', (e) => {
+    const target = e.target as HTMLElement
+    if (target.closest('.bear-picker-item-totp, .bear-picker-quick-save')) return
     e.preventDefault()
   })
 
@@ -223,8 +355,10 @@ export function updateInlinePicker(
 
   if (!credentials.length) {
     list.innerHTML = `<div class="bear-picker-empty">${escapeHtml(options.emptyText)}</div>`
+    stopTotpTimer()
   } else {
     renderList(list as HTMLElement, credentials, options.onSelect)
+    startTotpTimer(credentials)
   }
 
   renderQuickSaveFooter(picker, options.quickSave)
@@ -243,6 +377,7 @@ export function updateInlinePickerList(credentials: FillCredential[], onSelect: 
 }
 
 export function hideInlinePicker(): void {
+  stopTotpTimer()
   document.getElementById(PICKER_ID)?.remove()
   anchorInput = null
   if (scrollHandler) {

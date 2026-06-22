@@ -130,6 +130,7 @@ const deleteMessage = computed(() =>
             :credential="item"
             highlight
             @fill="vaultStore.autofill(item.id)"
+            @totp-copied="vaultStore.showToast(t('credential.totpCopied'))"
             @edit="vaultStore.openEdit(item)"
             @share="vaultStore.shareCredential(item)"
             @favorite="vaultStore.toggleFavorite(item)"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from '@/popup/composables/useI18n'
+import CredentialTotp from '@/popup/components/CredentialTotp.vue'
 import type { FillCredential } from '@/shared/types'
 
 const { t } = useI18n()
@@ -15,6 +16,7 @@ const emit = defineEmits<{
   share: []
   favorite: []
   delete: []
+  totpCopied: []
 }>()
 </script>
 
@@ -27,20 +29,11 @@ const emit = defineEmits<{
         <div class="username">{{ credential.username || t('credential.noUsername') }}</div>
       </button>
       <div class="btns">
-        <button
-          class="icon-btn"
-          type="button"
-          :title="t('credential.fill')"
-          @click.stop="emit('fill')"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-            <rect x="4" y="4" width="12" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round" />
-            <path stroke-linecap="round" d="M8 9h4" />
-            <path stroke-linecap="round" d="M8 13h4" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 10l2 2-2 2" />
-            <path stroke-linecap="round" d="M16 12h4" />
-          </svg>
-        </button>
+        <CredentialTotp
+          v-if="credential.authenticator"
+          :content="credential.authenticator"
+          @copied="emit('totpCopied')"
+        />
         <button class="icon-btn" type="button" :title="t('credential.edit')" @click="emit('edit')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <path
@@ -97,9 +90,14 @@ const emit = defineEmits<{
   background: var(--bear-surface);
   border: 1px solid var(--bear-border);
   border-radius: var(--bear-radius-md);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--bear-shadow-sm);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.credential-item:hover,
+.credential-item:focus-within {
+  z-index: 2;
 }
 
 .credential-item:hover {

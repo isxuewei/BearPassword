@@ -3,9 +3,9 @@ import {
   getExtraFieldLabel,
   type ExtraFieldTypeId
 } from '@/constants/extraFieldTypes'
-import type { AuthenticatorContent, LoginExtraField } from '@/types'
+import type { AuthenticatorContent, LoginContent, LoginExtraField } from '@/types'
 import { normalizeAuthenticatorContent } from '@/utils/authenticatorContent'
-import { applyParsedOtpAuthImport, type ParsedOtpAuthImport } from '@/utils/totp'
+import { applyParsedOtpAuthImport, isValidAuthenticatorSecret, type ParsedOtpAuthImport } from '@/utils/totp'
 
 const VALID_EXTRA_FIELD_TYPES = new Set<ExtraFieldTypeId>(
   EXTRA_FIELD_TYPE_OPTIONS.map((item) => item.id)
@@ -106,6 +106,19 @@ export function extraFieldToAuthenticatorContent(field: LoginExtraField): Authen
     digits: field.digits,
     period: field.period
   })
+}
+
+export function extractLoginAuthenticatorFromContent(
+  content: Pick<LoginContent, 'extraFields'>
+): AuthenticatorContent | undefined {
+  for (const field of normalizeExtraFields(content.extraFields)) {
+    if (!isAuthenticatorExtraField(field)) continue
+    const auth = extraFieldToAuthenticatorContent(field)
+    if (auth.secret && isValidAuthenticatorSecret(auth.secret)) {
+      return auth
+    }
+  }
+  return undefined
 }
 
 export function applyParsedOtpAuthToExtraField(

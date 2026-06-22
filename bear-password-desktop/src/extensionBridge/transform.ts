@@ -1,5 +1,6 @@
-import type { LoginContent, PasswordEntry } from '@/types'
+import type { AuthenticatorContent, LoginContent, PasswordEntry } from '@/types'
 import { isEncryptedContent } from '@/utils/contentCrypto'
+import { extractLoginAuthenticatorFromContent } from '@/utils/extraField'
 import { resolveEntryWebsites } from '@/utils/passwordWebsites'
 import { entryMatchesPage } from '@/extensionBridge/websiteMatch'
 
@@ -10,6 +11,7 @@ export interface FillCredential {
   password: string
   websites: string[]
   favorite?: boolean
+  authenticator?: AuthenticatorContent
 }
 
 export interface MatchingCredentialsResult {
@@ -32,13 +34,16 @@ export function toFillCredential(entry: PasswordEntry): FillCredential | null {
   const password = content.password ?? ''
   if (!username && !password) return null
 
+  const authenticator = extractLoginAuthenticatorFromContent(content)
+
   return {
     id: entry.id,
     title,
     username,
     password,
     websites: resolveEntryWebsites(entry),
-    favorite: entry.favorite ?? false
+    favorite: entry.favorite ?? false,
+    ...(authenticator ? { authenticator } : {})
   }
 }
 

@@ -102,6 +102,9 @@ const messages: MessageDict = {
   'credential.unfavorite': '取消收藏',
   'credential.delete': '删除',
   'credential.noUsername': '（无用户名）',
+  'credential.totpView': '查看验证码',
+  'credential.totpCopy': '点击复制验证码',
+  'credential.totpCopied': '验证码已复制',
 
   'entry.create': '新增登录项',
   'entry.edit': '编辑登录项',
@@ -187,6 +190,9 @@ const messages: MessageDict = {
   'content.picker.saveSuccess': '登录项已保存成功',
   'content.picker.saveFailed': '保存失败，请确认已登录 BearPassword',
   'content.picker.noUsername': '（无用户名）',
+  'content.picker.totpCopy': '点击复制验证码',
+  'content.picker.totpCopied': '验证码已复制',
+  'content.picker.totpCopyFailed': '复制失败，请手动复制验证码',
 
   'content.banner.title': '保存到 BearPassword？',
   'content.banner.desc': '检测到新的登录信息：{username}',

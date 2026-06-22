@@ -346,6 +346,14 @@ async function handleMessage(message: ExtensionMessage, sender?: chrome.runtime.
     case 'GENERATE_PASSWORD':
       return generatePassword(message.payload as Parameters<typeof generatePassword>[0])
 
+    case 'COPY_TEXT': {
+      const { text } = message.payload as { text: string }
+      const normalized = text.trim()
+      if (!normalized) return false
+      await navigator.clipboard.writeText(normalized)
+      return true
+    }
+
     default:
       throw new Error(`未知消息类型: ${message.type}`)
   }

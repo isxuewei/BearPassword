@@ -23,6 +23,8 @@ import {
   type QuickSaveOptions
 } from '@/content/inlinePicker'
 import { showSaveBanner } from '@/content/inpageBanner'
+import { showContentToast } from '@/content/contentToast'
+import { copyCredentialTotpCode } from '@/shared/utils/credentialTotp'
 import { sendMessage } from '@/shared/utils/messaging'
 import { tContent } from '@/shared/locale/contentLocale'
 import {
@@ -34,6 +36,12 @@ import {
 import { getBrowserTabTitle } from '@/shared/utils/tabTitle'
 import { getPageWebsiteUrl } from '@/shared/utils/websiteMatch'
 import { triggerDesktopProtocolUrl } from '@/shared/utils/desktopProtocol'
+import {
+  onExtensionTeardown,
+  runExtensionTeardown,
+  startExtensionContextWatch
+} from '@/content/extensionLifecycle'
+import { isExtensionContextValid } from '@/shared/utils/extensionContext'
 
 let matchingCredentials: FillCredential[] = []
 let needsSecurityKey = false
@@ -45,6 +53,12 @@ const DESKTOP_POLL_MS = 3000
 const APPEARANCE_SYNC_MS = 3000
 let desktopPollTimer: ReturnType<typeof setInterval> | null = null
 let appearanceSyncTimer: ReturnType<typeof setInterval> | null = null
+
+function stopAppearanceSync(): void {
+  if (!appearanceSyncTimer) return
+  clearInterval(appearanceSyncTimer)
+  appearanceSyncTimer = null
+}
 
 function refreshContentAppearanceUI(): void {
   refreshInlinePickerStyles()
@@ -237,6 +251,9 @@ function getPickerCredentials(): { list: FillCredential[]; title: string } {
 
 function handleSelect(credential: FillCredential, context: LoginFieldContext): void {
   autofillInContext(credential, context)
+  void copyCredentialTotpCode(credential).then((code) => {
+    if (code) showContentToast(tContent('content.picker.totpCopied'))
+  })
 }
 
 function isSameLoginContext(a: LoginFieldContext, b: LoginFieldContext): boolean {
@@ -452,6 +469,11 @@ interface ContentScriptMessage {
 }
 
 chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, sendResponse) => {
+  if (!isExtensionContextValid()) {
+    runExtensionTeardown()
+    return false
+  }
+
   switch (message.type) {
     case 'TRIGGER_DESKTOP_PROTOCOL': {
       triggerDesktopProtocolUrl()
@@ -459,7 +481,11 @@ chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, se
       break
     }
     case 'PERFORM_AUTOFILL': {
-      const ok = autofillCredential(message.payload as FillCredential)
+      const credential = message.payload as FillCredential
+      const ok = autofillCredential(credential)
+      void copyCredentialTotpCode(credential).then((code) => {
+        if (code) showContentToast(tContent('content.picker.totpCopied'))
+      })
       sendResponse({ data: ok })
       break
     }
@@ -475,6 +501,14 @@ chrome.runtime.onMessage.addListener((message: ContentScriptMessage, _sender, se
 })
 
 async function init(): Promise<void> {
+  if (!isExtensionContextValid()) return
+
+  onExtensionTeardown(() => {
+    stopAppearanceSync()
+    stopDesktopPoll()
+  })
+  startExtensionContextWatch()
+
   await initContentAppearance()
   onContentAppearanceChange(refreshContentAppearanceUI)
   startAppearanceSync()

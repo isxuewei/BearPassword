@@ -313,6 +313,7 @@ export const useVaultStore = defineStore('vault', () => {
     filtered,
     refresh,
     autofill,
+    showToast,
     copyText,
     shareCredential,
     toggleFavorite,

@@ -20,6 +20,12 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
       box-shadow: ${tokens.shadowLg};
       font-family: ${CONTENT_FONT_FAMILY};
       color: ${tokens.text};
+      box-sizing: border-box;
+    }
+    #${pickerId} *,
+    #${pickerId} *::before,
+    #${pickerId} *::after {
+      box-sizing: border-box;
     }
     #${pickerId} .bear-picker-header {
       display: flex;
@@ -49,24 +55,48 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
       border-radius: 999px;
     }
     #${pickerId} .bear-picker-list {
+      overflow-x: hidden;
       overflow-y: auto;
       flex: 1;
+      min-width: 0;
     }
     #${pickerId} .bear-picker-item {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       width: 100%;
+      min-width: 0;
       padding: 10px 12px;
       border: none;
       border-bottom: 1px solid ${tokens.border};
       background: transparent;
       color: ${tokens.text};
-      text-align: left;
       cursor: pointer;
       transition: background 0.12s ease;
+      overflow: hidden;
+    }
+    #${pickerId} .bear-picker-item:last-child {
+      border-bottom: none;
     }
     #${pickerId} .bear-picker-item:hover,
     #${pickerId} .bear-picker-item.bear-active {
       background: ${tokens.surfaceHover};
+    }
+    #${pickerId} .bear-picker-item-info {
+      min-width: 0;
+      flex: 1;
+    }
+    #${pickerId} .bear-picker-item-totp {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      padding: 0;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: copy;
     }
     #${pickerId} .bear-picker-item-title {
       font-size: 13px;
@@ -83,6 +113,48 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    #${pickerId} .bear-picker-item-totp-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: ${tokens.text};
+      white-space: nowrap;
+    }
+    #${pickerId} .bear-picker-item-totp-ring {
+      display: block;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    #${pickerId} .bear-picker-item-totp-ring svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #${pickerId} .bear-picker-item-totp-ring-rotate {
+      transform-origin: 18px 18px;
+      transform: rotate(-90deg);
+    }
+    #${pickerId} .bear-picker-item-totp-ring-track {
+      fill: none;
+      stroke: ${tokens.border};
+      stroke-width: 3;
+    }
+    #${pickerId} .bear-picker-item-totp-ring-progress {
+      fill: none;
+      stroke: #e63946;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 97.4;
+      transition: stroke-dashoffset 0.35s linear;
+    }
+    #${pickerId} .bear-picker-item-totp-countdown {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 8px;
+      font-weight: 700;
+      fill: ${tokens.textMuted};
+    }
     #${pickerId} .bear-picker-empty {
       padding: 20px 14px;
       font-size: 12px;
@@ -96,6 +168,7 @@ export function inlinePickerStyles(pickerId: string, tokens: ThemeTokens): strin
       padding: 10px 12px;
       border-top: 1px solid ${tokens.border};
       background: ${tokens.surface2};
+      overflow: hidden;
     }
     #${pickerId} .bear-picker-quick-hint {
       font-size: 11px;
@@ -248,6 +321,38 @@ export function saveBannerStyles(bannerId: string, tokens: ThemeTokens): string 
     }
     #${bannerId} .bear-dismiss:hover {
       background: ${tokens.surfaceHover};
+    }
+  `
+}
+
+export function contentToastStyles(toastId: string, tokens: ThemeTokens): string {
+  return `
+    #${toastId} {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      z-index: 2147483647;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: ${tokens.text};
+      color: ${tokens.surface};
+      font-family: ${CONTENT_FONT_FAMILY};
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.4;
+      text-align: center;
+      box-shadow: ${tokens.shadowLg};
+      opacity: 0;
+      visibility: hidden;
+      transform: translate(-50%, -8px);
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+      pointer-events: none;
+    }
+    #${toastId}.bear-content-toast--visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0);
     }
   `
 }
