@@ -1,25 +1,13 @@
 BearPassword macOS 安装说明
 ==========================
 
-若打开时提示「BearPassword 已损坏，无法打开」：
-这不是安装包坏了，而是 macOS 对未公证应用的拦截（通过微信、邮件、浏览器下载时常见）。
+1. 将 BearPassword.app 拖到「应用程序」
+2. 打开「终端」，粘贴并回车：
 
-【推荐】方法一：双击运行「安装 BearPassword.command」
-  1. 解压 zip 或打开 dmg
-  2. 双击「安装 BearPassword.command」
-  3. 若提示无法打开，请右键该文件 → 打开 → 仍要打开
-  4. 按脚本提示完成安装
+   xattr -cr /Applications/BearPassword.app
 
-方法二：终端手动解除限制
-  1. 将 BearPassword.app 拖到「应用程序」
-  2. 打开「终端」，粘贴并回车：
+3. 从启动台或应用程序文件夹打开 BearPassword
 
-     xattr -cr /Applications/BearPassword.app
+若提示「已损坏，无法打开」，执行第 2 步即可解除 macOS 拦截。
 
-  3. 从启动台或应用程序文件夹打开 BearPassword
-
-说明
-----
-- 本安装包适用于 Apple 芯片 Mac（arm64，含 M1/M2/M3/M4/M5）
-- 首次使用前请确保后端服务已启动（默认 http://127.0.0.1:8080）
-- 若需免上述步骤分发给全员，需使用 Apple 开发者账号对应用签名并公证
+说明：适用于 Apple 芯片 Mac（arm64）。

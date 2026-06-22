@@ -1,6 +1,4 @@
-import { execSync } from 'node:child_process'
 import {
-  copyFileSync,
   existsSync,
   readdirSync,
   renameSync,
@@ -8,21 +6,25 @@ import {
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { releaseDir } from '../../scripts/release-dir.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = join(__dirname, '..')
-const releaseDir = join(root, 'release')
-const winAssetsDir = join(root, 'build/win')
+const setupPath = join(releaseDir, 'BearPassword-Setup.exe')
+
+const extraArtifacts = [
+  'BearPassword-win-x64.zip',
+  'BearPassword-Windows-安装包.zip',
+  'BearPassword-Setup.exe.blockmap',
+  'latest.yml',
+  '安装说明.txt',
+  'win-unpacked',
+  'builder-debug.yml',
+  'builder-effective-config.yaml'
+]
 
 if (!existsSync(releaseDir)) {
   console.warn('[after-win-build] release 目录不存在，跳过')
   process.exit(0)
-}
-
-const readmeSource = join(winAssetsDir, '安装说明.txt')
-const readmeTarget = join(releaseDir, '安装说明.txt')
-if (existsSync(readmeSource)) {
-  copyFileSync(readmeSource, readmeTarget)
 }
 
 function renameArtifact(oldName, newName) {
@@ -39,27 +41,15 @@ for (const name of readdirSync(releaseDir)) {
   const nsisMatch = name.match(/^BearPassword(?: Setup)?(?:\s[\d.]+)?\.exe$/i)
   if (nsisMatch) {
     renameArtifact(name, 'BearPassword-Setup.exe')
-    continue
-  }
-
-  const zipMatch = name.match(/^BearPassword-(?:[\d.]+-win|win-x64)\.zip$/i)
-  if (zipMatch && name !== 'BearPassword-win-x64.zip') {
-    renameArtifact(name, 'BearPassword-win-x64.zip')
   }
 }
 
-const setupExe = join(releaseDir, 'BearPassword-Setup.exe')
-const distZip = join(releaseDir, 'BearPassword-Windows-安装包.zip')
+for (const name of extraArtifacts) {
+  rmSync(join(releaseDir, name), { recursive: true, force: true })
+}
 
-if (existsSync(setupExe)) {
-  const files = ['BearPassword-Setup.exe']
-  if (existsSync(readmeTarget)) {
-    files.push('安装说明.txt')
-  }
-  execSync(`cd "${releaseDir}" && rm -f "${distZip}" && zip -r "${distZip}" ${files.map((f) => `"${f}"`).join(' ')}`, {
-    stdio: 'inherit'
-  })
-  console.log(`[after-win-build] 已生成分发包：${distZip}`)
+if (existsSync(setupPath)) {
+  console.log(`[after-win-build] Windows 产物：${setupPath}`)
 } else {
-  console.warn('[after-win-build] 未找到 BearPassword-Setup.exe，跳过 zip 分包')
+  console.warn('[after-win-build] 未生成 BearPassword-Setup.exe')
 }

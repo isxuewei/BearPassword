@@ -1,10 +1,9 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { releaseDir } from '../../scripts/release-dir.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const root = join(__dirname, '..')
-const releaseDir = join(root, 'release')
 
 const platform = process.argv[2]
 if (platform !== 'mac' && platform !== 'win') {

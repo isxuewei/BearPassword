@@ -46,7 +46,7 @@
     "productName": "BearPassword",
     "copyright": "Copyright © 2026 薛伟同学",
     "directories": {
-      "output": "release",
+      "output": "../release",
       "buildResources": "resources"
     },
     "files": [
@@ -92,12 +92,6 @@
           "arch": [
             "arm64"
           ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "arm64"
-          ]
         }
       ],
       "artifactName": "${productName}.${ext}",
@@ -109,7 +103,24 @@
     "dmg": {
       "title": "BearPassword",
       "icon": "resources/icon.icns",
-      "sign": false
+      "sign": false,
+      "window": {
+        "width": 540,
+        "height": 400
+      },
+      "contents": [
+        {
+          "x": 140,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "win": {
       "icon": "resources/icon.ico",
@@ -118,12 +129,6 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
           "arch": [
             "x64"
           ]

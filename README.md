@@ -113,6 +113,8 @@ cd bear-password-extension && npm install && npm run dev
 
 更详细的构建与打包说明，请查看各子目录 README。
 
+一键打包（Mac / Windows / 浏览器扩展）产物统一输出到仓库根目录 `release/`。
+
 ---
 
 ## 安全说明（用户可读版）

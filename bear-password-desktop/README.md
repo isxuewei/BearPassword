@@ -35,7 +35,7 @@
 
 请前往 [BearPassword 官网](https://bear-password.xuewei.fun) 下载对应系统安装包：
 
-- **macOS**：`.dmg` 安装包
+- **macOS**：`.dmg` 安装包（内含应用与安装说明）
 - **Windows**：安装程序或便携版压缩包
 
 安装后注册账号，按引导完成保险库初始化即可使用。
@@ -66,7 +66,7 @@ npm run typecheck    # 类型检查
 ```
 
 开发环境默认连接 `http://127.0.0.1:8080` 的后端 API。  
-打包产物位于 `release/` 目录。
+打包产物位于仓库根目录 `release/`。
 
 ---
 

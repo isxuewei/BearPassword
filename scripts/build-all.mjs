@@ -11,27 +11,24 @@
  *   node scripts/build-all.mjs --skip-mac      # 跳过 Mac（非 macOS 或无需 Mac 包时）
  *
  * 产物目录:
- *   bear-password-desktop/release/     桌面端安装包
- *   bear-password-extension/release/   扩展 zip
+ *   release/     全部安装包（Mac / Windows / 浏览器扩展）
  */
 
 import { execSync } from 'node:child_process'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { releaseDir } from './release-dir.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 const desktopDir = join(root, 'bear-password-desktop')
 const extensionDir = join(root, 'bear-password-extension')
 
-const DESKTOP_ARTIFACTS = [
+const RELEASE_ARTIFACTS = [
   'BearPassword.dmg',
-  'BearPassword.zip',
-  'BearPassword-mac-安装包.zip',
   'BearPassword-Setup.exe',
-  'BearPassword-win-x64.zip',
-  'BearPassword-Windows-安装包.zip'
+  'BearPassword-Extension.zip'
 ]
 
 function formatDuration(ms) {
@@ -96,39 +93,31 @@ function printFile(filePath) {
 
 function printSummary({ mac, win, extension }) {
   console.log('\n========== 产物清单 ==========\n')
+  console.log(`产物目录: ${releaseDir}`)
 
-  if (mac || win) {
-    const releaseDir = join(desktopDir, 'release')
-    if (existsSync(releaseDir)) {
-      console.log(`桌面端: ${releaseDir}`)
-      for (const name of DESKTOP_ARTIFACTS) {
-        const filePath = join(releaseDir, name)
-        if (existsSync(filePath)) {
-          printFile(filePath)
-        }
-      }
-    } else {
-      console.log('桌面端: release 目录不存在')
+  if (!existsSync(releaseDir)) {
+    console.log('（release 目录不存在）')
+    return
+  }
+
+  let found = false
+  for (const name of RELEASE_ARTIFACTS) {
+    const shouldShow =
+      (name === 'BearPassword.dmg' && mac) ||
+      (name === 'BearPassword-Setup.exe' && win) ||
+      (name === 'BearPassword-Extension.zip' && extension)
+
+    if (!shouldShow) continue
+
+    const filePath = join(releaseDir, name)
+    if (existsSync(filePath)) {
+      printFile(filePath)
+      found = true
     }
   }
 
-  if (extension) {
-    const releaseDir = join(extensionDir, 'release')
-    console.log(`\n浏览器扩展: ${releaseDir}`)
-    if (!existsSync(releaseDir)) {
-      console.log('  （release 目录不存在）')
-      return
-    }
-
-    const zipFiles = readdirSync(releaseDir).filter((name) => name.endsWith('.zip'))
-    if (zipFiles.length === 0) {
-      console.log('  （未找到 zip 产物）')
-      return
-    }
-
-    for (const name of zipFiles.sort()) {
-      printFile(join(releaseDir, name))
-    }
+  if (!found) {
+    console.log('（未找到本次打包产物）')
   }
 }
 

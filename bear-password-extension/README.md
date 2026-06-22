@@ -71,6 +71,8 @@ npm run build      # 生成 dist/
 npm run package    # 构建并打包为 zip
 ```
 
+打包产物位于仓库根目录 `release/BearPassword-Extension.zip`。
+
 ---
 
 ## 配置说明（进阶）
