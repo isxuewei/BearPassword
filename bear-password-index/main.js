@@ -101,8 +101,6 @@ async function loadVersions() {
     downloads.extension.version = fallback.version
   }
 
-  setText('version-mac', `v${downloads.mac.version}`)
-  setText('version-win', `v${downloads.win.version}`)
   setText('cta-version-mac', `Apple Silicon · v${downloads.mac.version}`)
   setText('cta-version-win', `x64 · v${downloads.win.version}`)
   setText('cta-version-extension', `Manifest V3 · v${downloads.extension.version}`)
@@ -227,12 +225,11 @@ function initHeroEntrance() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   const sequence = [
-    { selector: '.hero__eyebrow', delay: 80 },
+    { selector: '.hero__tags', delay: 80 },
     { selector: '.hero__title', delay: 160 },
-    { selector: '.hero__desc', delay: 260 },
-    { selector: '.hero__badges', delay: 320 },
-    { selector: '.hero__actions', delay: 400 },
-    { selector: '.hero__meta', delay: 500 },
+    { selector: '.hero__desc', delay: 240 },
+    { selector: '.hero__highlights', delay: 300 },
+    { selector: '.hero__actions', delay: 380 },
     { selector: '.hero__preview', delay: 360, float: true },
   ]
 
