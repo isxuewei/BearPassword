@@ -218,6 +218,7 @@ function schedulePresentLockScreenInteraction(autoPromptBiometric: boolean): voi
 
 async function presentLockScreenInteraction(autoPromptBiometric: boolean): Promise<void> {
   if (!visible.value) return
+  if (document.hidden) return
 
   await refreshBiometricAvailability()
   await ensureWindowFocused()
@@ -349,9 +350,7 @@ watch(
       }
       return
     }
-    if (document.hidden) {
-      hideLockScreen()
-    }
+    presentLockScreen()
   },
   { immediate: true, flush: 'sync' }
 )
