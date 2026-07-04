@@ -1,7 +1,7 @@
 {
   "name": "bear-password-web",
-  "version": "26.6.20",
-  "displayVersion": "26.6.20",
+  "version": "26.7.5",
+  "displayVersion": "26.7.5",
   "description": "BearPassword - 浏览器端密码管理",
   "private": true,
   "type": "module",

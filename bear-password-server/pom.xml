@@ -13,7 +13,7 @@
 
     <groupId>com.bear</groupId>
     <artifactId>bear-password-server</artifactId>
-    <version>26.6.20</version>
+    <version>26.7.5</version>
     <name>bear-password-server</name>
     <description>BearPassword 密码管理工具后端服务</description>
 
