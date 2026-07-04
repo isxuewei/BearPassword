@@ -1,0 +1,60 @@
+/**
+ * 檀夜主题（Noir）
+ * 参考深色金融仪表盘：深海军蓝背景、暖棕奶油强调
+ */
+html[data-theme='noir'] {
+  color-scheme: dark;
+
+  --color-bg-primary: #1b1d2e;
+  --color-bg-secondary: #2c2f48;
+  --color-bg-elevated: #353956;
+  --color-bg-glass: rgba(44, 47, 72, 0.82);
+
+  --color-text-primary: #f2f0ec;
+  --color-text-secondary: #a297a5;
+  --color-text-muted: #928e9a;
+
+  --color-accent: #e9d8c1;
+  --color-accent-hover: #f3e8d6;
+  --color-accent-glow: rgba(233, 216, 193, 0.28);
+  --color-accent-subtle: rgba(233, 216, 193, 0.14);
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.14);
+
+  --color-success: #8fbc8f;
+  --color-warning: #cdb9a3;
+  --color-danger: #c97a7a;
+
+  --color-surface-hover: rgba(233, 216, 193, 0.08);
+  --color-titlebar-hover: rgba(255, 255, 255, 0.07);
+  --color-badge-bg: rgba(233, 216, 193, 0.12);
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --color-skeleton-base: rgba(255, 255, 255, 0.04);
+  --color-skeleton-shine: rgba(255, 255, 255, 0.08);
+
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.26);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.46);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #e9d8c1;
+  --el-color-primary-light-3: #efe3d0;
+  --el-color-primary-light-5: #f3eadc;
+  --el-color-primary-light-7: #f7f1e8;
+  --el-color-primary-light-8: #faf6f0;
+  --el-color-primary-light-9: #fdfbf7;
+  --el-color-primary-dark-2: #cdb9a3;
+  --el-text-color-primary: #f2f0ec;
+  --el-text-color-regular: #a297a5;
+  --el-text-color-secondary: #928e9a;
+  --el-text-color-placeholder: #8a7e6a;
+  --el-text-color-disabled: #6e6878;
+  --el-bg-color: #2c2f48;
+  --el-bg-color-overlay: #353956;
+  --el-fill-color-blank: #353956;
+  --el-border-color: rgba(255, 255, 255, 0.1);
+  --el-border-color-light: rgba(255, 255, 255, 0.07);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.05);
+}

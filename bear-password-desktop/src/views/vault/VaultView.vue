@@ -62,12 +62,37 @@
           class="vault-view__category"
           @change="handleSearch"
         >
-          <template v-if="filterType" #prefix>
+          <template #prefix>
             <span
+              v-if="filterType"
               class="vault-view__category-prefix-icon"
               :style="{ background: getPasswordTypeColor(filterType) }"
             >
               <VaultEntryTypeIcon :type="getPasswordTypeIconType(filterType)" :size="14" />
+            </span>
+            <span v-else class="vault-view__category-default-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path
+                  d="M9 2.5L15.25 6.125 9 9.75 2.75 6.125 9 2.5Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M3.5 10.25 9 13.25l5.5-3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M3.5 13.25 9 16.25l5.5-3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </span>
           </template>
           <el-option
@@ -93,12 +118,20 @@
           :placeholder="t('vault.searchPlaceholder')"
           clearable
           size="large"
-          :prefix-icon="Search"
           class="vault-view__search"
           @input="scheduleSearch"
           @clear="handleSearch"
           @keyup.enter="onSearchEnter"
-        />
+        >
+          <template #prefix>
+            <span class="vault-view__search-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="8" cy="8" r="4.75" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M11.5 11.5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </template>
+        </el-input>
       </div>
       <el-button
         type="primary"
@@ -516,7 +549,6 @@ import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch, de
 import { useRoute } from 'vue-router'
 import {
   Plus,
-  Search,
   MoreFilled,
   Star,
   StarFilled,
@@ -1639,29 +1671,42 @@ onUnmounted(() => {
 
   &__new-btn {
     flex-shrink: 0;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 $spacing-md;
+    border-radius: $radius-md;
+    border: none;
+    box-shadow: none;
+    font-weight: 500;
+
+    &:not(.is-disabled):hover,
+    &:not(.is-disabled):focus,
+    &:not(.is-disabled):active {
+      box-shadow: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px $color-accent-subtle;
+    }
   }
 
   &__sort-btn {
     width: 40px;
-    height: 40px;
-    border-radius: $radius-md;
+    @include vault-toolbar-control-surface;
     @include flex-center;
     color: $color-text-secondary;
-    background: $color-bg-secondary;
-    border: none;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background $transition-fast, box-shadow $transition-fast, color $transition-fast;
 
     &:hover {
-      background: $color-bg-elevated;
+      @include vault-toolbar-control-surface-hover;
       color: $color-text-primary;
     }
 
     &:focus-visible {
       outline: none;
-      background: $color-bg-elevated;
-      box-shadow: 0 0 0 2px $color-accent-subtle;
+      @include vault-toolbar-control-surface-focus;
     }
   }
 
@@ -1673,27 +1718,26 @@ onUnmounted(() => {
     min-width: 0;
 
     :deep(.el-dropdown.is-open) .vault-view__sort-btn {
-      background: $color-bg-elevated;
-      box-shadow: 0 0 0 2px $color-accent-subtle;
+      @include vault-toolbar-control-surface-focus;
     }
   }
 
   &__category {
     width: 160px;
     flex-shrink: 0;
+    --el-border-color: transparent;
+    --el-select-border-color-hover: transparent;
+    --el-select-disabled-border: transparent;
 
     :deep(.el-select__wrapper) {
-      border-radius: $radius-md;
-      background: $color-bg-secondary;
-      box-shadow: none;
-      transition: background $transition-fast, box-shadow $transition-fast;
+      @include vault-toolbar-control-surface;
 
       &:hover {
-        background: $color-bg-elevated;
+        @include vault-toolbar-control-surface-hover;
       }
 
       &.is-focused {
-        box-shadow: 0 0 0 2px $color-accent-subtle;
+        @include vault-toolbar-control-surface-focus;
       }
     }
 
@@ -1711,6 +1755,14 @@ onUnmounted(() => {
     flex-shrink: 0;
   }
 
+  &__category-default-icon {
+    @include flex-center;
+    width: 18px;
+    height: 18px;
+    color: $color-text-secondary;
+    flex-shrink: 0;
+  }
+
   &__category-option {
     display: flex;
     align-items: center;
@@ -1721,31 +1773,56 @@ onUnmounted(() => {
     flex: 1;
     min-width: 240px;
     max-width: 560px;
+    --el-input-border-color: transparent;
+    --el-input-hover-border-color: transparent;
+    --el-input-focus-border-color: transparent;
+    --el-input-bg-color: var(--color-bg-secondary);
+    --el-input-hover-bg-color: var(--color-bg-elevated);
+    --el-input-focus-bg-color: var(--color-bg-elevated);
 
     :deep(.el-input__wrapper) {
-      border-radius: 999px;
-      padding-left: 6px;
-      background: $color-bg-secondary;
-      box-shadow: none;
-      transition: background $transition-fast, box-shadow $transition-fast;
+      @include vault-toolbar-control-surface;
+      padding: 0 $spacing-md;
+      background-color: $color-bg-secondary !important;
+      box-shadow: none !important;
 
       &:hover {
-        background: $color-bg-elevated;
+        @include vault-toolbar-control-surface-hover;
+        background-color: $color-bg-elevated !important;
+        box-shadow: none !important;
       }
 
       &.is-focus {
-        background: $color-bg-elevated;
-        box-shadow: 0 0 0 2px $color-accent-subtle;
+        @include vault-toolbar-control-surface-focus;
+        background-color: $color-bg-elevated !important;
+        box-shadow: 0 0 0 2px $color-accent-subtle !important;
+      }
+    }
+
+    :deep(.el-input__inner) {
+      color: $color-text-primary;
+
+      &::placeholder {
+        color: $color-text-muted;
       }
     }
 
     :deep(.el-input__prefix) {
-      color: $color-text-muted;
+      display: flex;
+      align-items: center;
+      margin-right: $spacing-xs;
     }
 
     :deep(.el-input__suffix) {
       color: $color-text-muted;
     }
+  }
+
+  &__search-icon {
+    @include flex-center;
+    width: 18px;
+    height: 18px;
+    color: $color-text-secondary;
   }
 
   &__split {

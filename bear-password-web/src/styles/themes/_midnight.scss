@@ -1,0 +1,60 @@
+/**
+ * 午夜主题（Midnight）
+ * 参考深色金融仪表盘：深海军蓝背景、亮蓝强调、高对比文字
+ */
+html[data-theme='midnight'] {
+  color-scheme: dark;
+
+  --color-bg-primary: #121a2d;
+  --color-bg-secondary: #1a2438;
+  --color-bg-elevated: #222e48;
+  --color-bg-glass: rgba(26, 36, 56, 0.78);
+
+  --color-text-primary: #f4f7fc;
+  --color-text-secondary: #b8c4dc;
+  --color-text-muted: #8a98b4;
+
+  --color-accent: #5678ff;
+  --color-accent-hover: #4568ee;
+  --color-accent-glow: rgba(86, 120, 255, 0.38);
+  --color-accent-subtle: rgba(86, 120, 255, 0.16);
+
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-hover: rgba(255, 255, 255, 0.15);
+
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  --color-surface-hover: rgba(86, 120, 255, 0.1);
+  --color-titlebar-hover: rgba(255, 255, 255, 0.08);
+  --color-badge-bg: rgba(86, 120, 255, 0.12);
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+  --color-skeleton-base: rgba(255, 255, 255, 0.05);
+  --color-skeleton-shine: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.48);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #5678ff;
+  --el-color-primary-light-3: #7f97ff;
+  --el-color-primary-light-5: #a3b4ff;
+  --el-color-primary-light-7: #c7d1ff;
+  --el-color-primary-light-8: #d9e0ff;
+  --el-color-primary-light-9: #ecf0ff;
+  --el-color-primary-dark-2: #4568ee;
+  --el-text-color-primary: #f4f7fc;
+  --el-text-color-regular: #b8c4dc;
+  --el-text-color-secondary: #8a98b4;
+  --el-text-color-placeholder: #7585a0;
+  --el-text-color-disabled: #5c6880;
+  --el-bg-color: #1a2438;
+  --el-bg-color-overlay: #222e48;
+  --el-fill-color-blank: #222e48;
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-light: rgba(255, 255, 255, 0.08);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.06);
+}

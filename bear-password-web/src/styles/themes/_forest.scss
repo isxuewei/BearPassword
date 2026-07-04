@@ -1,0 +1,59 @@
+/**
+ * 森绿主题（Forest）
+ * 参考金融仪表盘示例：浅薄荷背景、墨绿强调、金色点缀
+ */
+html[data-theme='forest'] {
+  color-scheme: light;
+
+  --color-bg-primary: #e9f0ea;
+  --color-bg-secondary: #f8fbf8;
+  --color-bg-elevated: #f2f7f3;
+  --color-bg-glass: rgba(248, 251, 248, 0.86);
+
+  --color-text-primary: #1a2e22;
+  --color-text-secondary: #4a5f50;
+  --color-text-muted: #7a8f82;
+
+  --color-accent: #3d7a54;
+  --color-accent-hover: #356b48;
+  --color-accent-glow: rgba(61, 122, 84, 0.32);
+  --color-accent-subtle: rgba(61, 122, 84, 0.14);
+
+  --color-border: rgba(30, 60, 40, 0.1);
+  --color-border-hover: rgba(30, 60, 40, 0.17);
+
+  --color-success: #3d7a54;
+  --color-warning: #c9a227;
+  --color-danger: #c45c4a;
+
+  --color-surface-hover: rgba(61, 122, 84, 0.08);
+  --color-titlebar-hover: rgba(61, 122, 84, 0.1);
+  --color-badge-bg: rgba(61, 122, 84, 0.1);
+  --color-scrollbar-thumb: rgba(30, 60, 40, 0.14);
+  --color-scrollbar-thumb-hover: rgba(30, 60, 40, 0.22);
+  --color-skeleton-base: rgba(61, 122, 84, 0.06);
+  --color-skeleton-shine: rgba(61, 122, 84, 0.12);
+
+  --shadow-sm: 0 2px 12px rgba(30, 60, 40, 0.07);
+  --shadow-md: 0 8px 28px rgba(30, 60, 40, 0.1);
+  --shadow-lg: 0 16px 48px rgba(30, 60, 40, 0.13);
+
+  /* Element Plus 对齐 */
+  --el-color-primary: #3d7a54;
+  --el-color-primary-light-3: #659b76;
+  --el-color-primary-light-5: #8eb89a;
+  --el-color-primary-light-7: #b7d5bf;
+  --el-color-primary-light-8: #cce3d2;
+  --el-color-primary-light-9: #e6f1e9;
+  --el-color-primary-dark-2: #356b48;
+  --el-text-color-primary: #1a2e22;
+  --el-text-color-regular: #4a5f50;
+  --el-text-color-secondary: #7a8f82;
+  --el-text-color-placeholder: #94a89e;
+  --el-bg-color: #f8fbf8;
+  --el-bg-color-overlay: #f8fbf8;
+  --el-fill-color-blank: #f2f7f3;
+  --el-border-color: rgba(30, 60, 40, 0.11);
+  --el-border-color-light: rgba(30, 60, 40, 0.08);
+  --el-border-color-lighter: rgba(30, 60, 40, 0.05);
+}

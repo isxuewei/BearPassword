@@ -1,0 +1,202 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { loginApi, logoutApi, registerApi } from '@/api'
+import { useSecurityStore } from '@/stores/security'
+import { useAutoLockStore } from '@/stores/autoLock'
+import { useVaultStore } from '@/stores/vault'
+import { storage } from '@/utils/storage'
+import { clearPersistedVaultPassword, persistVaultPassword } from '@/utils/vaultPasswordStorage'
+import {
+  computeSecretKeyFingerprint,
+  generateVaultSalt
+} from '@/utils/vaultCrypto/vaultKeyDerivation'
+import type {
+  LoginFlowResult,
+  LoginParams,
+  LoginResult,
+  RegisterParams,
+  UserInfo,
+  UserProfile
+} from '@/types'
+import { isMfaLoginChallenge } from '@/types/auth'
+
+function toUserInfo(result: { username: string; avatar?: string; token: string }): UserInfo {
+  return {
+    username: result.username,
+    avatar: result.avatar,
+    token: result.token
+  }
+}
+
+async function buildRegisterVaultCrypto(): Promise<{
+  vaultCrypto: RegisterParams['vaultCrypto']
+  accountSecretKey: string
+}> {
+  const securityStore = useSecurityStore()
+  const accountSecretKey = securityStore.createRandomSecurityKey()
+  const vaultSalt = generateVaultSalt()
+  const secretKeyFingerprint = await computeSecretKeyFingerprint(accountSecretKey)
+  return {
+    accountSecretKey,
+    vaultCrypto: {
+      vaultSalt,
+      secretKeyFingerprint
+    }
+  }
+}
+
+/**
+ * 认证状态管理
+ * 管理登录态、用户信息与 Token 持久化
+ */
+export const useAuthStore = defineStore('auth', () => {
+  const userInfo = ref<UserInfo | null>(storage.get<UserInfo>('user'))
+  const loading = ref(false)
+
+  const isLoggedIn = computed(() => !!userInfo.value?.token)
+  const username = computed(() => userInfo.value?.username ?? '')
+  const displayName = computed(() => username.value)
+  const avatar = computed(() => userInfo.value?.avatar ?? '')
+
+  /** 登录；若返回 MFA 挑战，由调用方展示二次验证 */
+  async function login(params: LoginParams): Promise<LoginFlowResult> {
+    loading.value = true
+    try {
+      const result = await loginApi(params)
+      if (isMfaLoginChallenge(result)) {
+        return result
+      }
+      await applyLoginResult(result)
+      return result
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function applyLoginResult(result: LoginResult): Promise<void> {
+    const info = toUserInfo(result)
+    userInfo.value = info
+    storage.set('user', info)
+    storage.set('token', result.token)
+    await useSecurityStore().onLoginSuccess()
+    if (useSecurityStore().needsVaultUnlock) {
+      useAutoLockStore().lock({ hideWindow: false })
+    }
+  }
+
+  /** 注册并自动登录（需在外部展示 Emergency Kit 后调用） */
+  async function register(
+    params: RegisterParams & { masterPassword?: string; accountSecretKey?: string }
+  ): Promise<LoginResult> {
+    loading.value = true
+    try {
+      const result = await registerApi(params)
+      const info = toUserInfo(result)
+      userInfo.value = info
+      storage.set('user', info)
+      storage.set('token', result.token)
+
+      const securityStore = useSecurityStore()
+      const accountSecretKey = params.accountSecretKey?.trim()
+      if (accountSecretKey) {
+        await securityStore.setSecurityKey(accountSecretKey)
+      }
+      securityStore.syncVaultCryptoMeta(params.vaultCrypto)
+
+      const masterPassword = params.masterPassword?.trim()
+      if (masterPassword) {
+        await persistVaultPassword(masterPassword)
+      }
+
+      await securityStore.onLoginSuccess(masterPassword)
+      return result
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** 准备注册：生成账户密钥与 vault 元数据，供 Emergency Kit 展示 */
+  async function prepareRegistrationVault(): Promise<{
+    accountSecretKey: string
+    vaultCrypto: RegisterParams['vaultCrypto']
+  }> {
+    return buildRegisterVaultCrypto()
+  }
+
+  /** 退出登录（手动）：清除登录态，账户密钥保留在系统钥匙串 */
+  async function logout(): Promise<void> {
+    try {
+      await logoutApi()
+    } catch {
+      // 登录过期时 logout 接口可能失败，仍应清理本地状态
+    }
+    clearSession()
+  }
+
+  /** 完全退出：清除登录态、本机主密码与账户密钥 */
+  async function logoutCompletely(): Promise<void> {
+    try {
+      await logoutApi()
+    } catch {
+      // 同上
+    }
+    await useSecurityStore().clearLocalVaultCredentials()
+    clearSession()
+  }
+
+  /** 清除本地登录态（不请求服务端） */
+  function clearSession(): void {
+    userInfo.value = null
+    storage.remove('user')
+    storage.remove('token')
+    useVaultStore().reset()
+    useAutoLockStore().stop()
+    useSecurityStore().unloadFromMemory()
+    void clearPersistedVaultPassword()
+  }
+
+  /** 更新本地头像 URL（上传成功后同步侧边栏等展示） */
+  function updateAvatar(avatar: string): void {
+    if (!userInfo.value) return
+    userInfo.value = { ...userInfo.value, avatar }
+    storage.set('user', userInfo.value)
+  }
+
+  /** 更新本地用户名（修改成功后同步） */
+  function updateUsername(username: string): void {
+    if (!userInfo.value) return
+    userInfo.value = { ...userInfo.value, username }
+    storage.set('user', userInfo.value)
+  }
+
+  /** 从服务端用户详情同步本地展示信息 */
+  function syncProfile(profile: UserProfile): void {
+    if (!userInfo.value) return
+    userInfo.value = {
+      ...userInfo.value,
+      username: profile.username,
+      avatar: profile.avatar
+    }
+    storage.set('user', userInfo.value)
+    useSecurityStore().syncVaultCryptoMeta(profile)
+  }
+
+  return {
+    userInfo,
+    loading,
+    isLoggedIn,
+    username,
+    displayName,
+    avatar,
+    login,
+    applyLoginResult,
+    register,
+    prepareRegistrationVault,
+    logout,
+    logoutCompletely,
+    clearSession,
+    updateAvatar,
+    updateUsername,
+    syncProfile
+  }
+})

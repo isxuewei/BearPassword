@@ -1,0 +1,42 @@
+/**
+ * 浅色主题（默认）
+ * 仅在没有 data-theme 或明确为 light 时生效，避免覆盖其他主题
+ */
+:root:not([data-theme]),
+:root[data-theme='light'],
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-bg-primary: #f4f4f8;
+  --color-bg-secondary: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-glass: rgba(255, 255, 255, 0.82);
+
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #5c5c6e;
+  --color-text-muted: #9898a8;
+
+  --color-accent: #6c5ce7;
+  --color-accent-hover: #5a4bd6;
+  --color-accent-glow: rgba(108, 92, 231, 0.28);
+  --color-accent-subtle: rgba(108, 92, 231, 0.1);
+
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-hover: rgba(0, 0, 0, 0.14);
+
+  --color-success: #00a870;
+  --color-warning: #d48806;
+  --color-danger: #e8384f;
+
+  --color-surface-hover: rgba(0, 0, 0, 0.04);
+  --color-titlebar-hover: rgba(0, 0, 0, 0.06);
+  --color-badge-bg: rgba(0, 0, 0, 0.05);
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.14);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.22);
+  --color-skeleton-base: rgba(0, 0, 0, 0.04);
+  --color-skeleton-shine: rgba(0, 0, 0, 0.08);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.1);
+}

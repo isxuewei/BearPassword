@@ -1,0 +1,53 @@
+/**
+ * 深色主题
+ * 使用 html[data-theme='dark'] 提高优先级，避免被 :root 浅色变量覆盖
+ */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg-primary: #0d0d12;
+  --color-bg-secondary: #14141c;
+  --color-bg-elevated: #1c1c26;
+  --color-bg-glass: rgba(26, 26, 36, 0.72);
+
+  --color-text-primary: #f2f2f7;
+  --color-text-secondary: #c2c2d0;
+  --color-text-muted: #9ea0b0;
+
+  --color-accent: #6c5ce7;
+  --color-accent-hover: #7d6ff0;
+  --color-accent-glow: rgba(108, 92, 231, 0.35);
+  --color-accent-subtle: rgba(108, 92, 231, 0.15);
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+
+  --color-success: #00c48c;
+  --color-warning: #ffb020;
+  --color-danger: #ff4757;
+
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-titlebar-hover: rgba(255, 255, 255, 0.1);
+  --color-badge-bg: rgba(255, 255, 255, 0.07);
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.24);
+  --color-skeleton-base: rgba(255, 255, 255, 0.06);
+  --color-skeleton-shine: rgba(255, 255, 255, 0.12);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  /* Element Plus 深色文字 / 边框对齐 */
+  --el-text-color-primary: #f2f2f7;
+  --el-text-color-regular: #c2c2d0;
+  --el-text-color-secondary: #9ea0b0;
+  --el-text-color-placeholder: #8e90a0;
+  --el-text-color-disabled: #6e7080;
+  --el-bg-color: #14141c;
+  --el-bg-color-overlay: #1c1c26;
+  --el-fill-color-blank: #1c1c26;
+  --el-border-color: rgba(255, 255, 255, 0.12);
+  --el-border-color-light: rgba(255, 255, 255, 0.08);
+  --el-border-color-lighter: rgba(255, 255, 255, 0.06);
+}

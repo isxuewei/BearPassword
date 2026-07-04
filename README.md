@@ -83,6 +83,7 @@ BearPassword 是一套完整的密码管理方案，由**桌面应用**和**浏�
 | 目录 | 面向谁 | 说明 |
 |------|--------|------|
 | [bear-password-desktop](bear-password-desktop/) | 所有用户 | 桌面客户端 |
+| [bear-password-web](bear-password-web/) | 所有用户 | 浏览器网页端（独立应用，挂载 `/app/`） |
 | [bear-password-extension](bear-password-extension/) | 所有用户 | 浏览器扩展 |
 | [bear-password-server](bear-password-server/) | 自建部署 | 账号与数据同步服务 |
 | [bear-password-index](bear-password-index/) | — | 官网静态页面 |
@@ -103,6 +104,9 @@ cd bear-password-server && mvn spring-boot:run
 
 # 桌面端
 cd bear-password-desktop && npm install && npm run dev
+
+# 网页端
+cd bear-password-web && npm install && npm run dev
 
 # 浏览器扩展
 cd bear-password-extension && npm install && npm run dev
