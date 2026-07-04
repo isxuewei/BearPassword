@@ -21,6 +21,7 @@ export interface InlinePickerOptions {
   emptyText?: string
   onSelect: (credential: FillCredential) => void
   quickSave?: QuickSaveOptions | null
+  onEmptyClick?: () => void | Promise<void>
 }
 
 let scrollHandler: (() => void) | null = null
@@ -286,7 +287,18 @@ export function showInlinePicker(
   list.className = 'bear-picker-list'
 
   if (!credentials.length) {
-    list.innerHTML = `<div class="bear-picker-empty">${escapeHtml(options.emptyText ?? tContent('content.picker.emptyDefault'))}</div>`
+    const emptyDiv = document.createElement('div')
+    emptyDiv.className = 'bear-picker-empty'
+    emptyDiv.innerHTML = escapeHtml(options.emptyText ?? tContent('content.picker.emptyDefault'))
+    if (options.onEmptyClick) {
+      emptyDiv.style.cursor = 'pointer'
+      emptyDiv.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        options.onEmptyClick?.()
+      })
+    }
+    list.appendChild(emptyDiv)
     stopTotpTimer()
   } else {
     renderList(list, credentials, options.onSelect)
@@ -328,6 +340,7 @@ export function reanchorInlinePicker(
     emptyText: string
     onSelect: (c: FillCredential) => void
     quickSave?: QuickSaveOptions | null
+    onEmptyClick?: () => void | Promise<void>
   }
 ): void {
   anchorInput = anchor
@@ -342,6 +355,7 @@ export function updateInlinePicker(
     emptyText: string
     onSelect: (c: FillCredential) => void
     quickSave?: QuickSaveOptions | null
+    onEmptyClick?: () => void | Promise<void>
   }
 ): void {
   const picker = document.getElementById(PICKER_ID)
@@ -354,7 +368,19 @@ export function updateInlinePicker(
   if (!list) return
 
   if (!credentials.length) {
-    list.innerHTML = `<div class="bear-picker-empty">${escapeHtml(options.emptyText)}</div>`
+    list.innerHTML = ''
+    const emptyDiv = document.createElement('div')
+    emptyDiv.className = 'bear-picker-empty'
+    emptyDiv.innerHTML = escapeHtml(options.emptyText)
+    if (options.onEmptyClick) {
+      emptyDiv.style.cursor = 'pointer'
+      emptyDiv.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        options.onEmptyClick?.()
+      })
+    }
+    list.appendChild(emptyDiv)
     stopTotpTimer()
   } else {
     renderList(list as HTMLElement, credentials, options.onSelect)

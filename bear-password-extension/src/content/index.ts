@@ -92,7 +92,10 @@ async function syncOpenPickerAfterRefresh(): Promise<void> {
     updateInlinePicker([], {
       emptyText: getDesktopNotReadyText(),
       onSelect: () => {},
-      quickSave: null
+      quickSave: null,
+      onEmptyClick: () => {
+        void wakeDesktopFromPage()
+      }
     })
     return
   }
@@ -295,7 +298,10 @@ function showDesktopWakePicker(input: HTMLInputElement): void {
     title,
     emptyText: getDesktopNotReadyText(),
     onSelect: () => {},
-    quickSave: null
+    quickSave: null,
+    onEmptyClick: () => {
+      void wakeDesktopFromPage()
+    }
   })
   startDesktopPoll()
 }
@@ -315,7 +321,6 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
     if (anchorContext && isSameLoginContext(anchorContext, context)) {
       await refreshCredentials()
       if (!desktopUnlocked) {
-        void wakeDesktopFromPage()
         showDesktopWakePicker(input)
         return
       }
@@ -333,7 +338,6 @@ async function openPickerForInput(input: HTMLInputElement): Promise<void> {
   await refreshCredentials()
 
   if (!desktopUnlocked) {
-    void wakeDesktopFromPage()
     showDesktopWakePicker(input)
     return
   }

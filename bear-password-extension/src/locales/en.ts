@@ -181,7 +181,7 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword autofill',
   'content.picker.needsSecurityKey': 'Unlock the vault in the desktop app and try again',
-  'content.picker.desktopNotReady': 'Opening BearPassword on your computer…',
+  'content.picker.desktopNotReady': 'BearPassword desktop is locked or not running. Click here to open and unlock.',
   'content.picker.desktopProtocolConfirm':
     'If your browser shows a confirmation, click Open BearPassword, then sign in and unlock the vault.',
   'content.picker.noEntries': 'No saved logins for this site',
