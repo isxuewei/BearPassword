@@ -177,7 +177,7 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword 填充',
   'content.picker.needsSecurityKey': '请在桌面端解锁保险库后重试',
-  'content.picker.desktopNotReady': '正在唤起 BearPassword 桌面端…',
+  'content.picker.desktopNotReady': '桌面端未就绪或已锁定，点击此处唤醒并解锁。',
   'content.picker.desktopProtocolConfirm': '若浏览器弹出确认框，请点击「打开 BearPassword」，启动并解锁后重试。',
   'content.picker.noEntries': '此网站暂无保存的登录项',
   'content.picker.noMatch': '没有匹配的登录项',

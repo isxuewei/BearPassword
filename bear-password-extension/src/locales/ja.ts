@@ -181,7 +181,7 @@ const messages: MessageDict = {
 
   'content.passwordIcon.title': 'BearPassword 自動入力',
   'content.picker.needsSecurityKey': 'デスクトップ版で保管庫のロックを解除してから再試行してください',
-  'content.picker.desktopNotReady': 'BearPassword デスクトップ版を起動しています…',
+  'content.picker.desktopNotReady': 'デスクトップ版が未起動またはロックされています。クリックして起動・ロック解除します。',
   'content.picker.desktopProtocolConfirm':
     'ブラウザに確認ダイアログが表示されたら「BearPassword を開く」をクリックし、起動後にロックを解除して再試行してください。',
   'content.picker.noEntries': 'このサイトに保存されたログインはありません',
