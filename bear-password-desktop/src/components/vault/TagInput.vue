@@ -65,10 +65,11 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { getPasswordLabelsApi } from '@/api/vault'
+import { useVaultStore } from '@/stores/vault'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
+const vaultStore = useVaultStore()
 const modelValue = defineModel<string[]>({ default: () => [] })
 
 const showTagPanel = ref(false)
@@ -91,7 +92,13 @@ onMounted(() => {
 
 async function loadAllLabels(): Promise<void> {
   try {
-    allLabels.value = await getPasswordLabelsApi()
+    const labels = new Set<string>()
+    vaultStore.allEntries.forEach((entry) => {
+      entry.passwordLabels?.forEach((label) => {
+        if (label.trim()) labels.add(label.trim())
+      })
+    })
+    allLabels.value = [...labels].sort((a, b) => a.localeCompare(b, 'zh-CN'))
   } catch {
     allLabels.value = []
   } finally {
