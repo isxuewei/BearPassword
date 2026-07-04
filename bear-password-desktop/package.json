@@ -13,6 +13,7 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "build:mac": "npm run build && electron-builder --mac && node scripts/after-mac-build.mjs",
     "build:win": "npm run generate:icons && npm run build && electron-builder --win --x64 && node scripts/after-win-build.mjs",
+    "build:win:zip": "npm run generate:icons && npm run build && electron-builder --win zip --x64 && node scripts/after-win-zip-build.mjs",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
@@ -126,6 +127,7 @@
       "icon": "resources/icon.ico",
       "executableName": "BearPassword",
       "artifactName": "BearPassword-win-x64.${ext}",
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "nsis",

@@ -7,6 +7,7 @@
  *   node scripts/build-all.mjs --mac           # 仅 Mac 桌面端
  *   node scripts/build-all.mjs --win           # 仅 Windows 桌面端
  *   node scripts/build-all.mjs --extension     # 仅浏览器扩展
+ *   node scripts/build-all.mjs --web             # 仅网页端
  *   node scripts/build-all.mjs --mac --extension
  *   node scripts/build-all.mjs --skip-mac      # 跳过 Mac（非 macOS 或无需 Mac 包时）
  *
@@ -24,11 +25,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 const desktopDir = join(root, 'bear-password-desktop')
 const extensionDir = join(root, 'bear-password-extension')
+const webDir = join(root, 'bear-password-web')
 
 const RELEASE_ARTIFACTS = [
   'BearPassword.dmg',
   'BearPassword-Setup.exe',
-  'BearPassword-Extension.zip'
+  'BearPassword-win-x64.zip',
+  'BearPassword-Extension.zip',
+  'BearPassword-Web.zip'
 ]
 
 function formatDuration(ms) {
@@ -48,6 +52,7 @@ function parseArgs() {
   node scripts/build-all.mjs --mac           仅 Mac 桌面端
   node scripts/build-all.mjs --win           仅 Windows 桌面端
   node scripts/build-all.mjs --extension     仅浏览器扩展
+  node scripts/build-all.mjs --web           仅网页端
   node scripts/build-all.mjs --skip-mac      跳过 Mac 打包
 
 或在仓库根目录:
@@ -55,15 +60,17 @@ function parseArgs() {
   npm run build:mac
   npm run build:win
   npm run build:extension
+  npm run build:web
 `)
     process.exit(0)
   }
 
-  const hasTarget = args.some((arg) => ['--mac', '--win', '--extension'].includes(arg))
+  const hasTarget = args.some((arg) => ['--mac', '--win', '--extension', '--web'].includes(arg))
 
   let mac = !hasTarget || args.includes('--mac')
   let win = !hasTarget || args.includes('--win')
   const extension = !hasTarget || args.includes('--extension')
+  const web = !hasTarget || args.includes('--web')
 
   if (args.includes('--skip-mac')) {
     mac = false
@@ -74,7 +81,7 @@ function parseArgs() {
     mac = false
   }
 
-  return { mac, win, extension }
+  return { mac, win, extension, web }
 }
 
 function runStep(label, command, cwd) {
@@ -91,7 +98,11 @@ function printFile(filePath) {
   console.log(`  • ${relative} (${sizeMb} MB)`)
 }
 
-function printSummary({ mac, win, extension }) {
+function isArmMac() {
+  return process.platform === 'darwin' && process.arch === 'arm64'
+}
+
+function printSummary({ mac, win, extension, web }) {
   console.log('\n========== 产物清单 ==========\n')
   console.log(`产物目录: ${releaseDir}`)
 
@@ -104,8 +115,10 @@ function printSummary({ mac, win, extension }) {
   for (const name of RELEASE_ARTIFACTS) {
     const shouldShow =
       (name === 'BearPassword.dmg' && mac) ||
-      (name === 'BearPassword-Setup.exe' && win) ||
-      (name === 'BearPassword-Extension.zip' && extension)
+      (name === 'BearPassword-Setup.exe' && win && !isArmMac()) ||
+      (name === 'BearPassword-win-x64.zip' && win && isArmMac()) ||
+      (name === 'BearPassword-Extension.zip' && extension) ||
+      (name === 'BearPassword-Web.zip' && web)
 
     if (!shouldShow) continue
 
@@ -126,7 +139,8 @@ function main() {
   const selected = [
     options.mac && 'Mac',
     options.win && 'Win',
-    options.extension && 'Extension'
+    options.extension && 'Extension',
+    options.web && 'Web'
   ].filter(Boolean)
 
   if (selected.length === 0) {
@@ -147,11 +161,20 @@ function main() {
   }
 
   if (options.win) {
-    runStep('Windows 桌面端', 'npm run build:win', desktopDir)
+    if (isArmMac()) {
+      console.warn('[build-all] Apple Silicon 无法本地生成 NSIS 安装包，将输出 Windows 便携 zip')
+      runStep('Windows 桌面端 (zip)', 'npm run build:win:zip', desktopDir)
+    } else {
+      runStep('Windows 桌面端', 'npm run build:win', desktopDir)
+    }
   }
 
   if (options.extension) {
     runStep('浏览器扩展', 'npm run package', extensionDir)
+  }
+
+  if (options.web) {
+    runStep('网页端', 'npm run package', webDir)
   }
 
   printSummary(options)
