@@ -34,7 +34,10 @@ export function getFontPreferenceDescription(preference: FontPreference): string
 
 /** 将字体偏好应用到 document */
 export function applyFontPreference(preference: FontPreference): void {
-  document.documentElement.setAttribute('data-font', preference)
+  const root = document.documentElement
+  root.setAttribute('data-font', preference)
+  // 同步 Element Plus 字体变量，避免组件使用固定的 --el-font-family
+  root.style.setProperty('--el-font-family', 'var(--font-family-ui)')
 }
 
 /** 应用启动时尽早初始化，减少字体闪烁 */

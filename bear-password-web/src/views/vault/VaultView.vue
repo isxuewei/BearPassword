@@ -726,6 +726,7 @@ import {
 import { useServerStore } from '@/stores/server'
 import { useSecurityStore } from '@/stores/security'
 import { useVaultStore } from '@/stores/vault'
+import { useVaultUiStore } from '@/stores/vaultUi'
 import { normalizeAuthenticatorContent } from '@/utils/authenticatorContent'
 import { normalizeCustomContent } from '@/utils/customContent'
 import { normalizeDatabaseContent } from '@/utils/databaseContent'
@@ -800,6 +801,9 @@ const { isMobile } = useBreakpoint()
 const serverStore = useServerStore()
 const securityStore = useSecurityStore()
 const vaultStore = useVaultStore()
+const vaultUiStore = useVaultUiStore()
+const lastHandledCreateToken = ref(0)
+const lastHandledQuickSearchToken = ref(0)
 const mobileShowDetail = ref(false)
 const mobileSearchOpen = ref(false)
 const listMode = computed(() => (route.meta.mode as string | undefined) ?? 'vault')
@@ -1506,6 +1510,18 @@ function openCreate(): void {
   pickerVisible.value = true
 }
 
+function handleCreateIntent(): void {
+  if (vaultUiStore.openCreateToken === lastHandledCreateToken.value) return
+  lastHandledCreateToken.value = vaultUiStore.openCreateToken
+  openCreate()
+}
+
+function handleQuickSearchIntent(): void {
+  if (vaultUiStore.quickSearchFocusToken === lastHandledQuickSearchToken.value) return
+  lastHandledQuickSearchToken.value = vaultUiStore.quickSearchFocusToken
+  void nextTick(() => searchInputRef.value?.focus())
+}
+
 function onTypeSelected(type: PasswordType, label: string): void {
   editingEntry.value = null
   dialogVisible.value = false
@@ -1758,11 +1774,33 @@ onMounted(() => {
   requestAnimationFrame(() => {
     void ensureVaultData()
   })
+  handleCreateIntent()
+  handleQuickSearchIntent()
 })
 
 onActivated(() => {
   void vaultStore.ensureLoaded()
+  handleCreateIntent()
+  handleQuickSearchIntent()
 })
+
+watch(
+  () => vaultUiStore.openCreateToken,
+  async () => {
+    if (vaultUiStore.openCreateToken === 0) return
+    await nextTick()
+    handleCreateIntent()
+  }
+)
+
+watch(
+  () => vaultUiStore.quickSearchFocusToken,
+  async () => {
+    if (vaultUiStore.quickSearchFocusToken === 0) return
+    await nextTick()
+    handleQuickSearchIntent()
+  }
+)
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onSearchHotkey)

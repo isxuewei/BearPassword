@@ -10,6 +10,7 @@ import { useSecurityStore } from '@/stores/security'
 import { useVaultStore } from '@/stores/vault'
 import { storage } from '@/utils/storage'
 import { clearSensitiveClipboardOnLock } from '@/utils/sensitiveClipboard'
+import { clearPersistedVaultPassword } from '@/utils/vaultPasswordStorage'
 
 const STORAGE_KEY = 'auto_lock_minutes'
 const LOCK_STATE_KEY = 'app_locked'
@@ -58,6 +59,8 @@ export const useAutoLockStore = defineStore('autoLock', () => {
   const isLocked = ref(storage.get<boolean>(LOCK_STATE_KEY, false) === true)
   /** 递增以通知 LockScreen 在已锁定状态下重新展示（如快捷键唤起窗口） */
   const lockPresentToken = ref(0)
+  /** 手动锁定时为 true，LockScreen 应跳过「记住主密码」的静默解锁 */
+  const requireInteractiveUnlock = ref(false)
 
   function persistLockState(locked: boolean): void {
     if (locked) {
@@ -107,25 +110,36 @@ export const useAutoLockStore = defineStore('autoLock', () => {
     lastActivityAt = Date.now()
   }
 
-  function lock(options?: { hideWindow?: boolean }): void {
+  function consumeInteractiveUnlockRequired(): boolean {
+    return requireInteractiveUnlock.value
+  }
+
+  function lock(options?: { hideWindow?: boolean; interactive?: boolean }): void {
     if (isMigrationActive()) return
     if (!useAuthStore().isLoggedIn) return
     if (!useSecurityStore().canUseVaultLock) return
     clearCheckInterval()
     const wasLocked = isLocked.value
+    if (options?.interactive) {
+      requireInteractiveUnlock.value = true
+      void clearPersistedVaultPassword()
+    }
     isLocked.value = true
     persistLockState(true)
     applySecureLockSideEffects()
-    if (!wasLocked) {
-      if (options?.hideWindow !== false) {
-        hideWindowAfterLock()
+    if (!wasLocked || options?.interactive) {
+      if (options?.hideWindow === false || options?.interactive) {
+        requestLockPresentation()
       } else {
+        hideWindowAfterLock()
+        // Web 无窗口可隐藏，需主动展示锁屏
         requestLockPresentation()
       }
     }
   }
 
   function unlock(): void {
+    requireInteractiveUnlock.value = false
     isLocked.value = false
     persistLockState(false)
     lastActivityAt = Date.now()
@@ -148,6 +162,7 @@ export const useAutoLockStore = defineStore('autoLock', () => {
   /** 停止检测并清除锁定（登出时使用） */
   function stop(): void {
     pauseMonitoring()
+    requireInteractiveUnlock.value = false
     isLocked.value = false
     persistLockState(false)
   }
@@ -192,6 +207,7 @@ export const useAutoLockStore = defineStore('autoLock', () => {
     pauseMonitoring,
     stop,
     requestLockPresentation,
+    consumeInteractiveUnlockRequired,
     ensureSecureLockState,
     ensureVaultSessionLocked
   }

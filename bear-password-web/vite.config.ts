@@ -65,7 +65,17 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: false
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name?.endsWith('.ttf')) {
+              return 'assets/TsangerJinKai05-W04-[hash][extname]'
+            }
+            return 'assets/[name]-[hash][extname]'
+          }
+        }
+      }
     }
   }
 })

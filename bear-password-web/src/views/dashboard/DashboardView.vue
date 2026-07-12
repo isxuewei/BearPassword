@@ -131,7 +131,7 @@ function handleAddPassword(): void {
 
 function handleLockApp(): void {
   if (securityStore.isMigrating || autoLockStore.isLocked) return
-  autoLockStore.lock()
+  autoLockStore.lock({ interactive: true })
 }
 
 async function loadStats(): Promise<void> {

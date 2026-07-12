@@ -143,9 +143,13 @@ async function handleLockRequired(): Promise<void> {
   passwordShaking.value = false
   loading.value = false
 
-  const autoUnlocked = await trySilentAutoUnlock()
-  if (attemptId !== autoUnlockAttemptId) return
-  if (autoUnlocked) return
+  const skipAutoUnlock = autoLockStore.consumeInteractiveUnlockRequired()
+
+  if (!skipAutoUnlock) {
+    const autoUnlocked = await trySilentAutoUnlock()
+    if (attemptId !== autoUnlockAttemptId) return
+    if (autoUnlocked) return
+  }
 
   visible.value = true
   await focusPasswordInput()
@@ -396,13 +400,8 @@ async function handleUnlock(): Promise<void> {
 @media (max-width: 767px) {
   .lock-screen {
     padding: $spacing-md;
-    align-items: flex-end;
-    padding-bottom: calc($spacing-xl + env(safe-area-inset-bottom));
-  }
-
-  .lock-screen__card {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    padding-top: calc($spacing-md + env(safe-area-inset-top));
+    padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
   }
 }
 </style>

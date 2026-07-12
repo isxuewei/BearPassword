@@ -216,12 +216,13 @@ useAutoLockActivity()
 
   &--mobile {
     .main-layout__content {
-      padding-bottom: calc(64px + env(safe-area-inset-bottom));
-    }
+      padding: $spacing-md;
+      padding-bottom: calc(#{$mobile-tab-bar-height} + env(safe-area-inset-bottom, 0px) + #{$spacing-md});
 
-    &.main-layout__content--flush,
-    .main-layout__content--flush {
-      padding-bottom: calc(64px + env(safe-area-inset-bottom));
+      &--flush {
+        padding: 0;
+        padding-bottom: calc(#{$mobile-tab-bar-height} + env(safe-area-inset-bottom, 0px));
+      }
     }
   }
 
@@ -348,14 +349,6 @@ useAutoLockActivity()
   }
 }
 
-.main-layout--mobile .main-layout__content {
-  padding: $spacing-md;
-}
-
-.main-layout--mobile .main-layout__content--flush {
-  padding: 0;
-}
-
 .page-fade-enter-active,
 .page-fade-leave-active {
   transition: opacity $transition-fast;
@@ -439,12 +432,6 @@ useAutoLockActivity()
 @keyframes migration-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 767px) {
-  .main-layout__content {
-    padding: $spacing-md;
   }
 }
 </style>

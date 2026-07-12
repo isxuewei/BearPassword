@@ -3,6 +3,10 @@ spring:
     name: bear-password-server
   profiles:
     active: dev
+  # 使用 ResilientSaTokenDaoRedisJackson 替代默认实现（损坏 Session 自动清理）
+  autoconfigure:
+    exclude:
+      - cn.dev33.satoken.dao.SaTokenDaoRedisJackson
   jackson:
     time-zone: Asia/Shanghai
   servlet:
