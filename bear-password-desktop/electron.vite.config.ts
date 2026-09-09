@@ -3,7 +3,7 @@ import { defineConfig, externalizeDepsPlugin, loadEnv } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
 
 const DEV_SERVER_URL = 'http://127.0.0.1:8080'
-const PROD_SERVER_URL = 'https://bear-password.xuewei.fun'
+const PROD_SERVER_URL = 'http://bear-password.xuewei.fun'
 
 /**
  * electron-vite 统一配置文件

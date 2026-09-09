@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const DEV_SERVER_URL = 'http://127.0.0.1:8080'
-const PROD_SERVER_URL = 'https://bear-password.xuewei.fun'
+const PROD_SERVER_URL = 'http://bear-password.xuewei.fun'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')

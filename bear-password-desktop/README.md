@@ -7,7 +7,7 @@
 <p align="center">在电脑上管理密码库、生成强密码、查看两步验证码的主应用</p>
 
 <p align="center">
-  <a href="https://bear-password.xuewei.fun">官网下载</a> ·
+  <a href="http://bear-password.xuewei.fun">官网下载</a> ·
   <a href="../README.md">返回项目首页</a>
 </p>
 
@@ -33,10 +33,10 @@
 
 ## 下载与安装
 
-请前往 [BearPassword 官网](https://bear-password.xuewei.fun) 下载对应系统安装包：
+请前往 [BearPassword 官网](http://bear-password.xuewei.fun) 下载对应系统安装包：
 
 - **macOS**：`.dmg` 安装包（内含应用与安装说明）
-- **Windows**：安装程序或便携版压缩包
+- **Windows**：`BearPassword-Setup.exe` 安装程序（安装后注册桌面协议，供浏览器扩展唤醒）
 
 安装后注册账号，按引导完成保险库初始化即可使用。
 

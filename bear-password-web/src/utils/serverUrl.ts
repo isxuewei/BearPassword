@@ -9,7 +9,7 @@ export const API_CONTEXT_PATH = '/api'
 export function getDefaultServerOrigin(): string {
   const fromEnv = import.meta.env.VITE_SERVER_URL?.trim()
   if (fromEnv) return fromEnv
-  return import.meta.env.PROD ? 'https://bear-password.xuewei.fun' : 'http://127.0.0.1:8080'
+  return import.meta.env.PROD ? 'http://bear-password.xuewei.fun' : 'http://127.0.0.1:8080'
 }
 
 /** 规范化服务器地址（仅 origin，不含路径） */

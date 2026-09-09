@@ -1,4 +1,4 @@
-const API_BASE = 'https://bear-password.xuewei.fun/api'
+const API_BASE = 'http://bear-password.xuewei.fun/api'
 
 const downloads = {
   mac: { url: null, version: null },
@@ -66,7 +66,7 @@ function bindExtensionDownload() {
 }
 
 async function loadVersions() {
-  const fallback = { version: '26.7.5', url: null }
+  const fallback = { version: '26.9.9', url: null }
 
   try {
     const [macData, winData, extensionData] = await Promise.all([

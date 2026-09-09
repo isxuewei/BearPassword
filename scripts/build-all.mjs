@@ -30,7 +30,6 @@ const webDir = join(root, 'bear-password-web')
 const RELEASE_ARTIFACTS = [
   'BearPassword.dmg',
   'BearPassword-Setup.exe',
-  'BearPassword-win-x64.zip',
   'BearPassword-Extension.zip',
   'BearPassword-Web.zip'
 ]
@@ -98,10 +97,6 @@ function printFile(filePath) {
   console.log(`  • ${relative} (${sizeMb} MB)`)
 }
 
-function isArmMac() {
-  return process.platform === 'darwin' && process.arch === 'arm64'
-}
-
 function printSummary({ mac, win, extension, web }) {
   console.log('\n========== 产物清单 ==========\n')
   console.log(`产物目录: ${releaseDir}`)
@@ -115,8 +110,7 @@ function printSummary({ mac, win, extension, web }) {
   for (const name of RELEASE_ARTIFACTS) {
     const shouldShow =
       (name === 'BearPassword.dmg' && mac) ||
-      (name === 'BearPassword-Setup.exe' && win && !isArmMac()) ||
-      (name === 'BearPassword-win-x64.zip' && win && isArmMac()) ||
+      (name === 'BearPassword-Setup.exe' && win) ||
       (name === 'BearPassword-Extension.zip' && extension) ||
       (name === 'BearPassword-Web.zip' && web)
 
@@ -161,12 +155,7 @@ function main() {
   }
 
   if (options.win) {
-    if (isArmMac()) {
-      console.warn('[build-all] Apple Silicon 无法本地生成 NSIS 安装包，将输出 Windows 便携 zip')
-      runStep('Windows 桌面端 (zip)', 'npm run build:win:zip', desktopDir)
-    } else {
-      runStep('Windows 桌面端', 'npm run build:win', desktopDir)
-    }
+    runStep('Windows 桌面端安装包', 'npm run build:win', desktopDir)
   }
 
   if (options.extension) {

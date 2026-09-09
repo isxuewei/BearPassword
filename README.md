@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://bear-password.xuewei.fun">官网下载</a>
+  <a href="http://bear-password.xuewei.fun">官网下载</a>
 </p>
 
 ---
@@ -36,7 +36,7 @@ BearPassword 是一套完整的密码管理方案，由**桌面应用**和**浏�
 
 ## 推荐使用方式
 
-1. 从 [官网](https://bear-password.xuewei.fun) 下载并安装 **BearPassword 桌面端**（支持 macOS、Windows）
+1. 从 [官网](http://bear-password.xuewei.fun) 下载并安装 **BearPassword 桌面端**（支持 macOS、Windows）
 2. 注册账号，设置主密码，解锁保险库（建议同时配置安全密钥）
 3. 安装 **浏览器扩展**（Chrome / Edge）
 4. 日常使用：保持桌面端在后台运行并已解锁，即可在网页中自动填充

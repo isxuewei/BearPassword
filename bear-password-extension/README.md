@@ -7,7 +7,7 @@
 <p align="center">在网页上自动填充账号密码，并查看、复制两步验证码</p>
 
 <p align="center">
-  <a href="https://bear-password.xuewei.fun">官网下载</a> ·
+  <a href="http://bear-password.xuewei.fun">官网下载</a> ·
   <a href="../README.md">返回项目首页</a>
 </p>
 
@@ -80,7 +80,7 @@ npm run package    # 构建并打包为 zip
 | 环境 | 默认 API 地址 |
 |------|----------------|
 | 开发 | `http://127.0.0.1:8080` |
-| 正式打包 | `https://bear-password.xuewei.fun` |
+| 正式打包 | `http://bear-password.xuewei.fun` |
 
 可通过环境变量 `VITE_SERVER_URL` 覆盖。账号需与桌面端一致。
 

@@ -6,7 +6,7 @@ import {
   type DesktopUpdateStatus
 } from '../../shared/updater'
 
-let feedOrigin = (process.env.VITE_SERVER_URL || 'https://bear-password.xuewei.fun').replace(
+let feedOrigin = (process.env.VITE_SERVER_URL || 'http://bear-password.xuewei.fun').replace(
   /\/+$/,
   ''
 )

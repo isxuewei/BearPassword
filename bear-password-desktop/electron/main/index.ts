@@ -58,6 +58,7 @@ app.setName('BearPassword')
 
 const DESKTOP_WAKE_PROTOCOL = 'bearpassword'
 let pendingWakeUrl: string | null = null
+let releaseMainWindowTopTimer: ReturnType<typeof setTimeout> | null = null
 
 function registerDesktopWakeProtocol(): void {
   if (process.defaultApp) {
@@ -350,23 +351,34 @@ function showDockIfNeeded(): void {
 function bringMainWindowToFront(win: BrowserWindow): void {
   if (win.isDestroyed()) return
 
+  if (releaseMainWindowTopTimer) {
+    clearTimeout(releaseMainWindowTopTimer)
+    releaseMainWindowTopTimer = null
+  }
+
   if (win.isMinimized()) {
     win.restore()
-  }
-  if (!win.isVisible()) {
-    win.show()
   }
 
   if (process.platform === 'darwin') {
     app.focus({ steal: true })
-    win.moveTop()
-  } else if (process.platform === 'win32') {
-    win.setAlwaysOnTop(true)
-    win.setAlwaysOnTop(false)
   }
 
+  // 托盘点击时短暂提升窗口层级。不能在同一轮事件循环中立即撤销，
+  // 否则 Windows 窗口管理器可能尚未完成提升，窗口仍会被其他应用遮挡。
+  const topLevel = process.platform === 'darwin' ? 'floating' : 'screen-saver'
+  win.setAlwaysOnTop(true, topLevel)
+  win.show()
   win.focus()
+  win.moveTop()
   showDockIfNeeded()
+
+  releaseMainWindowTopTimer = setTimeout(() => {
+    releaseMainWindowTopTimer = null
+    if (!win.isDestroyed()) {
+      win.setAlwaysOnTop(false)
+    }
+  }, 300)
 }
 
 function isMainWindowOpen(): boolean {
@@ -460,6 +472,10 @@ function sendTrayCommand(command: TrayRendererCommand, notifyOpenOnLoad = false)
 function quitApp(): void {
   if (isQuitting) return
   isQuitting = true
+  if (releaseMainWindowTopTimer) {
+    clearTimeout(releaseMainWindowTopTimer)
+    releaseMainWindowTopTimer = null
+  }
   destroyTray()
   unregisterAllGlobalShortcuts()
   app.quit()

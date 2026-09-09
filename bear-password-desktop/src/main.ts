@@ -10,7 +10,7 @@ import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
-import { bindUnauthorizedHandler } from '@/utils/request'
+import { bindUnauthorizedHandler, isUnauthorizedError } from '@/utils/request'
 import { initFontOnBoot } from '@/utils/font'
 import { initLocaleOnBoot } from '@/utils/localePreference'
 import { initThemeOnBoot } from '@/utils/theme'
@@ -37,8 +37,14 @@ async function bootstrap(): Promise<void> {
     try {
       await useSecurityStore().refreshVaultCryptoMeta()
       await useSecurityStore().reloadFromStorage()
-    } catch {
-      authStore.clearSession()
+    } catch (error) {
+      // 开机后网络可能尚未就绪。只有服务端明确判定 Token 失效时才清除
+      // 已持久化的登录态；网络超时、断网等临时故障不应让用户被迫重登。
+      if (isUnauthorizedError(error)) {
+        authStore.clearSession()
+      } else {
+        console.warn('[bootstrap] 恢复登录会话时暂时无法连接服务端，保留本地登录态', error)
+      }
     }
   }
   autoLockStore.ensureSecureLockState()

@@ -14,7 +14,7 @@
 
 ## 这是做什么的？
 
-普通用户使用 [官网](https://bear-password.xuewei.fun) 提供的云服务即可，**无需自行部署服务端**。
+普通用户使用 [官网](http://bear-password.xuewei.fun) 提供的云服务即可，**无需自行部署服务端**。
 
 本模块面向希望**自建 BearPassword 后端**的用户或开发者，负责：
 
