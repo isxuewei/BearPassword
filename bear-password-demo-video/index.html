@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "PingFang SC";
+        src: local("PingFang SC");
+      }
+
+      @font-face {
+        font-family: "Hiragino Sans GB";
+        src: local("Hiragino Sans GB");
+      }
+
+      @font-face {
+        font-family: "Songti SC";
+        src: local("Songti SC");
+      }
+
+      @font-face {
+        font-family: "STSong";
+        src: local("STSong");
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f5f3fb;
+      }
+      body {
+        font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+        color: #171827;
+      }
+      code,
+      pre,
+      .monospace {
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f5f3fb;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #f5f3fb;
+      }
+
+      .scene:not(:first-child) {
+        opacity: 0;
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        padding: 74px 84px 70px;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 54px;
+        align-items: center;
+        box-sizing: border-box;
+      }
+
+      .background-grid {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        opacity: 0.46;
+        background-image:
+          linear-gradient(#dfdcef 1px, rgba(245, 243, 251, 0) 1px),
+          linear-gradient(90deg, #dfdcef 1px, rgba(245, 243, 251, 0) 1px);
+        background-size: 64px 64px;
+      }
+
+      .band {
+        position: absolute;
+        z-index: 1;
+        height: 310px;
+        width: 2300px;
+        left: -150px;
+        top: 690px;
+        transform: rotate(-7deg);
+        background: rgba(124, 108, 246, 0.09);
+      }
+
+      .thin-band {
+        position: absolute;
+        z-index: 1;
+        height: 82px;
+        width: 2100px;
+        left: -80px;
+        top: 185px;
+        transform: rotate(-7deg);
+        background: rgba(191, 242, 229, 0.5);
+      }
+
+      .copy-side {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        min-width: 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 16px;
+        border: 1px solid rgba(124, 108, 246, 0.24);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #6d5df2;
+        font-size: 24px;
+        font-weight: 700;
+        box-shadow: 0 14px 35px rgba(98, 84, 188, 0.12);
+      }
+
+      .eyebrow-dot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #7c6cf6;
+      }
+
+      .scene-title {
+        max-width: 690px;
+        font-family: "Songti SC", "STSong", serif;
+        font-size: 78px;
+        line-height: 1.06;
+        font-weight: 900;
+        letter-spacing: 0;
+        color: #171827;
+      }
+
+      .caption-panel {
+        width: 100%;
+        max-width: 710px;
+        padding: 30px 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(124, 108, 246, 0.16);
+        box-shadow: 0 22px 56px rgba(41, 38, 76, 0.14);
+      }
+
+      .caption-text {
+        font-size: 32px;
+        line-height: 1.52;
+        font-weight: 560;
+        color: #242536;
+      }
+
+      .points {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        max-width: 710px;
+      }
+
+      .point {
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 16px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(23, 24, 39, 0.08);
+        color: #3f4054;
+        font-size: 22px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .media-side {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .media-stage {
+        position: relative;
+        width: 1064px;
+        height: 774px;
+        transform: rotate(-1.6deg);
+      }
+
+      .media-shadow {
+        position: absolute;
+        inset: 24px 4px -24px 16px;
+        border-radius: 8px;
+        background: rgba(38, 35, 64, 0.13);
+        filter: blur(24px);
+        z-index: 0;
+      }
+
+      .screenshot-frame {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid rgba(23, 24, 39, 0.12);
+        box-shadow: 0 32px 80px rgba(41, 38, 76, 0.18);
+      }
+
+      .screenshot {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+      }
+
+      .device-label {
+        position: absolute;
+        right: 22px;
+        bottom: 20px;
+        z-index: 4;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(23, 24, 39, 0.86);
+        color: #ffffff;
+        font-size: 19px;
+        font-weight: 700;
+      }
+
+      .data-strip {
+        position: absolute;
+        left: -22px;
+        top: 72px;
+        z-index: 5;
+        display: flex;
+        gap: 10px;
+      }
+
+      .metric {
+        width: 128px;
+        padding: 13px 12px;
+        border-radius: 8px;
+        background: #171827;
+        color: #ffffff;
+        box-shadow: 0 16px 42px rgba(23, 24, 39, 0.18);
+      }
+
+      .metric-value {
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 31px;
+        line-height: 1;
+        font-weight: 800;
+      }
+
+      .metric-label {
+        margin-top: 7px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .stamp {
+        position: absolute;
+        z-index: 4;
+        right: 74px;
+        top: 62px;
+        color: rgba(124, 108, 246, 0.16);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 120px;
+        font-weight: 900;
+        letter-spacing: 0;
+        pointer-events: none;
+      }
+
+      .progress {
+        position: absolute;
+        left: 84px;
+        right: 84px;
+        bottom: 38px;
+        z-index: 6;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(23, 24, 39, 0.08);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: #7c6cf6;
+      }
+
+      .scene-number {
+        position: absolute;
+        left: 84px;
+        top: 46px;
+        z-index: 6;
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 20px;
+        font-weight: 800;
+        color: #606579;
+      }
+
+      .final-address {
+        display: inline-flex;
+        width: fit-content;
+        padding: 16px 20px;
+        border-radius: 8px;
+        background: #171827;
+        color: #ffffff;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 25px;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-r64w" id="root" data-composition-id="main" data-start="0" data-duration="154" data-width="1920" data-height="1080"></div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+
+      const scenes = [
+        {
+          title: "密码越复杂，越容易忘",
+          eyebrow: "开场痛点",
+          image: "assets/screenshots/6新增密码.png",
+          label: "创建强密码",
+          duration: 10,
+          points: ["强度不够", "三个月后想不起", "老密码反复用"],
+          text: "你是不是也有这种情况。注册一个网站，密码强度不够。换一个复杂点的，三个月后，自己也想不起来。最后，只能靠浏览器记住，或者，几个老密码反复用。今天，给你看一个我自己做的密码管理工具，叫 BearPassword。"
+        },
+        {
+          title: "账号越来越多，脑子装不下",
+          eyebrow: "真实问题",
+          image: "assets/screenshots/5密码库.png",
+          label: "账号集中管理",
+          duration: 12,
+          points: ["工作平台", "AI 工具", "双重验证"],
+          text: "现在，每个人的账号都太多了。工作平台、邮箱、网盘、AI 工具、服务器、数据库、银行卡信息，还有各种双重验证。如果全靠脑子记，记不住。如果全放在浏览器里，换电脑、换浏览器、换设备，又很麻烦。更现实的是，很多人为了方便，会在不同网站，重复使用同一套密码。而这，才是最危险的地方。"
+        },
+        {
+          title: "不是小本子，是加密保险库",
+          eyebrow: "产品思路",
+          image: "assets/screenshots/5密码库.png",
+          label: "加密保险库",
+          duration: 12,
+          points: ["安全保存", "快速使用", "迁移恢复"],
+          text: "很多人以为，密码管理器，就是一个“帮我保存密码的小本子”。其实，真正重要的不是保存，而是安全地保存，快速地使用，还能在需要的时候，迁移和恢复。BearPassword 的思路，很直接。密码，不要散落在各个浏览器里，而是集中放进一个加密保险库。你日常登录网站时，用扩展，一键填充。你管理账号时，用桌面端，或者网页端，统一整理。"
+        },
+        {
+          title: "先看仪表盘",
+          eyebrow: "桌面端演示",
+          image: "assets/screenshots/4首页.png",
+          label: "仪表盘",
+          duration: 8,
+          points: ["密码库统计", "最近访问", "快捷入口"],
+          text: "打开 BearPassword，先进入仪表盘。这里，可以看到密码库统计、最近访问和快捷入口。"
+        },
+        {
+          title: "一个账号，一个完整条目",
+          eyebrow: "密码库",
+          image: "assets/screenshots/5密码库.png",
+          label: "搜索 GitHub",
+          duration: 8,
+          points: ["账号", "网址标签", "备注"],
+          text: "进入密码库，搜索一个网站，比如 GitHub。账号、密码、网址、标签、备注，都可以放在同一个条目里。"
+        },
+        {
+          title: "两步验证也放进同一流程",
+          eyebrow: "TOTP",
+          image: "assets/screenshots/6新增密码.png",
+          label: "6 位验证码",
+          duration: 10,
+          points: ["TOTP 密钥", "倒计时", "点击复制"],
+          text: "如果这个账号开了两步验证，还可以把 TOTP 密钥，也放进去。登录时，不用再打开手机翻验证码。BearPassword 会显示当前 6 位验证码和倒计时，点击，就能复制。"
+        },
+        {
+          title: "登录页面直接唤起扩展",
+          eyebrow: "浏览器扩展",
+          image: "assets/screenshots/16自动填充.png",
+          label: "github.com/login",
+          duration: 9,
+          points: ["输入框旁图标", "自动匹配", "选择条目"],
+          text: "再看浏览器扩展。来到登录页面，输入框旁边，会出现 BearPassword 图标。点一下，自动匹配当前网站的账号。"
+        },
+        {
+          title: "账号、密码、验证码快速完成",
+          eyebrow: "一键填充",
+          image: "assets/screenshots/16自动填充.png",
+          label: "自动填充",
+          duration: 10,
+          points: ["账号密码填入", "验证码复制", "减少粘贴"],
+          text: "选择条目，账号密码，直接填入。如果这个账号有两步验证，验证码，也可以快速复制。整个过程，不需要你手动查找、不需要复制粘贴一堆内容。"
+        },
+        {
+          title: "信任来自加密边界",
+          eyebrow: "安全背书",
+          image: "assets/screenshots/10安全设置.png",
+          label: "客户端加密",
+          duration: 10,
+          points: ["本地加密", "服务端密文", "主密码不上传"],
+          text: "密码工具最核心的问题是，你凭什么相信它。所以，BearPassword 做了几件事。第一，客户端加密。你的保险库内容，在本地加密，服务端，只保存密文。"
+        },
+        {
+          title: "离开电脑，也要降低风险",
+          eyebrow: "自动锁定",
+          image: "assets/screenshots/11安全设置.png",
+          label: "安全设置",
+          duration: 9,
+          points: ["解锁后可见", "自动锁定", "剪贴板清空"],
+          text: "第二，主密码不上传，明文密码，只在解锁后出现。第三，支持自动锁定和剪贴板定时清空，离开电脑，也能减少风险。"
+        },
+        {
+          title: "代码公开，数据也能自己掌握",
+          eyebrow: "开源与私有化",
+          image: "assets/screenshots/2Emergency Kit.png",
+          label: "Emergency Kit",
+          duration: 11,
+          points: ["全端开源", "可审计", "可私有化部署"],
+          text: "第四，BearPassword 已经开源，服务端、桌面端、浏览器扩展、官网代码，都公开。如果你懂技术，可以自己审计代码。如果你不想用官方服务，也可以私有化部署。"
+        },
+        {
+          title: "以前的密码管理，很分散",
+          eyebrow: "使用前",
+          image: "assets/screenshots/7浏览器导入.png",
+          label: "导入旧数据",
+          duration: 10,
+          points: ["浏览器一部分", "备忘录一部分", "忘记密码"],
+          text: "以前，你可能是这样管理密码的。浏览器里存一部分，备忘录里记一部分，手机验证码，再翻一部分。换设备的时候，重新登录一圈。遇到复杂密码，还得点“忘记密码”。"
+        },
+        {
+          title: "现在变成一套统一流程",
+          eyebrow: "使用后",
+          image: "assets/screenshots/15插件端.png",
+          label: "Chrome / Edge",
+          duration: 12,
+          points: ["统一保险库", "桌面网页管理", "扩展自动填充"],
+          text: "用了 BearPassword 之后，流程会变成这样。密码，统一进保险库。桌面端管理，网页端也能打开。Chrome 和 Edge 扩展，负责自动填充。常用账号，可以搜索、收藏、分类。强密码、两步验证、自动锁定，都在同一套流程里。"
+        },
+        {
+          title: "少记密码，多一点安心",
+          eyebrow: "适合谁",
+          image: "assets/screenshots/4首页.png",
+          label: "BearPassword",
+          duration: 9,
+          points: ["账号很多", "开发者", "团队"],
+          text: "BearPassword 想做的，不是让你多装一个工具。而是让你少记密码，多一点安心。它适合日常上网账号很多的人，也适合想把密码数据，掌握在自己手里的开发者和团队。"
+        },
+        {
+          title: "受够密码越攒越乱，就去试试",
+          eyebrow: "行动提示",
+          image: "assets/screenshots/2Emergency Kit.png",
+          label: "保存 Emergency Kit",
+          duration: 14,
+          points: ["注册账号", "下载桌面端", "安装扩展"],
+          text: "如果你也受够了密码越攒越乱，可以去 BearPassword 官网试试。注册账号，保存好 Emergency Kit，然后下载桌面端和浏览器扩展。核心服务，可以免费使用。如果你喜欢开源项目，也欢迎去 GitHub 看代码、提 Issue、点 Star。官网地址，我放在评论区和简介里。试完之后，也可以告诉我，你最希望密码管理器，下一步支持什么功能。",
+          address: "bear-password.xuewei.fun"
+        }
+      ];
+
+      const root = document.getElementById("root");
+      const totalDuration = scenes.reduce((sum, scene) => sum + scene.duration, 0);
+
+      function createScene(scene, index) {
+        const el = document.createElement("section");
+        el.id = `scene${index + 1}`;
+        el.className = "scene";
+        el.style.zIndex = String(index + 1);
+
+        el.innerHTML = `
+          <div class="background-grid" data-layout-ignore></div>
+          <div class="band" data-layout-ignore></div>
+          <div class="thin-band" data-layout-ignore></div>
+          <div class="stamp" data-layout-ignore>BP</div>
+          <div class="scene-number">${String(index + 1).padStart(2, "0")} / ${String(scenes.length).padStart(2, "0")}</div>
+          <div class="scene-content">
+            <div class="media-side">
+              <div class="media-stage">
+                <div class="media-shadow" data-layout-ignore></div>
+                <div class="data-strip">
+                  <div class="metric"><div class="metric-value">${index + 3}</div><div class="metric-label">账号</div></div>
+                  <div class="metric"><div class="metric-value">${(22 - index).toString().padStart(2, "0")}</div><div class="metric-label">秒</div></div>
+                </div>
+                <div class="screenshot-frame" data-layout-allow-overflow>
+                  <img class="screenshot" src="${scene.image}" alt="${scene.label}" />
+                </div>
+                <div class="device-label">${scene.label}</div>
+              </div>
+            </div>
+            <div class="copy-side">
+              <div class="eyebrow"><span class="eyebrow-dot"></span><span>${scene.eyebrow}</span></div>
+              <h1 class="scene-title">${scene.title}</h1>
+              <div class="caption-panel">
+                <p class="caption-text">${scene.text}</p>
+              </div>
+              ${scene.address ? `<div class="final-address">${scene.address}</div>` : ""}
+              <div class="points">
+                ${scene.points.map((point) => `<div class="point">${point}</div>`).join("")}
+              </div>
+            </div>
+          </div>
+          <div class="progress"><div class="progress-fill"></div></div>
+        `;
+
+        root.appendChild(el);
+      }
+
+      scenes.forEach(createScene);
+
+      const tl = gsap.timeline({ paused: true });
+      const starts = [];
+      scenes.reduce((time, scene) => {
+        starts.push(time);
+        return time + scene.duration;
+      }, 0);
+
+      function enterScene(index, at) {
+        const selector = `#scene${index + 1}`;
+        const base = at + (index === 0 ? 0.25 : 0.68);
+        const mediaFrom = index % 3 === 0 ? { x: -52, y: 22, rotation: -3.5 } : index % 3 === 1 ? { y: 54, scale: 0.94 } : { x: 48, y: -18, rotation: 2.8 };
+
+        tl.from(`${selector} .scene-number`, { y: -18, opacity: 0, duration: 0.42, ease: "power2.out" }, base);
+        tl.from(`${selector} .media-stage`, { ...mediaFrom, opacity: 0, duration: 0.72, ease: "back.out(1.35)" }, base + 0.04);
+        tl.from(`${selector} .data-strip`, { x: -35, opacity: 0, duration: 0.46, ease: "power3.out" }, base + 0.28);
+        tl.from(`${selector} .eyebrow`, { x: 28, opacity: 0, duration: 0.44, ease: "sine.out" }, base + 0.18);
+        tl.from(`${selector} .scene-title`, { y: 34, opacity: 0, duration: 0.58, ease: "expo.out" }, base + 0.34);
+        tl.from(`${selector} .caption-panel`, { y: 30, scale: 0.985, opacity: 0, duration: 0.55, ease: "power2.out" }, base + 0.58);
+        const sceneEl = document.getElementById(`scene${index + 1}`);
+        const finalAddress = sceneEl.querySelector(".final-address");
+        if (finalAddress) {
+          tl.from(finalAddress, { y: 18, opacity: 0, duration: 0.42, ease: "power4.out" }, base + 0.74);
+        }
+        tl.from(`${selector} .point`, { y: 24, opacity: 0, duration: 0.42, stagger: 0.08, ease: "power3.out" }, base + 0.82);
+        tl.from(`${selector} .progress-fill`, { scaleX: 0, transformOrigin: "left center", duration: scenes[index].duration - 0.75, ease: "none" }, at + 0.35);
+        tl.to(`${selector} .screenshot`, { y: index % 2 === 0 ? -12 : 10, duration: 3.1, repeat: Math.floor(scenes[index].duration / 3.1) - 1, yoyo: true, ease: "sine.inOut" }, base + 1.0);
+      }
+
+      function blurTransition(previous, next, at) {
+        tl.to(`#scene${previous + 1}`, { filter: "blur(12px)", scale: 1.025, opacity: 0, duration: 0.56, ease: "power2.inOut" }, at);
+        tl.fromTo(`#scene${next + 1}`, { filter: "blur(12px)", scale: 0.985, opacity: 0 }, { filter: "blur(0px)", scale: 1, opacity: 1, duration: 0.56, ease: "power2.inOut" }, at + 0.08);
+      }
+
+      function pushTransition(previous, next, at) {
+        tl.to(`#scene${previous + 1}`, { x: -1920, duration: 0.52, ease: "power3.inOut" }, at);
+        tl.fromTo(`#scene${next + 1}`, { x: 1920, opacity: 1 }, { x: 0, duration: 0.52, ease: "power3.inOut" }, at);
+        tl.set(`#scene${previous + 1}`, { opacity: 0 }, at + 0.53);
+      }
+
+      scenes.forEach((_, index) => {
+        if (index > 0) {
+          const transitionAt = starts[index];
+          if ([3, 6, 8, 11, 14].includes(index)) {
+            pushTransition(index - 1, index, transitionAt);
+          } else {
+            blurTransition(index - 1, index, transitionAt);
+          }
+        }
+        enterScene(index, starts[index]);
+      });
+
+      tl.to("#scene15 .scene-content, #scene15 .stamp", { y: -24, opacity: 0, duration: 0.85, ease: "power2.in" }, totalDuration - 1.05);
+      tl.to("#scene15", { backgroundColor: "#171827", duration: 0.85, ease: "sine.inOut" }, totalDuration - 1.05);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
