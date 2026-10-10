@@ -1,4 +1,6 @@
 import {
+  EXTENSION_BRIDGE_AUTH_HEADER,
+  EXTENSION_BRIDGE_AUTH_VALUE,
   EXTENSION_BRIDGE_ORIGIN,
   type ExtensionBridgeHealth
 } from '@/shared/constants/extensionBridge'
@@ -30,11 +32,23 @@ class DesktopBridgeError extends Error {
   }
 }
 
+const BRIDGE_AUTH_HEADERS = {
+  [EXTENSION_BRIDGE_AUTH_HEADER]: EXTENSION_BRIDGE_AUTH_VALUE
+}
+
+function resolveBridgeErrorMessage(response: Response, payload?: BridgeEnvelope<unknown> | null): string {
+  if (response.status === 403) {
+    return '桌面端桥接认证失败，请确认 BearPassword 桌面端与浏览器扩展均已更新'
+  }
+  return payload?.message || '桌面端请求失败'
+}
+
 async function bridgeFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${EXTENSION_BRIDGE_ORIGIN}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
+      ...BRIDGE_AUTH_HEADERS,
       ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
       ...(init?.headers ?? {})
     }
@@ -50,7 +64,7 @@ async function bridgeFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok || !payload || (payload.code !== 0 && payload.code !== 200)) {
-    throw new DesktopBridgeError(payload?.message || '桌面端请求失败')
+    throw new DesktopBridgeError(resolveBridgeErrorMessage(response, payload))
   }
 
   return payload.data
@@ -66,11 +80,11 @@ export async function probeDesktopBridge(): Promise<ExtensionBridgeHealth> {
   try {
     const response = await fetch(`${EXTENSION_BRIDGE_ORIGIN}/health`, {
       signal: controller.signal,
-      headers: { Accept: 'application/json' }
+      headers: { Accept: 'application/json', ...BRIDGE_AUTH_HEADERS }
     })
     const payload = (await response.json()) as BridgeEnvelope<ExtensionBridgeHealth>
     if (!response.ok || (payload.code !== 0 && payload.code !== 200)) {
-      throw new DesktopBridgeError(payload.message || '桌面端未就绪')
+      throw new DesktopBridgeError(resolveBridgeErrorMessage(response, payload))
     }
     return payload.data
   } catch (err) {

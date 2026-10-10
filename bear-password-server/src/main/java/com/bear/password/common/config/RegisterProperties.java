@@ -33,5 +33,13 @@ public class RegisterProperties {
          * 同一邮箱发送间隔（秒）
          */
         private int sendIntervalSeconds = 60;
+        /**
+         * 同一验证码允许的最大错误次数
+         */
+        private int verifyMaxAttempts = 5;
+        /**
+         * 验证码错误次数过多后的锁定时长（秒）
+         */
+        private int verifyLockSeconds = 300;
     }
 }

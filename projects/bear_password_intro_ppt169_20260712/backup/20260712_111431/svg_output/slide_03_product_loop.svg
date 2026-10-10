@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Product Loop</title>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFF8ED"/>
+    <rect x="42" y="42" width="1196" height="636" rx="38" fill="#FFFFFF" opacity="0.52"/>
+  </g>
+  <g id="header">
+    <text x="64" y="82" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="42" font-weight="800" fill="#7A4B22">桌面端 + 扩展，组成完整使用闭环</text>
+    <text x="66" y="124" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#1F2937">把“集中管理”和“网页即用”拆给最适合的端来完成。</text>
+  </g>
+  <g id="loop-diagram">
+    <path d="M292 348 C292 238 394 182 510 190" fill="none" stroke="#E8D9C5" stroke-width="10" stroke-linecap="round"/>
+    <path d="M664 214 C768 262 810 356 764 462" fill="none" stroke="#E8D9C5" stroke-width="10" stroke-linecap="round"/>
+    <path d="M682 528 C560 592 404 554 328 454" fill="none" stroke="#E8D9C5" stroke-width="10" stroke-linecap="round"/>
+    <path d="M500 188 L532 183 L514 210" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M767 455 L754 486 L738 456" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M334 458 L312 432 L346 432" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="196" y="248" width="232" height="128" rx="28" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <circle cx="238" cy="312" r="28" fill="#FEF3C7"/>
+    <path d="M226 304 L250 304 L250 326 L226 326 Z M232 304 L232 298 C232 286 244 286 244 298 L244 304" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+    <text x="282" y="306" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">桌面端</text>
+    <text x="282" y="342" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">管理与解锁保险库</text>
+
+    <rect x="516" y="154" width="244" height="128" rx="28" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <circle cx="558" cy="218" r="28" fill="#DBEAFE"/>
+    <rect x="544" y="204" width="28" height="24" rx="5" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+    <path d="M548 212 L568 212" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="602" y="212" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">浏览器扩展</text>
+    <text x="602" y="248" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">网页匹配与一键填充</text>
+
+    <rect x="648" y="452" width="244" height="128" rx="28" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <circle cx="690" cy="516" r="28" fill="#DCFCE7"/>
+    <path d="M674 520 C678 508 690 500 704 508 C715 510 718 526 706 532 L680 532 C668 530 666 520 674 520 Z" fill="none" stroke="#16A34A" stroke-width="2.5"/>
+    <text x="734" y="510" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">服务端</text>
+    <text x="734" y="546" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">账号、密文同步、更新</text>
+
+    <rect x="268" y="452" width="254" height="128" rx="28" fill="#7A4B22"/>
+    <circle cx="310" cy="516" r="28" fill="#F59E0B" opacity="0.24"/>
+    <path d="M300 516 L308 524 L322 506" fill="none" stroke="#FEF3C7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="354" y="510" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#FFFFFF">本机安全通信</text>
+    <text x="354" y="546" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#FEF3C7">扩展向已解锁桌面端取用</text>
+  </g>
+  <g id="screenshot-panel">
+    <rect x="930" y="180" width="272" height="392" rx="30" fill="#D6B98D" opacity="0.20"/>
+    <rect x="910" y="160" width="272" height="392" rx="30" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <image href="../images/home.png" x="930" y="184" width="232" height="310" preserveAspectRatio="xMidYMid meet"/>
+    <text x="948" y="532" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="700" fill="#7A4B22">产品首页承接完整路径</text>
+  </g>
+  <g id="footer">
+    <text x="64" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">桌面端管理 · 扩展端填充 · 服务端同步</text>
+    <text x="1140" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">03 / 08</text>
+  </g>
+</svg>

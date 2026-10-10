@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Desktop Vault</title>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFF8ED"/>
+    <circle cx="1090" cy="610" r="210" fill="#FEF3C7" opacity="0.52"/>
+  </g>
+  <g id="header">
+    <text x="64" y="78" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="42" font-weight="800" fill="#7A4B22">桌面端：把敏感信息放进一个可搜索的保险库</text>
+    <text x="66" y="120" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#1F2937">桌面端是 BearPassword 的管理中枢，覆盖密码、身份、银行卡、服务器和 TOTP 等多种条目。</text>
+  </g>
+  <g id="main-screenshot">
+    <rect x="64" y="158" width="610" height="444" rx="32" fill="#D6B98D" opacity="0.20"/>
+    <rect x="48" y="144" width="610" height="444" rx="32" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <image href="../images/vault.png" x="72" y="168" width="562" height="358" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="88" y="540" width="216" height="42" rx="21" fill="#FEF3C7"/>
+    <text x="112" y="568" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="800" fill="#7A4B22">保险库首页</text>
+  </g>
+  <g id="capability-grid">
+    <rect x="714" y="154" width="226" height="128" rx="24" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.6"/>
+    <text x="740" y="204" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">多种条目类型</text>
+    <text x="740" y="242" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">登录、安全备注、身份、</text>
+    <text x="740" y="270" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">银行卡、服务器、数据库</text>
+
+    <rect x="966" y="154" width="226" height="128" rx="24" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.6"/>
+    <text x="992" y="204" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">丰富字段</text>
+    <text x="992" y="242" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">URL、邮箱、地址、</text>
+    <text x="992" y="270" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">电话、备用密码、TOTP</text>
+
+    <rect x="714" y="310" width="226" height="128" rx="24" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.6"/>
+    <text x="740" y="360" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">实时验证码</text>
+    <text x="740" y="398" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">详情页显示 6 位 TOTP</text>
+    <text x="740" y="426" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">和倒计时</text>
+
+    <rect x="966" y="310" width="226" height="128" rx="24" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.6"/>
+    <text x="992" y="360" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#1F2937">顺手管理</text>
+    <text x="992" y="398" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">收藏、最近访问、标签、</text>
+    <text x="992" y="426" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">搜索、多主题与多语言</text>
+  </g>
+  <g id="inset-screenshot">
+    <rect x="724" y="478" width="468" height="124" rx="26" fill="#7A4B22"/>
+    <image href="../images/add-password.png" x="746" y="498" width="154" height="84" preserveAspectRatio="xMidYMid meet"/>
+    <text x="930" y="526" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" font-weight="800" fill="#FFFFFF">新增条目时按需扩展字段</text>
+    <text x="930" y="564" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#FEF3C7">把“登录项”从简单账号密码升级为完整资料卡。</text>
+  </g>
+  <g id="footer">
+    <text x="64" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">桌面端能力：保存 · 查看 · 搜索 · 配置 · 解锁</text>
+    <text x="1140" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">04 / 08</text>
+  </g>
+</svg>

@@ -1,0 +1,45 @@
+{
+  "stage": "stage1",
+  "lang": "zh",
+  "recommend": {
+    "canvas": "ppt169",
+    "mode": "problem-solution",
+    "visual_style": "soft-rounded",
+    "delivery_purpose": "balanced"
+  },
+  "audience": {
+    "value": "面向潜在用户、产品评审者、开源项目关注者与希望了解 BearPassword 的个人/开发者；重点解释产品价值、使用闭环与安全可信度。"
+  },
+  "content_divergence": {
+    "value": "基于仓库 README 与产品截图重组为产品介绍叙事；保留事实与功能边界，不虚构商业指标。"
+  },
+  "visual_style_spectrum": [
+    {
+      "id": "soft-rounded",
+      "tag_zh": "稳妥可信",
+      "tag_en": "Safe & trusted",
+      "tag_ja": "安心・信頼",
+      "note_zh": "圆角卡片、轻阴影、产品截图友好，适合安全工具介绍。",
+      "note_en": "Rounded cards, soft shadows, screenshot-friendly product presentation.",
+      "note_ja": "角丸カードと柔らかい影で、セキュリティ製品紹介に適した表現。"
+    },
+    {
+      "id": "swiss-minimal",
+      "tag_zh": "克制专业",
+      "tag_en": "Minimal professional",
+      "tag_ja": "ミニマルでプロフェッショナル",
+      "note_zh": "强网格、少装饰、信息清晰，像成熟 SaaS 产品发布稿。",
+      "note_en": "Strong grids and restrained layout like a mature SaaS launch deck.",
+      "note_ja": "強いグリッドと控えめな装飾で成熟したSaaS資料風。"
+    },
+    {
+      "id": "dark-tech",
+      "tag_zh": "安全科技感",
+      "tag_en": "Security tech",
+      "tag_ja": "セキュリティテック",
+      "note_zh": "深色背景、发光线条、密钥/保险库隐喻，适合强化安全感。",
+      "note_en": "Dark surfaces, glow lines, vault/key metaphors for a security-forward mood.",
+      "note_ja": "暗色背景と光の線でセキュリティ感を強調。"
+    }
+  ]
+}

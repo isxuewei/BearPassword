@@ -120,6 +120,10 @@ interface DockApi {
 /** Electron preload 暴露的文件选择 API */
 interface FileApi {
   pickPasswordCsv: () => Promise<{ fileName: string; content: string } | null>
+  savePasswordCsv: (payload: {
+    defaultFileName: string
+    content: string
+  }) => Promise<{ ok: true; filePath: string } | { ok: false; canceled: true }>
   saveSecurityKeyBackup: (payload: {
     defaultFileName: string
     content: string
@@ -142,7 +146,8 @@ interface SecureStorageApi {
 /** Electron preload 暴露的主密码存储 API（生物识别解锁保险库时使用） */
 interface VaultPasswordApi {
   isAvailable: () => Promise<boolean>
-  get: () => Promise<string | null>
+  has: () => Promise<boolean>
+  get: (reason?: string) => Promise<string | null>
   set: (password: string) => Promise<{ ok: true } | { ok: false; error: string }>
   remove: () => Promise<void>
 }

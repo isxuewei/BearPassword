@@ -33,3 +33,9 @@ dromara:
         bucket-name: ${ALIYUN_OSS_BUCKET_NAME}
         domain: ${ALIYUN_OSS_DOMAIN}
         base-path: ""
+
+bear:
+  password:
+    cors:
+      allowed-origins:
+        - https://bear-password.xuewei.fun

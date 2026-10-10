@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import manifest from './manifest.config'
 
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), crx({ manifest })],
+  plugins: [vue(), crx({ manifest, liveReload: false })],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')

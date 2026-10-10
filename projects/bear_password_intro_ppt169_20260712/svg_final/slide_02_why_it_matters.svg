@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Why BearPassword Matters</title>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFF8ED" />
+    <circle cx="1135" cy="92" r="180" fill="#FEF3C7" opacity="0.55" />
+    <circle cx="82" cy="630" r="170" fill="#DBEAFE" opacity="0.34" />
+  </g>
+  <g id="header">
+    <text x="64" y="78" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="42" font-weight="800" fill="#7A4B22">账号越多，真正难的是“安心管理”</text>
+    <text x="66" y="120" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#1F2937">BearPassword 聚焦的不只是保存密码，而是把登录、验证码和敏感信息管理变成可控流程。</text>
+  </g>
+  <g id="pain-card-1">
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.8" d="M90,178 H368 A26,26 0 0 1 394,204 V314 A26,26 0 0 1 368,340 H90 A26,26 0 0 1 64,314 V204 A26,26 0 0 1 90,178 Z" />
+    <circle cx="112" cy="226" r="28" fill="#FEF3C7" />
+    <path d="M101 226 L123 226 M112 215 L112 237" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" />
+    <text x="154" y="218" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">账号分散</text>
+    <text x="154" y="260" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">多网站、多账号，</text>
+    <text x="154" y="294" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">复制粘贴容易出错。</text>
+  </g>
+  <g id="pain-card-2">
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.8" d="M90,364 H368 A26,26 0 0 1 394,390 V500 A26,26 0 0 1 368,526 H90 A26,26 0 0 1 64,500 V390 A26,26 0 0 1 90,364 Z" />
+    <circle cx="112" cy="412" r="28" fill="#DBEAFE" />
+    <path d="M112 396 A16 16 0 1 1 111 396 M112 404 L112 414 L120 420" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" />
+    <text x="154" y="404" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">验证码割裂</text>
+    <text x="154" y="446" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">TOTP 需要实时查看，</text>
+    <text x="154" y="480" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">和登录流程常常断开。</text>
+  </g>
+  <g id="pain-card-3">
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.8" d="M452,178 H730 A26,26 0 0 1 756,204 V500 A26,26 0 0 1 730,526 H452 A26,26 0 0 1 426,500 V204 A26,26 0 0 1 452,178 Z" />
+    <circle cx="484" cy="232" r="34" fill="#DCFCE7" />
+    <path d="M470 230 L484 216 L498 230 L498 250 L470 250 Z" fill="none" stroke="#16A34A" stroke-width="3" stroke-linejoin="round" />
+    <text x="532" y="226" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">敏感信息不止密码</text>
+    <text x="466" y="304" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">银行卡、证件、服务器、</text>
+    <text x="466" y="340" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">数据库、安全备注……</text>
+    <path fill="#FFF8ED" stroke="#E8D9C5" d="M491,388 H667 A25,25 0 0 1 692,413 V413 A25,25 0 0 1 667,438 H491 A25,25 0 0 1 466,413 V413 A25,25 0 0 1 491,388 Z" />
+    <text x="494" y="421" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" font-weight="700" fill="#7A4B22">不适合散落在普通笔记</text>
+  </g>
+  <g id="answer-card">
+    <path fill="#7A4B22" d="M832,178 H1184 A32,32 0 0 1 1216,210 V494 A32,32 0 0 1 1184,526 H832 A32,32 0 0 1 800,494 V210 A32,32 0 0 1 832,178 Z" />
+    <circle cx="1122" cy="266" r="118" fill="#F59E0B" opacity="0.18" />
+    <text x="844" y="240" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="32" font-weight="800" fill="#FFFFFF">BearPassword 的答案</text>
+    <text x="844" y="302" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="700" fill="#FEF3C7">一个保险库，两个使用场景</text>
+    <text x="844" y="364" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#FFFFFF">桌面端集中管理各类敏感信息，</text>
+    <text x="844" y="402" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#FFFFFF">浏览器扩展在网页登录时安全取用。</text>
+    <path fill="#FFFFFF" opacity="0.16" d="M868,452 H1058 A24,24 0 0 1 1082,476 V476 A24,24 0 0 1 1058,500 H868 A24,24 0 0 1 844,476 V476 A24,24 0 0 1 868,452 Z" />
+    <text x="870" y="484" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">从保存到填充的闭环</text>
+  </g>
+  <g id="footer">
+    <text x="64" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">Source: BearPassword README</text>
+    <text x="1140" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">02 / 08</text>
+  </g>
+</svg>

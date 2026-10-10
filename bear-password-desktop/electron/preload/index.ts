@@ -140,6 +140,10 @@ const fileApi = {
       fileName: string
       content: string
     } | null>,
+  savePasswordCsv: (payload: { defaultFileName: string; content: string }) =>
+    ipcRenderer.invoke('file:savePasswordCsv', payload) as Promise<
+      { ok: true; filePath: string } | { ok: false; canceled: true }
+    >,
   saveSecurityKeyBackup: (payload: { defaultFileName: string; content: string }) =>
     ipcRenderer.invoke('file:saveSecurityKeyBackup', payload) as Promise<
       { ok: true; filePath: string } | { ok: false; canceled: true }
@@ -169,7 +173,8 @@ contextBridge.exposeInMainWorld('secureStorageApi', secureStorageApi)
 
 const vaultPasswordApi = {
   isAvailable: (): Promise<boolean> => ipcRenderer.invoke('vault-password:isAvailable'),
-  get: (): Promise<string | null> => ipcRenderer.invoke('vault-password:get'),
+  has: (): Promise<boolean> => ipcRenderer.invoke('vault-password:has'),
+  get: (reason?: string): Promise<string | null> => ipcRenderer.invoke('vault-password:get', reason ?? null),
   set: (password: string): Promise<{ ok: true } | { ok: false; error: string }> =>
     ipcRenderer.invoke('vault-password:set', password),
   remove: (): Promise<void> => ipcRenderer.invoke('vault-password:remove')

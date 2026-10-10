@@ -84,7 +84,8 @@ import { verifyVaultUnlockContext } from '@/utils/vaultUnlockVerify'
 import { isUnauthorizedError } from '@/utils/request'
 import {
   clearPersistedVaultPassword,
-  loadPersistedVaultPassword,
+  hasPersistedVaultPassword as checkPersistedVaultPassword,
+  loadPersistedVaultPasswordWithBiometric,
   persistVaultPassword
 } from '@/utils/vaultPasswordStorage'
 
@@ -176,10 +177,6 @@ async function triggerPasswordShake(): Promise<void> {
   await focusPasswordInput()
 }
 
-function shouldAutoPromptBiometric(autoPromptBiometric: boolean): boolean {
-  return autoPromptBiometric && showBiometricUnlock.value
-}
-
 async function waitForWindowFocus(timeoutMs = BIOMETRIC_WINDOW_FOCUS_TIMEOUT_MS): Promise<void> {
   if (document.hasFocus()) return
 
@@ -208,25 +205,21 @@ async function ensureWindowFocused(): Promise<void> {
   await waitForWindowFocus()
 }
 
-function schedulePresentLockScreenInteraction(autoPromptBiometric: boolean): void {
+function schedulePresentLockScreenInteraction(): void {
   clearPresentInteractionTimer()
   presentInteractionTimer = setTimeout(() => {
     presentInteractionTimer = null
-    void presentLockScreenInteraction(autoPromptBiometric)
+    void presentLockScreenInteraction()
   }, LOCK_PRESENT_INTERACTION_DELAY_MS)
 }
 
-async function presentLockScreenInteraction(autoPromptBiometric: boolean): Promise<void> {
+async function presentLockScreenInteraction(): Promise<void> {
   if (!visible.value) return
   if (document.hidden) return
 
   await refreshBiometricAvailability()
   await ensureWindowFocused()
   await nextTick()
-
-  if (shouldAutoPromptBiometric(autoPromptBiometric)) {
-    await handleBiometricUnlock({ silent: true })
-  }
 
   if (visible.value && !unlocking.value) {
     await focusPasswordInput()
@@ -245,7 +238,7 @@ function handleWindowFocusedWhileLocked(): void {
     return
   }
   if (isPasswordInputFocused()) return
-  schedulePresentLockScreenInteraction(true)
+  schedulePresentLockScreenInteraction()
 }
 
 async function refreshBiometricAvailability(): Promise<void> {
@@ -253,8 +246,7 @@ async function refreshBiometricAvailability(): Promise<void> {
   biometricKind.value = null
   hasPersistedVaultPassword.value = false
 
-  const persisted = await loadPersistedVaultPassword()
-  hasPersistedVaultPassword.value = !!persisted
+  hasPersistedVaultPassword.value = await checkPersistedVaultPassword()
 
   if (!window.biometricApi) return
 
@@ -287,14 +279,8 @@ async function focusPasswordInput(): Promise<void> {
   passwordInputRef.value?.select()
 }
 
-function isBiometricCanceled(result: { canceled: boolean; error?: string }): boolean {
-  if (result.canceled) return true
-  const message = result.error?.trim() ?? ''
-  return message.includes('取消') || /cancel/i.test(message)
-}
-
-async function onLockScreenReady(autoPromptBiometric: boolean): Promise<void> {
-  schedulePresentLockScreenInteraction(autoPromptBiometric)
+async function onLockScreenReady(): Promise<void> {
+  schedulePresentLockScreenInteraction()
 }
 
 function presentLockScreen(): void {
@@ -304,7 +290,7 @@ function presentLockScreen(): void {
   errorMsg.value = ''
   passwordShaking.value = false
   loading.value = false
-  void onLockScreenReady(true)
+  void onLockScreenReady()
 }
 
 function hideLockScreen(): void {
@@ -440,18 +426,7 @@ async function handleBiometricUnlock(options: { silent?: boolean } = {}): Promis
   let focusPasswordAfterCancel = false
   try {
     await ensureWindowFocused()
-    const result = await window.biometricApi.prompt(t('lock.biometricReason'))
-    if (!result.ok) {
-      if (isBiometricCanceled(result)) {
-        errorMsg.value = ''
-        focusPasswordAfterCancel = true
-      } else if (!options.silent && result.error) {
-        errorMsg.value = result.error
-      }
-      return
-    }
-
-    const storedPassword = await loadPersistedVaultPassword()
+    const storedPassword = await loadPersistedVaultPasswordWithBiometric(t('lock.biometricReason'))
     if (!storedPassword) {
       if (!options.silent) {
         errorMsg.value = t('lock.biometricPasswordMissing')

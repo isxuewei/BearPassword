@@ -1649,7 +1649,7 @@ function getPreviewFields(entry: PasswordEntry): PreviewField[] {
       const fields: PreviewField[] = [
         {
           label: previewFieldLabel('内容'),
-          value: getSecureNoteBodyPreview(entry.content as Record<string, unknown>)
+          value: note.body.trim() || '-'
         }
       ]
       note.extraFields.forEach((field) => {
@@ -2509,6 +2509,7 @@ onUnmounted(() => {
     font-size: $font-size-md;
     color: $color-text-primary;
     line-height: 1.45;
+    white-space: pre-wrap;
     word-break: break-word;
     cursor: pointer;
 

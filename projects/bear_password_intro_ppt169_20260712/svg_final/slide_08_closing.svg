@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>Closing</title>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFF8ED" />
+    <circle cx="640" cy="340" r="280" fill="#FEF3C7" opacity="0.56" />
+    <circle cx="980" cy="160" r="180" fill="#DBEAFE" opacity="0.36" />
+    <path fill="#FFFFFF" opacity="0.72" stroke="#E8D9C5" stroke-width="2" d="M140,76 H1140 A44,44 0 0 1 1184,120 V600 A44,44 0 0 1 1140,644 H140 A44,44 0 0 1 96,600 V120 A44,44 0 0 1 140,76 Z" />
+  </g>
+  <g id="main-lockup">
+    <path fill="#FEF3C7" stroke="#E8D9C5" d="M561,118 H719 A27,27 0 0 1 746,145 V145 A27,27 0 0 1 719,172 H561 A27,27 0 0 1 534,145 V145 A27,27 0 0 1 561,118 Z" />
+    <text x="574" y="153" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" font-weight="800" fill="#7A4B22">BearPassword</text>
+    <text x="260" y="248" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="56" font-weight="800" fill="#7A4B22">安心保存，顺手填充</text>
+    <text x="322" y="304" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" fill="#1F2937">把密码管理、TOTP 和敏感信息收拢到一个可信工作流中。</text>
+  </g>
+  <g id="proof-pillars">
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2" d="M212,374 H428 A28,28 0 0 1 456,402 V482 A28,28 0 0 1 428,510 H212 A28,28 0 0 1 184,482 V402 A28,28 0 0 1 212,374 Z" />
+    <circle cx="228" cy="424" r="26" fill="#FEF3C7" />
+    <text x="272" y="432" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">简洁</text>
+    <text x="222" y="476" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">桌面端管理</text>
+    <text x="222" y="506" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">网页端一键填充</text>
+
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2" d="M532,374 H748 A28,28 0 0 1 776,402 V482 A28,28 0 0 1 748,510 H532 A28,28 0 0 1 504,482 V402 A28,28 0 0 1 532,374 Z" />
+    <circle cx="548" cy="424" r="26" fill="#DBEAFE" />
+    <path d="M536 424 L546 434 L562 414" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="592" y="432" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">安全</text>
+    <text x="542" y="476" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">客户端加密</text>
+    <text x="542" y="506" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">主密码保护与自动锁定</text>
+
+    <path fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2" d="M852,374 H1068 A28,28 0 0 1 1096,402 V482 A28,28 0 0 1 1068,510 H852 A28,28 0 0 1 824,482 V402 A28,28 0 0 1 852,374 Z" />
+    <circle cx="868" cy="424" r="26" fill="#DCFCE7" />
+    <path d="M856 414 L880 414 M856 424 L880 424 M856 434 L872 434" stroke="#16A34A" stroke-width="3" stroke-linecap="round" />
+    <text x="912" y="432" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="28" font-weight="800" fill="#1F2937">专业</text>
+    <text x="862" y="476" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">多类型条目</text>
+    <text x="862" y="506" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="20" fill="#6B7280">支持自建服务端</text>
+  </g>
+  <g id="cta">
+    <path fill="#7A4B22" d="M417,558 H863 A27,27 0 0 1 890,585 V585 A27,27 0 0 1 863,612 H417 A27,27 0 0 1 390,585 V585 A27,27 0 0 1 417,558 Z" />
+    <text x="454" y="593" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="22" font-weight="800" fill="#FFFFFF">官网下载：https://bear-password.xuewei.fun</text>
+  </g>
+  <g id="footer">
+    <text x="1140" y="654" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">08 / 08</text>
+  </g>
+</svg>

@@ -18,6 +18,11 @@ export function isVaultPasswordEncryptionAvailable(): boolean {
   return safeStorage.isEncryptionAvailable()
 }
 
+export function hasStoredVaultPassword(): boolean {
+  return safeStorage.isEncryptionAvailable()
+    && (existsSync(getVaultPasswordPath()) || existsSync(getLegacyAccountPasswordPath()))
+}
+
 async function decryptPasswordFile(filePath: string): Promise<string | null> {
   if (!safeStorage.isEncryptionAvailable() || !existsSync(filePath)) {
     return null

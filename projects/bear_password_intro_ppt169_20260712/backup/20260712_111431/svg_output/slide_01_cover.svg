@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <title>BearPassword Cover</title>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFF8ED"/>
+    <circle cx="1120" cy="110" r="220" fill="#FEF3C7" opacity="0.72"/>
+    <circle cx="160" cy="640" r="240" fill="#DBEAFE" opacity="0.42"/>
+    <rect x="38" y="38" width="1204" height="644" rx="36" fill="#FFFFFF" opacity="0.58"/>
+  </g>
+  <g id="left-hero-copy">
+    <rect x="74" y="92" width="142" height="42" rx="21" fill="#FEF3C7" stroke="#E8D9C5" stroke-width="1.5"/>
+    <text x="96" y="120" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="700" fill="#7A4B22">产品介绍</text>
+    <text x="74" y="216" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="64" font-weight="800" fill="#7A4B22">BearPassword</text>
+    <text x="78" y="270" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="32" font-weight="700" fill="#1F2937">简洁、安全、专业的密码管理工具</text>
+    <text x="78" y="324" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">桌面端集中管理，浏览器扩展顺手填充，</text>
+    <text x="78" y="360" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="24" fill="#6B7280">数据在本地加密后再同步。</text>
+  </g>
+  <g id="value-chips">
+    <rect x="78" y="418" width="168" height="54" rx="27" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.5"/>
+    <circle cx="108" cy="445" r="14" fill="#F59E0B" opacity="0.22"/>
+    <path d="M102 445 L107 450 L116 438" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="134" y="453" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="700" fill="#1F2937">本地加密</text>
+    <rect x="266" y="418" width="170" height="54" rx="27" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.5"/>
+    <circle cx="296" cy="445" r="14" fill="#2563EB" opacity="0.18"/>
+    <path d="M289 446 C294 437 306 437 311 446 C306 454 294 454 289 446 Z" fill="none" stroke="#2563EB" stroke-width="2"/>
+    <text x="322" y="453" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="700" fill="#1F2937">一键填充</text>
+    <rect x="78" y="492" width="214" height="54" rx="27" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="1.5"/>
+    <circle cx="108" cy="519" r="14" fill="#16A34A" opacity="0.16"/>
+    <path d="M108 509 L108 529 M98 519 L118 519" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="134" y="527" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" font-weight="700" fill="#1F2937">TOTP 验证码</text>
+  </g>
+  <g id="product-screenshot">
+    <rect x="560" y="86" width="630" height="500" rx="34" fill="#D6B98D" opacity="0.22"/>
+    <rect x="542" y="68" width="630" height="500" rx="34" fill="#FFFFFF" stroke="#E8D9C5" stroke-width="2"/>
+    <rect x="566" y="92" width="582" height="452" rx="24" fill="#FFF8ED"/>
+    <image href="../images/home.png" x="584" y="108" width="546" height="398" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="604" y="522" width="484" height="1.5" fill="#E8D9C5"/>
+  </g>
+  <g id="footer">
+    <text x="78" y="642" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="18" fill="#6B7280">bear-password.xuewei.fun</text>
+    <text x="1140" y="642" font-family="Microsoft YaHei, PingFang SC, Arial, sans-serif" font-size="16" fill="#6B7280">01 / 08</text>
+  </g>
+</svg>

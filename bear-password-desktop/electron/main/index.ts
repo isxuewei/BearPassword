@@ -31,6 +31,7 @@ import {
   saveStoredSecurityKey
 } from './securityKeyStorage'
 import {
+  hasStoredVaultPassword,
   isVaultPasswordEncryptionAvailable,
   loadStoredVaultPassword,
   removeStoredVaultPassword,
@@ -158,6 +159,28 @@ const WINDOW_MIN_HEIGHT = 640
 /** 判断是否为开发环境 */
 const isDev = !app.isPackaged
 
+function isAllowedAppNavigation(url: string): boolean {
+  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+    return url.startsWith(process.env['ELECTRON_RENDERER_URL'])
+  }
+  try {
+    return new URL(url).protocol === 'file:'
+  } catch {
+    return false
+  }
+}
+
+function attachWebContentsSecurity(win: BrowserWindow): void {
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isAllowedAppNavigation(url)) return
+    event.preventDefault()
+  })
+
+  win.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false)
+  })
+}
+
 /** 图标资源目录 */
 function getIconBaseDir(): string {
   return app.isPackaged ? join(process.resourcesPath, 'icons') : join(__dirname, '../../resources')
@@ -229,11 +252,11 @@ function createWindow(notifyOpenOnLoad = false): void {
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
-      // 桌面端需连接用户自定义的后端地址，关闭同源限制以避免跨域 Network Error
-      webSecurity: false
+      webSecurity: true
     }
   })
 
+  attachWebContentsSecurity(mainWindow)
   attachMainWindowStateListeners(mainWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
   mainWindow.on('focus', () => {
@@ -272,7 +295,14 @@ function createWindow(notifyOpenOnLoad = false): void {
 
   // 外部链接使用跟随系统浏览器打开
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    try {
+      const protocol = new URL(details.url).protocol
+      if (protocol === 'http:' || protocol === 'https:') {
+        shell.openExternal(details.url)
+      }
+    } catch {
+      // 拒绝格式异常的窗口打开请求
+    }
     return { action: 'deny' }
   })
 
@@ -623,6 +653,25 @@ function registerFileIpc(): void {
   })
 
   ipcMain.handle(
+    'file:savePasswordCsv',
+    async (_event, payload: { defaultFileName: string; content: string }) => {
+      const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined
+      const result = await dialog.showSaveDialog(parent, {
+        title: '导出密码',
+        defaultPath: payload.defaultFileName,
+        filters: [{ name: 'CSV', extensions: ['csv'] }]
+      })
+
+      if (result.canceled || !result.filePath) {
+        return { ok: false as const, canceled: true as const }
+      }
+
+      await writeFile(result.filePath, payload.content, 'utf-8')
+      return { ok: true as const, filePath: result.filePath }
+    }
+  )
+
+  ipcMain.handle(
     'file:saveSecurityKeyBackup',
     async (_event, payload: { defaultFileName: string; content: string }) => {
       const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined
@@ -674,7 +723,18 @@ function registerSecureStorageIpc(): void {
 function registerVaultPasswordIpc(): void {
   ipcMain.handle('vault-password:isAvailable', () => isVaultPasswordEncryptionAvailable())
 
-  ipcMain.handle('vault-password:get', async () => loadStoredVaultPassword())
+  ipcMain.handle('vault-password:has', () => hasStoredVaultPassword())
+
+  ipcMain.handle('vault-password:get', async (_event, reason: unknown) => {
+    const message = typeof reason === 'string' && reason.trim()
+      ? reason.trim()
+      : '验证身份以读取保险库主密码'
+    const verified = await promptBiometricUnlock(message)
+    if (!verified.ok) {
+      return null
+    }
+    return loadStoredVaultPassword()
+  })
 
   ipcMain.handle('vault-password:set', async (_event, password: unknown) => {
     if (typeof password !== 'string') {

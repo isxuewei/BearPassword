@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
@@ -50,7 +50,17 @@ if (process.platform === 'darwin') {
     await sharp(pngBuffer).resize(size, size).png().toFile(join(iconsetDir, filename))
   }
 
-  execSync(`iconutil -c icns "${iconsetDir}" -o "${join(resourcesDir, 'icon.icns')}"`)
+  const icnsPath = join(resourcesDir, 'icon.icns')
+  try {
+    execSync(`iconutil -c icns "${iconsetDir}" -o "${icnsPath}"`)
+  } catch (error) {
+    if (!existsSync(icnsPath)) {
+      throw error
+    }
+    console.warn(
+      '[generate-icons] iconutil 转换 icon.iconset 失败，已保留现有 resources/icon.icns'
+    )
+  }
   rmSync(iconsetDir, { recursive: true, force: true })
 }
 

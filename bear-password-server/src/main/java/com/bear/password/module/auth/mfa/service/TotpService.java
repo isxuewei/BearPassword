@@ -47,7 +47,7 @@ public class TotpService {
     public TotpSetupResult beginSetup(User user) {
         String secret = secretGenerator.generate();
         String pendingToken = UUID.randomUUID().toString().replace("-", "");
-        mfaSessionService.savePendingTotpSecret(pendingToken, secret);
+        mfaSessionService.savePendingTotpSecret(pendingToken, totpSecretCodec.encrypt(secret));
 
         QrData qrData = new QrData.Builder()
                 .label(user.getUsername())
@@ -63,7 +63,7 @@ public class TotpService {
     }
 
     public void enableTotp(Long userId, String pendingToken, String code) {
-        String secret = mfaSessionService.consumePendingTotpSecret(pendingToken);
+        String secret = totpSecretCodec.decrypt(mfaSessionService.consumePendingTotpSecret(pendingToken));
         verifyCode(secret, code);
 
         User update = new User();

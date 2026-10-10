@@ -1,0 +1,1 @@
+从工程实现看，BearPassword 是一个完整的多端项目。桌面端使用 Electron、Vue 3、TypeScript、Pinia、Element Plus 和 Vite；浏览器扩展基于 Manifest V3、Vue 3、TypeScript、Vite 和 CRXJS；服务端使用 Java 17、Spring Boot 3、MyBatis Plus、MySQL 和 Druid。普通用户可以直接从官网下载安装包使用官方云服务；希望自建后端的用户或开发者，也可以按仓库 README 初始化数据库、配置服务端并本地运行。这让产品既有开箱即用路径，也保留了自建部署空间。

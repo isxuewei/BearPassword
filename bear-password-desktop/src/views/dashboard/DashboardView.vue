@@ -64,6 +64,14 @@
           <button type="button" class="dashboard-view__action" @click="handleImportPassword">
             {{ t('dashboard.actionImportPassword') }}
           </button>
+          <button
+            type="button"
+            class="dashboard-view__action"
+            :disabled="exporting"
+            @click="handleExportPassword"
+          >
+            {{ exporting ? t('dashboard.exportingPasswords') : t('dashboard.actionExportPassword') }}
+          </button>
           <button type="button" class="dashboard-view__action" @click="handleLockApp">
             {{ t('dashboard.actionLockApp') }}
           </button>
@@ -89,13 +97,18 @@
 import { ref, reactive, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import StatCard from '@/components/dashboard/StatCard.vue'
-import { getDashboardStatsApi } from '@/api'
+import { ElMessage } from 'element-plus'
+import { fetchAllPasswordEntries, getDashboardStatsApi } from '@/api'
 import type { DashboardStats } from '@/types'
 import { useI18n } from '@/composables/useI18n'
 import { useAutoLockStore } from '@/stores/autoLock'
 import { useSecurityStore } from '@/stores/security'
 import { useVersionStore } from '@/stores/version'
 import { openVaultCreate, openVaultImport } from '@/utils/vaultQuickSearch'
+import { appMessageBoxConfirm } from '@/utils/appMessageBox'
+import { buildChromePasswordCsv } from '@/utils/passwordExport'
+import { isDecryptFailedContent } from '@/utils/vaultEntryTransform'
+import { resolveEntryType } from '@/utils/vaultEntryDisplay'
 
 const router = useRouter()
 const autoLockStore = useAutoLockStore()
@@ -103,6 +116,7 @@ const securityStore = useSecurityStore()
 const versionStore = useVersionStore()
 const { t } = useI18n()
 const loading = ref(true)
+const exporting = ref(false)
 
 const stats = reactive<DashboardStats>({
   totalPasswords: 0,
@@ -134,6 +148,67 @@ function handleAddPassword(): void {
 
 function handleImportPassword(): void {
   void openVaultImport()
+}
+
+async function handleExportPassword(): Promise<void> {
+  if (exporting.value) return
+
+  try {
+    await appMessageBoxConfirm(
+      t('dashboard.exportConfirmBody'),
+      t('dashboard.exportConfirmTitle'),
+      {
+        type: 'warning',
+        confirmButtonText: t('dashboard.actionExportPassword'),
+        cancelButtonText: t('entry.dialog.cancel')
+      }
+    )
+  } catch (err) {
+    if (err === 'cancel' || err === 'close') return
+    ElMessage.error(err instanceof Error ? err.message : t('dashboard.exportFailed'))
+    return
+  }
+
+  if (!window.fileApi?.savePasswordCsv) {
+    ElMessage.error(t('dashboard.exportUnavailable'))
+    return
+  }
+
+  exporting.value = true
+  try {
+    const entries = await fetchAllPasswordEntries()
+    const hasDecryptFailure = entries.some(
+      (entry) => resolveEntryType(entry) === '登录信息' && isDecryptFailedContent(entry.content)
+    )
+    if (hasDecryptFailure) {
+      ElMessage.error(t('dashboard.exportDecryptFailed'))
+      return
+    }
+
+    const csv = buildChromePasswordCsv(entries)
+    if (!csv.rowCount) {
+      ElMessage.warning(t('dashboard.exportEmpty'))
+      return
+    }
+
+    const now = new Date()
+    const date = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0')
+    ].join('-')
+    const result = await window.fileApi.savePasswordCsv({
+      defaultFileName: `BearPassword-passwords-${date}.csv`,
+      content: csv.content
+    })
+    if (result.ok) {
+      ElMessage.success(t('dashboard.exportSuccess', { count: csv.rowCount }))
+    }
+  } catch (err) {
+    ElMessage.error(err instanceof Error ? err.message : t('dashboard.exportFailed'))
+  } finally {
+    exporting.value = false
+  }
 }
 
 function handleLockApp(): void {
@@ -293,6 +368,11 @@ onActivated(() => {
     font-weight: 500;
     cursor: pointer;
     transition: background $transition-fast, border-color $transition-fast, color $transition-fast;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
 
     &:hover {
       background: rgba(108, 92, 231, 0.08);

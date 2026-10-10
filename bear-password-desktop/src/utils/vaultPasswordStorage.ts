@@ -13,6 +13,17 @@ export async function loadPersistedVaultPassword(): Promise<string | null> {
   return password || null
 }
 
+export async function loadPersistedVaultPasswordWithBiometric(reason?: string): Promise<string | null> {
+  if (!canUseVaultPasswordApi()) return null
+  const password = await window.vaultPasswordApi!.get(reason)
+  return password || null
+}
+
+export async function hasPersistedVaultPassword(): Promise<boolean> {
+  if (!canUseVaultPasswordApi()) return false
+  return window.vaultPasswordApi!.has()
+}
+
 export async function persistVaultPassword(password: string): Promise<VaultPasswordPersistResult> {
   if (!password) {
     return { ok: false, error: '密码不能为空' }

@@ -146,6 +146,16 @@ bear:
     register:
       code-expire-minutes: 5
       send-interval-seconds: 60
+      verify-max-attempts: 5
+      verify-lock-seconds: 300
+    cors:
+      allowed-origins:
+        - https://bear-password.xuewei.fun
+    auth-rate-limit:
+      enabled: true
+      window-seconds: 60
+      ip-max-attempts: 60
+      account-max-attempts: 10
     redis:
       key-prefix: bear:password
     snowflake:

@@ -29,7 +29,6 @@ public final class AuthConstants {
             "/auth/mfa/totp/verify",
             "/health",
             "/version/latest",
-            "/error",
-            "/druid/**"
+            "/error"
     };
 }

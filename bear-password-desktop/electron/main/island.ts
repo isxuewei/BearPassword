@@ -19,6 +19,28 @@ let getMainWindowHandler: (() => BrowserWindow | null) | null = null
 
 const isDev = !app.isPackaged
 
+function isAllowedAppNavigation(url: string): boolean {
+  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+    return url.startsWith(process.env['ELECTRON_RENDERER_URL'])
+  }
+  try {
+    return new URL(url).protocol === 'file:'
+  } catch {
+    return false
+  }
+}
+
+function attachWebContentsSecurity(win: BrowserWindow): void {
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isAllowedAppNavigation(url)) return
+    event.preventDefault()
+  })
+
+  win.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false)
+  })
+}
+
 function getIslandBounds(expanded = isExpanded): Electron.Rectangle {
   const size = expanded ? ISLAND_EXPANDED : ISLAND_COLLAPSED
   const display = screen.getPrimaryDisplay()
@@ -71,9 +93,11 @@ function createIslandWindow(): BrowserWindow {
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false
+      webSecurity: true
     }
   })
+
+  attachWebContentsSecurity(win)
 
   if (isMac) {
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })

@@ -20,7 +20,13 @@ function renderSteps(): void {
     t('wake.step3', locale)
   ]
 
-  list.innerHTML = steps.map((step) => `<li>${step}</li>`).join('')
+  list.replaceChildren(
+    ...steps.map((step) => {
+      const item = document.createElement('li')
+      item.textContent = step
+      return item
+    })
+  )
 }
 
 function render(): void {

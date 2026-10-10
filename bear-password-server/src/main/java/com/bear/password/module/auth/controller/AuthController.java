@@ -1,9 +1,12 @@
 package com.bear.password.module.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import com.bear.password.common.web.ClientIpResolver;
 import com.bear.password.common.result.Result;
 import com.bear.password.module.auth.dto.*;
+import com.bear.password.module.auth.service.AuthRateLimitService;
 import com.bear.password.module.auth.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -19,13 +22,17 @@ import org.springframework.web.multipart.MultipartFile;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthRateLimitService authRateLimitService;
+    private final ClientIpResolver clientIpResolver;
 
     /**
      * SRP 登录第一步：获取 salt 与服务端公值 B
      */
     @SaIgnore
     @PostMapping("/login/init")
-    public Result<SrpLoginInitResponse> srpLoginInit(@Valid @RequestBody SrpLoginInitRequest request) {
+    public Result<SrpLoginInitResponse> srpLoginInit(@Valid @RequestBody SrpLoginInitRequest request,
+                                                     HttpServletRequest servletRequest) {
+        authRateLimitService.check("login:init", clientIpResolver.resolve(servletRequest), request.getUsername());
         return Result.success(authService.srpLoginInit(request));
     }
 
@@ -34,7 +41,9 @@ public class AuthController {
      */
     @SaIgnore
     @PostMapping("/login/verify")
-    public Result<SrpLoginVerifyResponse> srpLoginVerify(@Valid @RequestBody SrpLoginVerifyRequest request) {
+    public Result<SrpLoginVerifyResponse> srpLoginVerify(@Valid @RequestBody SrpLoginVerifyRequest request,
+                                                         HttpServletRequest servletRequest) {
+        authRateLimitService.check("login:verify", clientIpResolver.resolve(servletRequest), request.getSessionId());
         return Result.success(authService.srpLoginVerify(request));
     }
 
@@ -43,7 +52,9 @@ public class AuthController {
      */
     @SaIgnore
     @PostMapping("/register/code")
-    public Result<Void> sendRegisterCode(@Valid @RequestBody SendRegisterCodeRequest request) {
+    public Result<Void> sendRegisterCode(@Valid @RequestBody SendRegisterCodeRequest request,
+                                         HttpServletRequest servletRequest) {
+        authRateLimitService.check("register:code", clientIpResolver.resolve(servletRequest), request.getEmail());
         authService.sendRegisterCode(request);
         return Result.success();
     }
@@ -53,7 +64,9 @@ public class AuthController {
      */
     @SaIgnore
     @PostMapping("/register")
-    public Result<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public Result<LoginResponse> register(@Valid @RequestBody RegisterRequest request,
+                                          HttpServletRequest servletRequest) {
+        authRateLimitService.check("register", clientIpResolver.resolve(servletRequest), request.getEmail());
         return Result.success(authService.register(request));
     }
 

@@ -2,6 +2,8 @@
 export const EXTENSION_BRIDGE_HOST = '127.0.0.1'
 export const EXTENSION_BRIDGE_PORT = 6892
 export const EXTENSION_BRIDGE_ORIGIN = `http://${EXTENSION_BRIDGE_HOST}:${EXTENSION_BRIDGE_PORT}`
+export const EXTENSION_BRIDGE_AUTH_HEADER = 'X-BearPassword-Bridge'
+export const EXTENSION_BRIDGE_AUTH_VALUE = 'BearPassword-Extension'
 
 /** 扩展唤起桌面端（未连接时由系统打开应用） */
 export const DESKTOP_WAKE_PROTOCOL_URL = 'bearpassword://focus'

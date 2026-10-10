@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.bear.password.common.exception.BusinessException;
 import com.bear.password.common.result.Result;
 import com.bear.password.common.result.ResultCode;
+import com.bear.password.common.web.ClientIpResolver;
 import com.bear.password.module.auth.dto.LoginResponse;
 import com.bear.password.module.auth.mfa.dto.MfaStatusResponse;
 import com.bear.password.module.auth.mfa.dto.MfaTotpVerifyRequest;
@@ -11,8 +12,10 @@ import com.bear.password.module.auth.mfa.dto.TotpCodeRequest;
 import com.bear.password.module.auth.mfa.dto.TotpEnableRequest;
 import com.bear.password.module.auth.mfa.dto.TotpSetupResponse;
 import com.bear.password.module.auth.mfa.service.MfaService;
+import com.bear.password.module.auth.service.AuthRateLimitService;
 import com.bear.password.module.user.entity.User;
 import com.bear.password.module.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +30,8 @@ public class MfaController {
 
     private final MfaService mfaService;
     private final UserService userService;
+    private final AuthRateLimitService authRateLimitService;
+    private final ClientIpResolver clientIpResolver;
 
     @GetMapping("/status")
     public Result<MfaStatusResponse> status() {
@@ -52,7 +57,9 @@ public class MfaController {
 
     /** 登录第二步：TOTP 验证 */
     @PostMapping("/totp/verify")
-    public Result<LoginResponse> verifyTotpLogin(@Valid @RequestBody MfaTotpVerifyRequest request) {
+    public Result<LoginResponse> verifyTotpLogin(@Valid @RequestBody MfaTotpVerifyRequest request,
+                                                 HttpServletRequest servletRequest) {
+        authRateLimitService.check("mfa:totp:verify", clientIpResolver.resolve(servletRequest), request.getMfaToken());
         return Result.success(mfaService.verifyTotpAndLogin(request.getMfaToken(), request.getCode()));
     }
 

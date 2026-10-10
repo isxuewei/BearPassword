@@ -1,0 +1,34 @@
+{
+  "stage": "final",
+  "status": "confirmed",
+  "canvas": "ppt169",
+  "audience": "面向潜在用户、产品评审者、开源项目关注者与希望了解 BearPassword 的个人/开发者；重点解释产品价值、使用闭环与安全可信度。",
+  "content_divergence": "基于仓库 README 与产品截图重组为产品介绍叙事；保留事实与功能边界，不虚构商业指标。",
+  "mode": "problem-solution",
+  "visual_style": "soft-rounded",
+  "delivery_purpose": "balanced",
+  "page_count": "8",
+  "color": {
+    "name": "Bear Warm Trust",
+    "palette": {
+      "background": "#FFF8ED",
+      "secondary_bg": "#FFFFFF",
+      "primary": "#7A4B22",
+      "accent": "#F59E0B",
+      "secondary_accent": "#2563EB",
+      "body_text": "#1F2937"
+    }
+  },
+  "icons": "phosphor-duotone",
+  "typography": {
+    "name": "现代圆润产品风",
+    "heading": {"cjk": "思源黑体 / PingFang SC", "latin": "Inter / SF Pro Display", "css": "'Source Han Sans SC','PingFang SC','Inter','SF Pro Display',sans-serif"},
+    "body": {"cjk": "思源黑体 / PingFang SC", "latin": "Inter / SF Pro Text", "css": "'Source Han Sans SC','PingFang SC','Inter','SF Pro Text',sans-serif"},
+    "body_size": 24
+  },
+  "formula_policy": "text-only",
+  "image_usage": ["provided"],
+  "image_notes": "优先使用项目已有产品截图：封面/总览用首页，桌面端用密码库与新增密码，扩展端用自动填充与扩展弹窗，安全页用安全设置/生物解锁。",
+  "generation_mode": "continuous",
+  "refine_spec": false
+}
